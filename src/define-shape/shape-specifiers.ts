@@ -1,17 +1,17 @@
 import {
     ArrayElement,
+    AtLeastTuple,
     isObject,
     isRuntimeTypeOf,
     typedArrayIncludes,
     typedHasProperty,
 } from '@augment-vir/common';
 import {LiteralToPrimitive, Primitive, Simplify, UnionToIntersection} from 'type-fest';
+import {haveEqualTypes} from './type-equality';
 
 const andSymbol = Symbol('and');
 const orSymbol = Symbol('or');
 const exactSymbol = Symbol('exact');
-
-const isShapeSpecifierSymbol = Symbol('is-shape-specifier');
 
 const shapeSpecifiersTypes = [
     andSymbol,
@@ -21,17 +21,17 @@ const shapeSpecifiersTypes = [
 
 type ShapeSpecifierType = ArrayElement<typeof shapeSpecifiersTypes>;
 
-type ShapeSpecifier<Part, Type extends ShapeSpecifierType> = {
+type ShapeSpecifier<Parts> = {
     [isShapeSpecifierSymbol]: true;
-    parts: ReadonlyArray<Part>;
-    specifierType: Type;
+    parts: Parts;
+    specifierType: symbol;
 };
 
 export type ShapeOr<Part> = ShapeSpecifier<Part, typeof orSymbol>;
 export type ShapeAnd<Part> = ShapeSpecifier<Part, typeof andSymbol>;
 export type ShapeExact<Part> = ShapeSpecifier<Part, typeof exactSymbol>;
 
-export type SpecifierToRunTimeType<
+type SpecifierToRunTimeType<
     PossiblySpecifier,
     IsExact extends boolean = false,
 > = PossiblySpecifier extends ShapeSpecifier<infer Part, infer Type>
@@ -48,20 +48,42 @@ export type SpecifierToRunTimeType<
         : LiteralToPrimitive<PossiblySpecifier>
     : PossiblySpecifier;
 
-export function or<Part>(...parts: ReadonlyArray<Part>): ShapeOr<Part> {
+export function or<Parts extends AtLeastTuple<any, 1>>(
+    ...parts: Parts
+): ShapeOr<ArrayElement<Parts>> {
     return specifier(parts, orSymbol);
 }
 
-export function and<Part>(...parts: ReadonlyArray<Part>): ShapeAnd<Part> {
+export function and<Parts extends AtLeastTuple<any, 1>>(
+    ...parts: Parts
+): ShapeAnd<ArrayElement<Parts>> {
     return specifier(parts, andSymbol);
 }
 
-export function exact<Part>(...parts: ReadonlyArray<Part>): ShapeExact<Part> {
-    return specifier(parts, exactSymbol);
+export function exact<Part>(part: Part): ShapeExact<Part> {
+    return specifier([part], exactSymbol);
+}
+
+export function isOrShapeSpecifier(shape: unknown): shape is ShapeOr<unknown> {
+    const specifier = getShapeSpecifier(shape);
+
+    return !!specifier && specifier.specifierType === orSymbol;
+}
+
+export function isAndShapeSpecifier(shape: unknown): shape is ShapeAnd<unknown> {
+    const specifier = getShapeSpecifier(shape);
+
+    return !!specifier && specifier.specifierType === andSymbol;
+}
+
+export function isExactShapeSpecifier(shape: unknown): shape is ShapeExact<unknown> {
+    const specifier = getShapeSpecifier(shape);
+
+    return !!specifier && specifier.specifierType === exactSymbol;
 }
 
 function specifier<Part, Type extends ShapeSpecifierType>(
-    parts: ReadonlyArray<Part>,
+    parts: AtLeastTuple<Part, 1>,
     specifierType: Type,
 ): ShapeSpecifier<Part, Type> {
     return {
@@ -83,6 +105,25 @@ export type ShapeToRunTimeType<Shape, IsExact extends boolean = false> = Simplif
           }
         : Shape
 >;
+
+export function matchesSpecifier(subject: unknown, shape: unknown) {
+    const specifier = getShapeSpecifier(shape);
+
+    if (specifier) {
+        if (specifier.specifierType === andSymbol) {
+            return specifier.parts.every((part) => haveEqualTypes(part, subject));
+        } else if (specifier.specifierType === orSymbol) {
+            return specifier.parts.some((part) => haveEqualTypes(part, subject));
+        } else if (specifier.specifierType === exactSymbol) {
+            if (isObject(subject)) {
+                return haveEqualTypes(specifier.parts[0], subject);
+            } else {
+                return subject === specifier.parts[0];
+            }
+        }
+    }
+    return haveEqualTypes(subject, shape);
+}
 
 export function getShapeSpecifier(
     input: unknown,

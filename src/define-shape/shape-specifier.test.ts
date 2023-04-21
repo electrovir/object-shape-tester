@@ -1,5 +1,13 @@
 import {assertTypeOf} from '@augment-vir/browser-testing';
-import {ShapeAnd, ShapeExact, ShapeOr, ShapeToRunTimeType} from './shape-specifiers';
+import {
+    ShapeAnd,
+    ShapeExact,
+    ShapeOr,
+    ShapeToRunTimeType,
+    and,
+    exact,
+    or,
+} from './shape-specifiers';
 
 describe('ShapeToRunTimeType', () => {
     it('converts specifiers into their part types', () => {
@@ -48,5 +56,33 @@ describe('ShapeToRunTimeType', () => {
             };
             myExact: 'hello there';
         }>();
+    });
+});
+
+describe(or.name, () => {
+    it('requires at least one input', () => {
+        // @ts-expect-error
+        or();
+        or('one input is okay');
+        or('multiple', 'inputs', 'are okay');
+    });
+});
+
+describe(and.name, () => {
+    it('requires at least one input', () => {
+        // @ts-expect-error
+        and();
+        and('one input is okay');
+        and('multiple', 'inputs', 'are okay');
+    });
+});
+
+describe(exact.name, () => {
+    it('requires only one input', () => {
+        // @ts-expect-error
+        exact();
+        exact('only one input is allowed');
+        // @ts-expect-error
+        exact('multiple inputs', 'are not okay');
     });
 });
