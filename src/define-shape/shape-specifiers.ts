@@ -1,6 +1,7 @@
 import {
     ArrayElement,
     AtLeastTuple,
+    PropertyValueType,
     isObject,
     isRuntimeTypeOf,
     typedArrayIncludes,
@@ -12,6 +13,8 @@ import {haveEqualTypes} from './type-equality';
 const andSymbol = Symbol('and');
 const orSymbol = Symbol('or');
 const exactSymbol = Symbol('exact');
+const enumSymbol = Symbol('enum');
+const unknownSymbol = Symbol('unknown');
 
 const isShapeSpecifierSymbol = Symbol('is-shape-specifier');
 
@@ -19,6 +22,8 @@ const shapeSpecifiersTypes = [
     andSymbol,
     orSymbol,
     exactSymbol,
+    enumSymbol,
+    unknownSymbol,
 ] as const;
 
 type ShapeSpecifierType = ArrayElement<typeof shapeSpecifiersTypes>;
@@ -42,6 +47,11 @@ export type ShapeExact<Parts extends Readonly<AtLeastTuple<unknown, 1>>> = Shape
     Parts,
     typeof exactSymbol
 >;
+export type ShapeEnum<Parts extends Readonly<[Record<string, number | string>]>> = ShapeSpecifier<
+    Parts,
+    typeof enumSymbol
+>;
+export type ShapeUnknown<Parts extends Readonly<[]>> = ShapeSpecifier<Parts, typeof unknownSymbol>;
 
 export type SpecifierToRunTimeType<
     PossiblySpecifier,
@@ -53,6 +63,10 @@ export type SpecifierToRunTimeType<
         ? ArrayElement<Parts>
         : Type extends typeof exactSymbol
         ? WritableDeep<ArrayElement<Parts>>
+        : Type extends typeof enumSymbol
+        ? WritableDeep<PropertyValueType<Parts[0]>>
+        : Type extends typeof unknownSymbol
+        ? unknown
         : 'TypeError: found not match for shape specifier type.'
     : PossiblySpecifier extends Primitive
     ? IsExact extends true
@@ -74,22 +88,49 @@ export function exact<const Parts extends Readonly<AtLeastTuple<unknown, 1>>>(
     return specifier(parts, exactSymbol);
 }
 
-export function isOrShapeSpecifier(shape: unknown): shape is ShapeOr<AtLeastTuple<unknown, 1>> {
-    const specifier = getShapeSpecifier(shape);
-
-    return !!specifier && specifier.specifierType === orSymbol;
+export function enumShape<const Parts extends Readonly<[Record<string, number | string>]>>(
+    ...parts: Parts
+): ShapeEnum<Parts> {
+    return specifier(parts, enumSymbol);
 }
 
-export function isAndShapeSpecifier(shape: unknown): shape is ShapeAnd<AtLeastTuple<unknown, 1>> {
-    const specifier = getShapeSpecifier(shape);
-
-    return !!specifier && specifier.specifierType === andSymbol;
+export function unknownShape(): ShapeUnknown<[]> {
+    return specifier([], unknownSymbol);
 }
 
-export function isExactShapeSpecifier(shape: unknown): shape is ShapeExact<[unknown]> {
-    const specifier = getShapeSpecifier(shape);
+export function isOrShapeSpecifier(
+    maybeSpecifier: unknown,
+): maybeSpecifier is ShapeOr<AtLeastTuple<unknown, 1>> {
+    return specifierHasSymbol(maybeSpecifier, orSymbol);
+}
 
-    return !!specifier && specifier.specifierType === exactSymbol;
+export function isAndShapeSpecifier(
+    maybeSpecifier: unknown,
+): maybeSpecifier is ShapeAnd<AtLeastTuple<unknown, 1>> {
+    return specifierHasSymbol(maybeSpecifier, andSymbol);
+}
+
+export function isExactShapeSpecifier(
+    maybeSpecifier: unknown,
+): maybeSpecifier is ShapeExact<[unknown]> {
+    return specifierHasSymbol(maybeSpecifier, exactSymbol);
+}
+
+export function isEnumShapeSpecifier(
+    maybeSpecifier: unknown,
+): maybeSpecifier is ShapeEnum<[Record<string, number | string>]> {
+    return specifierHasSymbol(maybeSpecifier, enumSymbol);
+}
+export function isUnknownShapeSpecifier(
+    maybeSpecifier: unknown,
+): maybeSpecifier is ShapeUnknown<[]> {
+    return specifierHasSymbol(maybeSpecifier, unknownSymbol);
+}
+
+function specifierHasSymbol(maybeSpecifier: unknown, symbol: ShapeSpecifierType) {
+    const specifier = getShapeSpecifier(maybeSpecifier);
+
+    return !!specifier && specifier.specifierType === symbol;
 }
 
 function specifier<Parts extends BaseParts, Type extends ShapeSpecifierType>(
@@ -125,6 +166,10 @@ export function matchesSpecifier(subject: unknown, shape: unknown) {
             } else {
                 return subject === specifier.parts[0];
             }
+        } else if (isEnumShapeSpecifier(specifier)) {
+            return Object.values(specifier.parts[0]).some((part) => part === subject);
+        } else if (isUnknownShapeSpecifier(specifier)) {
+            return true;
         }
     }
     return haveEqualTypes(subject, shape);
@@ -140,11 +185,7 @@ export function getShapeSpecifier(
         return undefined;
     }
 
-    if (
-        !typedHasProperty(input, 'parts') ||
-        !isRuntimeTypeOf(input.parts, 'array') ||
-        !input.parts.length
-    ) {
+    if (!typedHasProperty(input, 'parts') || !isRuntimeTypeOf(input.parts, 'array')) {
         throw new Error('Found a shape specifier but its parts are not valid.');
     }
 

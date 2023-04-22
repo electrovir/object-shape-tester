@@ -3,8 +3,10 @@ import {ShapeDefinition} from '../define-shape/define-shape';
 import {
     getShapeSpecifier,
     isAndShapeSpecifier,
+    isEnumShapeSpecifier,
     isExactShapeSpecifier,
     isOrShapeSpecifier,
+    isUnknownShapeSpecifier,
     matchesSpecifier,
 } from '../define-shape/shape-specifiers';
 import {ShapeMismatchError} from '../errors/shape-mismatch.error';
@@ -25,11 +27,14 @@ export function assertValidShape<Shape>(
     subject: unknown,
     shapeDefinition: ShapeDefinition<Shape>,
 ): asserts subject is ShapeDefinition<Shape>['runTimeType'] {
-    internalAssertValidShape(subject, shapeDefinition.shape, []);
+    internalAssertValidShape(subject, shapeDefinition.shape, ['top level']);
 }
 
 function createKeyString(keys: ReadonlyArray<PropertyKey>): string {
-    return keys.map((key) => `'${String(key)}'`).join(' -> ');
+    return [
+        keys[0],
+        ...keys.slice(1).map((key) => `'${String(key)}'`),
+    ].join(' -> ');
 }
 
 function internalAssertValidShape<Shape>(
@@ -37,6 +42,11 @@ function internalAssertValidShape<Shape>(
     shape: Shape,
     keys: PropertyKey[],
 ): asserts subject is ShapeDefinition<Shape>['runTimeType'] {
+    // unknown shape specifier allows anything, abort instantly
+    if (isUnknownShapeSpecifier(shape)) {
+        return;
+    }
+
     const keysString = createKeyString(keys);
 
     const subjectAsSpecifier = getShapeSpecifier(subject);
@@ -47,15 +57,9 @@ function internalAssertValidShape<Shape>(
     }
 
     if (!matchesSpecifier(subject, shape)) {
-        if (keys.length) {
-            throw new ShapeMismatchError(
-                `Subject does not match shape definition at key ${keysString}`,
-            );
-        } else {
-            throw new ShapeMismatchError(
-                'Subject does not match shape definition at the top level.',
-            );
-        }
+        throw new ShapeMismatchError(
+            `Subject does not match shape definition at key ${keysString}`,
+        );
     }
 
     if (isObject(subject)) {
@@ -70,14 +74,20 @@ function internalAssertValidShape<Shape>(
 
         function testKeys(
             shapePart: unknown,
-            options: {ignoreExtraKeys: boolean} = {ignoreExtraKeys: false},
+            {
+                ignoreExtraKeys = false,
+            }: {
+                ignoreExtraKeys?: boolean;
+            } = {
+                ignoreExtraKeys: false,
+            },
         ) {
             /* c8 ignore start */
             // just covering edge cases, can't actually trigger this
             if (isObject(shapePart)) {
                 /* c8 ignore stop */
                 const shapePartKeys = new Set(Object.keys(shapePart));
-                if (!options.ignoreExtraKeys) {
+                if (!ignoreExtraKeys) {
                     subjectKeys.forEach((subjectKey) => {
                         if (!shapePartKeys.has(subjectKey)) {
                             throw new ShapeMismatchError(
@@ -87,7 +97,19 @@ function internalAssertValidShape<Shape>(
                     });
                 }
                 shapePartKeys.forEach((shapePartKey) => {
-                    if (!subjectKeys.has(shapePartKey)) {
+                    debugger;
+                    const shapeValue = (shapePart as any)[shapePartKey];
+                    const orContainsUndefined: boolean = isOrShapeSpecifier(shapeValue)
+                        ? shapeValue.parts.includes(undefined)
+                        : false;
+                    const containsUndefined: boolean =
+                        shapeValue?.includes?.(undefined) || shapeValue === undefined;
+
+                    if (
+                        !subjectKeys.has(shapePartKey) &&
+                        !orContainsUndefined &&
+                        !containsUndefined
+                    ) {
                         throw new ShapeMismatchError(
                             `Subject missing key '${shapePartKey}' in ${keysString}`,
                         );
@@ -96,7 +118,7 @@ function internalAssertValidShape<Shape>(
 
                 subjectKeys.forEach((key) => {
                     const subjectChild = (objectSubject as any)[key] as unknown;
-                    if (options.ignoreExtraKeys && !shapePartKeys.has(key)) {
+                    if (ignoreExtraKeys && !shapePartKeys.has(key)) {
                         return;
                     }
                     const shapePartChild = (shapePart as any)[key] as unknown;
@@ -161,6 +183,13 @@ function internalAssertValidShape<Shape>(
         } else if (isExactShapeSpecifier(shape)) {
             testKeys(shape.parts[0]);
             matched = true;
+            /* c8 ignore start */
+        } else if (isEnumShapeSpecifier(shape)) {
+            // just cover an edge case
+            throw new ShapeMismatchError(
+                `Cannot compare an enum specifier to an object at ${keysString}`,
+            );
+            /* c8 ignore stop */
         } else if (isRuntimeTypeOf(shape, 'array') && isRuntimeTypeOf(objectSubject, 'array')) {
             // special case arrays
             matched = objectSubject.every((subjectEntry, index): boolean => {

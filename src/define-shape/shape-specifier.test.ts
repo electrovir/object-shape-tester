@@ -1,6 +1,20 @@
 import {assertTypeOf, itCases} from '@augment-vir/browser-testing';
 import {defineShape} from './define-shape';
-import {and, exact, getShapeSpecifier, or} from './shape-specifiers';
+import {
+    and,
+    enumShape,
+    exact,
+    getShapeSpecifier,
+    matchesSpecifier,
+    or,
+    unknownShape,
+} from './shape-specifiers';
+
+enum TestEnum {
+    First = 'first',
+    Second = 'second',
+    Third = 'third',
+}
 
 describe('ShapeToRunTimeType', () => {
     it('converts specifiers into their part types', () => {
@@ -14,6 +28,8 @@ describe('ShapeToRunTimeType', () => {
             myOr: or('', 0),
             myAnd: and('', 0),
             mySimpleArray: [''],
+            idk: unknownShape(),
+            myEnum: enumShape(TestEnum),
             myMultiArray: [
                 '',
                 0,
@@ -43,6 +59,8 @@ describe('ShapeToRunTimeType', () => {
             myOr: string | number;
             myAnd: string & number;
             mySimpleArray: string[];
+            idk: unknown;
+            myEnum: TestEnum;
             myMultiArray: (string | number)[];
             myObjectOr:
                 | {
@@ -57,6 +75,19 @@ describe('ShapeToRunTimeType', () => {
             myExact: 'hello there';
         }>();
     });
+});
+
+describe(matchesSpecifier.name, () => {
+    itCases(matchesSpecifier, [
+        {
+            it: 'always true for unknown specifier',
+            inputs: [
+                Math.random() > 0.5 ? '' : 4,
+                unknownShape(),
+            ],
+            expect: true,
+        },
+    ]);
 });
 
 describe(getShapeSpecifier.name, () => {
@@ -78,17 +109,6 @@ describe(getShapeSpecifier.name, () => {
                 const orResult: any = or('');
 
                 orResult.parts = {};
-
-                return orResult;
-            })(),
-            throws: Error,
-        },
-        {
-            it: 'errors if parts is empty',
-            input: (() => {
-                const orResult: any = or('');
-
-                orResult.parts = [];
 
                 return orResult;
             })(),
@@ -125,6 +145,31 @@ describe(or.name, () => {
         or();
         or('one input is okay');
         or('multiple', 'inputs', 'are okay');
+    });
+});
+
+describe(enumShape.name, () => {
+    it('only allows one input', () => {
+        // @ts-expect-error
+        enumShape();
+        // @ts-expect-error
+        enumShape('input must be an object');
+        enumShape(TestEnum);
+        enumShape({objectIs: 'okay too'});
+        // @ts-expect-error
+        enumShape(TestEnum, {multipleEnums: 'is not okay'});
+    });
+});
+
+describe(unknownShape.name, () => {
+    it('blocks all inputs', () => {
+        unknownShape();
+        // @ts-expect-error
+        unknownShape('no inputs are accepted');
+        // @ts-expect-error
+        unknownShape(TestEnum);
+        // @ts-expect-error
+        unknownShape('multiple', 'are not allowed either');
     });
 });
 

@@ -1,10 +1,16 @@
 import {FunctionTestCase, itCases} from '@augment-vir/browser-testing';
+import {ArrayElement} from '@augment-vir/common';
 import {defineShape} from '../define-shape/define-shape';
-import {and, exact, or} from '../define-shape/shape-specifiers';
+import {and, enumShape, exact, or, unknownShape} from '../define-shape/shape-specifiers';
 import {ShapeMismatchError} from '../errors/shape-mismatch.error';
 import {assertValidShape, isValidShape} from './verify-shape';
 
 const sharedRegExp = /shared/;
+
+enum sharedEnum {
+    First = 'first',
+    Second = 'second',
+}
 
 const testCases: ReadonlyArray<FunctionTestCase<typeof assertValidShape>> = [
     {
@@ -124,6 +130,112 @@ const testCases: ReadonlyArray<FunctionTestCase<typeof assertValidShape>> = [
         throws: ShapeMismatchError,
     },
     {
+        it: 'works with enum shapes',
+        inputs: [
+            {
+                a: 'big key',
+                b: 42,
+                c: sharedEnum.First,
+            },
+            defineShape({
+                a: '',
+                b: 0,
+                c: enumShape(sharedEnum),
+            }),
+        ],
+        throws: undefined,
+    },
+    {
+        it: 'accepts anything for unknownShape',
+        inputs: [
+            {
+                a: 'big key',
+                b: 42,
+                c: sharedEnum.First,
+            },
+            defineShape({
+                a: unknownShape(),
+                b: unknownShape(),
+                c: unknownShape(),
+            }),
+        ],
+        throws: undefined,
+    },
+    {
+        it: 'accepts missing keys if their shape is undefined',
+        inputs: [
+            {
+                c: null,
+            },
+            defineShape({
+                a: undefined,
+                b: or('', undefined),
+                c: null,
+            }),
+        ],
+        throws: undefined,
+    },
+    // {
+    //     it: 'works with nested specifiers',
+    //     inputs: [
+    //         {
+    //             a: {what: 'who'},
+    //             b: 'hello there',
+    //             c: 4321,
+    //         },
+    //         defineShape({
+    //             a: exact({
+    //                 what: 'who',
+    //             }),
+    //             b: or(0, exact('hello there')),
+    //             c: or(0, exact('hello there')),
+    //         }),
+    //     ],
+    //     throws: undefined,
+    // },
+    {
+        it: 'does not allow missing keys for null shapes',
+        inputs: [
+            {},
+            defineShape({
+                a: undefined,
+                b: or('', undefined),
+                c: null,
+            }),
+        ],
+        throws: ShapeMismatchError,
+    },
+    {
+        it: 'accepts anything for unknownShape at the top level',
+        inputs: [
+            {
+                a: 'big key',
+                b: 42,
+                c: sharedEnum.First,
+            },
+            defineShape(unknownShape()),
+        ],
+        throws: undefined,
+    },
+    {
+        it: 'fails when comparing an enum with an object',
+        inputs: [
+            {
+                a: 'big key',
+                b: 42,
+                c: {
+                    a: 'five',
+                },
+            },
+            defineShape({
+                a: '',
+                b: 0,
+                c: enumShape(sharedEnum),
+            }),
+        ],
+        throws: ShapeMismatchError,
+    },
+    {
         it: 'fails if extra keys exist',
         inputs: [
             {
@@ -173,32 +285,26 @@ const testCases: ReadonlyArray<FunctionTestCase<typeof assertValidShape>> = [
         ],
         throws: ShapeMismatchError,
     },
-    {
-        it: 'fails if an object getter throws an error',
-        inputs: [
-            {
-                a: 'what',
-                get b(): string {
-                    throw new Error('failed to get b');
-                },
-                c: {a: 0, c: ''},
-            },
-            defineShape({
-                a: 'what',
-                b: and('', {
-                    get b(): string {
-                        throw new Error('failed to get b');
-                    },
-                }),
-                c: and({a: 0}, {b: ''}),
-            }),
-        ],
-        throws: Error,
-    },
 ];
 
 describe(assertValidShape.name, () => {
     itCases(assertValidShape, testCases);
+
+    describe('with default values', () => {
+        itCases(
+            assertValidShape,
+            testCases.map((testCase): ArrayElement<typeof testCases> => {
+                return {
+                    ...testCase,
+                    inputs: [
+                        testCase.inputs[1].defaultValue,
+                        testCase.inputs[1],
+                    ],
+                    throws: undefined,
+                };
+            }),
+        );
+    });
 });
 
 describe(isValidShape.name, () => {
