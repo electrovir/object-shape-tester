@@ -73,26 +73,27 @@ export type ShapeEnum<Parts extends Readonly<[Record<string, number | string>]>>
 >;
 export type ShapeUnknown<Parts extends Readonly<[]>> = ShapeSpecifier<Parts, typeof unknownSymbol>;
 
-type ExpandParts<Parts extends BaseParts> =
-    | Exclude<ArrayElement<Parts>, ShapeDefinition<any>>
-    | ShapeToRunTimeType<Extract<ArrayElement<Parts>, ShapeDefinition<any>>['shape']>;
-
-type ExpandPart<Part> = Part extends ShapeDefinition<infer Shape>
-    ? ShapeToRunTimeType<Shape>
-    : Part;
+type ExpandParts<Parts extends BaseParts, IsExact extends boolean> = Extract<
+    ArrayElement<Parts>,
+    ShapeDefinition<any>
+> extends never
+    ? SpecifierToRunTimeType<ArrayElement<Parts>, IsExact>
+    :
+          | Exclude<ArrayElement<Parts>, ShapeDefinition<any>>
+          | ShapeToRunTimeType<Extract<ArrayElement<Parts>, ShapeDefinition<any>>['shape']>;
 
 export type SpecifierToRunTimeType<
     PossiblySpecifier,
     IsExact extends boolean = false,
 > = PossiblySpecifier extends ShapeSpecifier<infer Parts, infer Type>
     ? Type extends typeof andSymbol
-        ? UnionToIntersection<ExpandParts<Parts>>
+        ? UnionToIntersection<ExpandParts<Parts, IsExact>>
         : Type extends typeof orSymbol
-        ? ExpandParts<Parts>
+        ? ExpandParts<Parts, IsExact>
         : Type extends typeof exactSymbol
-        ? WritableDeep<ExpandParts<Parts>>
+        ? WritableDeep<ExpandParts<Parts, true>>
         : Type extends typeof enumSymbol
-        ? WritableDeep<PropertyValueType<ExpandPart<Parts[0]>>>
+        ? WritableDeep<PropertyValueType<Parts[0]>>
         : Type extends typeof unknownSymbol
         ? unknown
         : 'TypeError: found not match for shape specifier type.'
@@ -100,6 +101,8 @@ export type SpecifierToRunTimeType<
     ? IsExact extends true
         ? PossiblySpecifier
         : LiteralToPrimitive<PossiblySpecifier>
+    : PossiblySpecifier extends object
+    ? {[Prop in keyof PossiblySpecifier]: SpecifierToRunTimeType<PossiblySpecifier[Prop], IsExact>}
     : PossiblySpecifier;
 
 export function or<Parts extends AtLeastTuple<unknown, 1>>(...parts: Parts): ShapeOr<Parts> {
@@ -173,11 +176,20 @@ export function specifier<Parts extends BaseParts, Type extends ShapeSpecifierTy
 }
 
 export type ShapeToRunTimeType<Shape, IsExact extends boolean = false> = Shape extends object
-    ? {
-          [PropName in keyof Shape]: Shape[PropName] extends ShapeSpecifier<any, typeof exactSymbol>
-              ? ShapeToRunTimeType<SpecifierToRunTimeType<Shape[PropName], true>, true>
-              : ShapeToRunTimeType<SpecifierToRunTimeType<Shape[PropName], IsExact>, IsExact>;
-      }
+    ? Shape extends ShapeDefinition<infer InnerShape>
+        ? ShapeToRunTimeType<InnerShape, IsExact>
+        : Shape extends ShapeSpecifier<any, any>
+        ? Shape extends ShapeSpecifier<any, typeof exactSymbol>
+            ? SpecifierToRunTimeType<Shape, true>
+            : SpecifierToRunTimeType<Shape, IsExact>
+        : {
+              [PropName in keyof Shape]: Shape[PropName] extends ShapeSpecifier<
+                  any,
+                  typeof exactSymbol
+              >
+                  ? ShapeToRunTimeType<Shape[PropName], true>
+                  : ShapeToRunTimeType<Shape[PropName], IsExact>;
+          }
     : Shape;
 
 export function matchesSpecifier(subject: unknown, shape: unknown): boolean {

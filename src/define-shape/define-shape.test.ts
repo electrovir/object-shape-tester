@@ -1,7 +1,7 @@
 import {assertTypeOf} from '@augment-vir/browser-testing';
 import {assert} from '@open-wc/testing';
 import {defineShape} from './define-shape';
-import {exact, unknownShape} from './shape-specifiers';
+import {exact, or, unknownShape} from './shape-specifiers';
 
 describe(defineShape.name, () => {
     const exampleShape = defineShape({
@@ -52,9 +52,54 @@ describe(defineShape.name, () => {
         const myShape = defineShape(unknownShape());
         const myInstance: (typeof myShape)['runTimeType'] = myShape.defaultValue;
 
+        assertTypeOf(myInstance).toEqualTypeOf<unknown>();
+
         const myNestedShape = defineShape({
             nested: myShape,
         });
         const myNestedInstance: (typeof myNestedShape)['runTimeType'] = myNestedShape.defaultValue;
+        assertTypeOf(myNestedInstance).toEqualTypeOf<{nested: unknown}>();
+    });
+
+    it('works with complex nested shapes', () => {
+        const myShape = defineShape({
+            a: exact({
+                what: 'who',
+            }),
+            b: or(0, ''),
+            c: or(0, exact('hello there')),
+        });
+
+        const myNestedShape = defineShape({
+            nested: or(myShape, 0),
+        });
+        const myNestedInstance: (typeof myNestedShape)['runTimeType'] = myNestedShape.defaultValue;
+        assertTypeOf(myNestedInstance).toEqualTypeOf<{
+            nested:
+                | number
+                | {
+                      a: {
+                          what: 'who';
+                      };
+                      b: number | string;
+                      c: number | 'hello there';
+                  };
+        }>();
+    });
+
+    it('works with nested exact specifiers', () => {
+        const myShape = defineShape({
+            a: exact({
+                what: 'who',
+            }),
+            b: or(0, exact('hello there')),
+            c: or(0, exact('hello there')),
+        });
+
+        assertTypeOf<(typeof myShape)['runTimeType']>().toEqualTypeOf<{
+            a: {what: 'who'};
+            b: number | 'hello there';
+            c: number | 'hello there';
+        }>();
     });
 });
