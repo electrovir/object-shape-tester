@@ -3,6 +3,4 @@ import {defineConfig} from 'vite';
 
 export default defineConfig({
     ...baseViteConfig,
-    root: './src/',
-    base: './src/public/',
 });

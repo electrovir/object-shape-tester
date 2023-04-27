@@ -6,6 +6,7 @@ import {
     isEnumShapeSpecifier,
     isExactShapeSpecifier,
     isOrShapeSpecifier,
+    isShapeDefinition,
     isUnknownShapeSpecifier,
 } from './shape-specifiers';
 
@@ -22,24 +23,23 @@ function innerShapeToDefaultValue<Shape>(shape: Shape): any {
         } else if (isAndShapeSpecifier(specifier)) {
             return specifier.parts.reduce((combined: any, part) => {
                 return Object.assign(combined, innerShapeToDefaultValue(part));
-            });
+            }, {});
         } else if (isEnumShapeSpecifier(specifier)) {
             return Object.values(specifier.parts[0])[0];
         } else if (isUnknownShapeSpecifier(specifier)) {
             return 'unknown';
-            /* c8 ignore start */
         } else {
-            // covering edge cases
             throw new Error(
                 `found specifier but it matches no expected specifiers: ${String(
                     specifier.specifierType,
                 )}`,
             );
         }
-        /* c8 ignore stop */
     }
 
-    if (shape instanceof RegExp) {
+    if (isShapeDefinition(shape)) {
+        return shapeToDefaultValue(shape.shape);
+    } else if (shape instanceof RegExp) {
         return shape;
     } else if (isRuntimeTypeOf(shape, 'array')) {
         return shape;

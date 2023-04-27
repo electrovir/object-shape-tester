@@ -15,6 +15,19 @@ const orSymbol = Symbol('or');
 const exactSymbol = Symbol('exact');
 const enumSymbol = Symbol('enum');
 const unknownSymbol = Symbol('unknown');
+export const shapeSymbol = Symbol('shape-marker');
+
+/** This definition has to be in this file because the types circularly depend on each other. */
+export type ShapeDefinition<Shape> = {
+    shape: Shape;
+    runTimeType: ShapeToRunTimeType<Shape>;
+    defaultValue: Readonly<ShapeToRunTimeType<Shape>>;
+    [shapeSymbol]: true;
+};
+
+export function isShapeDefinition(input: unknown): input is ShapeDefinition<unknown> {
+    return typedHasProperty(input, shapeSymbol);
+}
 
 const isShapeSpecifierSymbol = Symbol('is-shape-specifier');
 
@@ -53,18 +66,26 @@ export type ShapeEnum<Parts extends Readonly<[Record<string, number | string>]>>
 >;
 export type ShapeUnknown<Parts extends Readonly<[]>> = ShapeSpecifier<Parts, typeof unknownSymbol>;
 
+type ExpandParts<Parts extends BaseParts> =
+    | Exclude<ArrayElement<Parts>, ShapeDefinition<any>>
+    | ShapeToRunTimeType<Extract<ArrayElement<Parts>, ShapeDefinition<any>>['shape']>;
+
+type ExpandPart<Part> = Part extends ShapeDefinition<infer Shape>
+    ? ShapeToRunTimeType<Shape>
+    : Part;
+
 export type SpecifierToRunTimeType<
     PossiblySpecifier,
     IsExact extends boolean = false,
 > = PossiblySpecifier extends ShapeSpecifier<infer Parts, infer Type>
     ? Type extends typeof andSymbol
-        ? UnionToIntersection<ArrayElement<Parts>>
+        ? UnionToIntersection<ExpandParts<Parts>>
         : Type extends typeof orSymbol
-        ? ArrayElement<Parts>
+        ? ExpandParts<Parts>
         : Type extends typeof exactSymbol
-        ? WritableDeep<ArrayElement<Parts>>
+        ? WritableDeep<ExpandParts<Parts>>
         : Type extends typeof enumSymbol
-        ? WritableDeep<PropertyValueType<Parts[0]>>
+        ? WritableDeep<PropertyValueType<ExpandPart<Parts[0]>>>
         : Type extends typeof unknownSymbol
         ? unknown
         : 'TypeError: found not match for shape specifier type.'
@@ -152,17 +173,17 @@ export type ShapeToRunTimeType<Shape, IsExact extends boolean = false> = Shape e
       }
     : Shape;
 
-export function matchesSpecifier(subject: unknown, shape: unknown) {
+export function matchesSpecifier(subject: unknown, shape: unknown): boolean {
     const specifier = getShapeSpecifier(shape);
 
     if (specifier) {
         if (isAndShapeSpecifier(specifier)) {
-            return specifier.parts.every((part) => haveEqualTypes(part, subject));
+            return specifier.parts.every((part) => matchesSpecifier(subject, part));
         } else if (isOrShapeSpecifier(specifier)) {
-            return specifier.parts.some((part) => haveEqualTypes(part, subject));
+            return specifier.parts.some((part) => matchesSpecifier(subject, part));
         } else if (isExactShapeSpecifier(specifier)) {
             if (isObject(subject)) {
-                return haveEqualTypes(specifier.parts[0], subject);
+                return matchesSpecifier(subject, specifier.parts[0]);
             } else {
                 return subject === specifier.parts[0];
             }

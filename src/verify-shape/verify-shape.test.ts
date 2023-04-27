@@ -1,4 +1,4 @@
-import {FunctionTestCase, itCases} from '@augment-vir/browser-testing';
+import {FunctionTestCase, assertTypeOf, itCases} from '@augment-vir/browser-testing';
 import {ArrayElement} from '@augment-vir/common';
 import {defineShape} from '../define-shape/define-shape';
 import {and, enumShape, exact, or, unknownShape} from '../define-shape/shape-specifiers';
@@ -175,24 +175,24 @@ const testCases: ReadonlyArray<FunctionTestCase<typeof assertValidShape>> = [
         ],
         throws: undefined,
     },
-    // {
-    //     it: 'works with nested specifiers',
-    //     inputs: [
-    //         {
-    //             a: {what: 'who'},
-    //             b: 'hello there',
-    //             c: 4321,
-    //         },
-    //         defineShape({
-    //             a: exact({
-    //                 what: 'who',
-    //             }),
-    //             b: or(0, exact('hello there')),
-    //             c: or(0, exact('hello there')),
-    //         }),
-    //     ],
-    //     throws: undefined,
-    // },
+    {
+        it: 'works with nested specifiers',
+        inputs: [
+            {
+                a: {what: 'who'},
+                b: 'hello there',
+                c: 4321,
+            },
+            defineShape({
+                a: exact({
+                    what: 'who',
+                }),
+                b: or(0, exact('hello there')),
+                c: or(0, exact('hello there')),
+            }),
+        ],
+        throws: undefined,
+    },
     {
         it: 'does not allow missing keys for null shapes',
         inputs: [
@@ -201,6 +201,16 @@ const testCases: ReadonlyArray<FunctionTestCase<typeof assertValidShape>> = [
                 a: undefined,
                 b: or('', undefined),
                 c: null,
+            }),
+        ],
+        throws: ShapeMismatchError,
+    },
+    {
+        it: 'fails on invalid or strings',
+        inputs: [
+            {b: false},
+            defineShape({
+                b: or('', 4),
             }),
         ],
         throws: ShapeMismatchError,
@@ -304,6 +314,43 @@ describe(assertValidShape.name, () => {
                 };
             }),
         );
+    });
+
+    it('supports nested shapes', () => {
+        const lowerLevelShape = defineShape({
+            example: {
+                first: 'hello',
+                second: 42,
+            },
+        });
+
+        const shapeWithNested = defineShape({
+            stringProp: '',
+            andProp: and({hi: ''}, {bye: ''}),
+            nestedShape: or(lowerLevelShape),
+            exactProp: exact('derp'),
+        });
+
+        assertTypeOf<(typeof shapeWithNested)['runTimeType']>().toEqualTypeOf<{
+            stringProp: string;
+            andProp: {hi: string; bye: string};
+            nestedShape: (typeof lowerLevelShape)['runTimeType'];
+            exactProp: 'derp';
+        }>();
+
+        const exampleInstance: (typeof shapeWithNested)['runTimeType'] = {
+            stringProp: 'yo',
+            andProp: {hi: 'hello', bye: 'good bye'},
+            nestedShape: {
+                example: {
+                    first: 'a string',
+                    second: 0,
+                },
+            },
+            exactProp: 'derp',
+        };
+
+        assertValidShape(exampleInstance, shapeWithNested);
     });
 });
 
