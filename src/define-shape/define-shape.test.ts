@@ -1,7 +1,7 @@
 import {assertTypeOf} from '@augment-vir/browser-testing';
 import {assert} from '@open-wc/testing';
 import {defineShape} from './define-shape';
-import {exact} from './shape-specifiers';
+import {exact, unknownShape} from './shape-specifiers';
 
 describe(defineShape.name, () => {
     const exampleShape = defineShape({
@@ -46,5 +46,15 @@ describe(defineShape.name, () => {
             // @ts-expect-error
             exactProp: 'four',
         };
+    });
+
+    it('works with bare specifiers', () => {
+        const myShape = defineShape(unknownShape());
+        const myInstance: (typeof myShape)['runTimeType'] = myShape.defaultValue;
+
+        const myNestedShape = defineShape({
+            nested: myShape,
+        });
+        const myNestedInstance: (typeof myNestedShape)['runTimeType'] = myNestedShape.defaultValue;
     });
 });

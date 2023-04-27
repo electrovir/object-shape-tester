@@ -15,23 +15,30 @@ const orSymbol = Symbol('or');
 const exactSymbol = Symbol('exact');
 const enumSymbol = Symbol('enum');
 const unknownSymbol = Symbol('unknown');
-export const shapeSymbol = Symbol('shape-marker');
+
+/**
+ * This should really be a symbol, but TypeScript freaks out about using names that cannot be named
+ * in that case.
+ */
+export const isShapeDefinitionKey =
+    '__vir__shape__definition__key__do__not__use__in__actual__objects' as const;
 
 /** This definition has to be in this file because the types circularly depend on each other. */
 export type ShapeDefinition<Shape> = {
     shape: Shape;
     runTimeType: ShapeToRunTimeType<Shape>;
     defaultValue: Readonly<ShapeToRunTimeType<Shape>>;
-    [shapeSymbol]: true;
+    [isShapeDefinitionKey]: true;
 };
 
 export function isShapeDefinition(input: unknown): input is ShapeDefinition<unknown> {
-    return typedHasProperty(input, shapeSymbol);
+    return typedHasProperty(input, isShapeDefinitionKey);
 }
 
-const isShapeSpecifierSymbol = Symbol('is-shape-specifier');
+export const isShapeSpecifierKey =
+    '__vir__shape__specifier__key__do__not__use__in__actual__objects' as const;
 
-const shapeSpecifiersTypes = [
+export const shapeSpecifiersTypes = [
     andSymbol,
     orSymbol,
     exactSymbol,
@@ -42,8 +49,8 @@ const shapeSpecifiersTypes = [
 type ShapeSpecifierType = ArrayElement<typeof shapeSpecifiersTypes>;
 type BaseParts = AtLeastTuple<unknown, 0>;
 
-type ShapeSpecifier<Parts extends BaseParts, Type extends ShapeSpecifierType> = {
-    [isShapeSpecifierSymbol]: true;
+export type ShapeSpecifier<Parts extends BaseParts, Type extends ShapeSpecifierType> = {
+    [isShapeSpecifierKey]: true;
     parts: Parts;
     specifierType: Type;
 };
@@ -148,18 +155,18 @@ export function isUnknownShapeSpecifier(
     return specifierHasSymbol(maybeSpecifier, unknownSymbol);
 }
 
-function specifierHasSymbol(maybeSpecifier: unknown, symbol: ShapeSpecifierType) {
+export function specifierHasSymbol(maybeSpecifier: unknown, symbol: ShapeSpecifierType) {
     const specifier = getShapeSpecifier(maybeSpecifier);
 
     return !!specifier && specifier.specifierType === symbol;
 }
 
-function specifier<Parts extends BaseParts, Type extends ShapeSpecifierType>(
+export function specifier<Parts extends BaseParts, Type extends ShapeSpecifierType>(
     parts: Parts,
     specifierType: Type,
 ): ShapeSpecifier<Parts, Type> {
     return {
-        [isShapeSpecifierSymbol]: true,
+        [isShapeSpecifierKey]: true,
         specifierType,
         parts,
     };
@@ -202,7 +209,7 @@ export function getShapeSpecifier(
     if (!isObject(input)) {
         return undefined;
     }
-    if (!typedHasProperty(input, isShapeSpecifierSymbol)) {
+    if (!typedHasProperty(input, isShapeSpecifierKey)) {
         return undefined;
     }
 
