@@ -1,7 +1,6 @@
 import {
     ArrayElement,
     AtLeastTuple,
-    PropertyValueType,
     isObject,
     isRuntimeTypeOf,
     typedArrayIncludes,
@@ -93,7 +92,7 @@ export type SpecifierToRunTimeType<
         : Type extends typeof exactSymbol
         ? WritableDeep<ExpandParts<Parts, true>>
         : Type extends typeof enumSymbol
-        ? WritableDeep<PropertyValueType<Parts[0]>>
+        ? WritableDeep<Parts[0][keyof Parts[0]]>
         : Type extends typeof unknownSymbol
         ? unknown
         : 'TypeError: found not match for shape specifier type.'
