@@ -78,8 +78,8 @@ type ExpandParts<Parts extends BaseParts, IsExact extends boolean> = Extract<
 > extends never
     ? SpecifierToRunTimeType<ArrayElement<Parts>, IsExact>
     :
-          | Exclude<ArrayElement<Parts>, ShapeDefinition<any>>
-          | ShapeToRunTimeType<Extract<ArrayElement<Parts>, ShapeDefinition<any>>['shape']>;
+          | SpecifierToRunTimeType<Exclude<ArrayElement<Parts>, ShapeDefinition<any>>, IsExact>
+          | Extract<ArrayElement<Parts>, ShapeDefinition<any>>['runTimeType'];
 
 export type SpecifierToRunTimeType<
     PossiblySpecifier,
@@ -101,7 +101,14 @@ export type SpecifierToRunTimeType<
         ? PossiblySpecifier
         : LiteralToPrimitive<PossiblySpecifier>
     : PossiblySpecifier extends object
-    ? {[Prop in keyof PossiblySpecifier]: SpecifierToRunTimeType<PossiblySpecifier[Prop], IsExact>}
+    ? PossiblySpecifier extends ShapeDefinition<any>
+        ? PossiblySpecifier['runTimeType']
+        : {
+              [Prop in keyof PossiblySpecifier]: SpecifierToRunTimeType<
+                  PossiblySpecifier[Prop],
+                  IsExact
+              >;
+          }
     : PossiblySpecifier;
 
 export function or<Parts extends AtLeastTuple<unknown, 1>>(...parts: Parts): ShapeOr<Parts> {

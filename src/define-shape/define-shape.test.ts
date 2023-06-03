@@ -1,7 +1,7 @@
 import {assertTypeOf} from '@augment-vir/browser-testing';
 import {assert} from '@open-wc/testing';
 import {defineShape} from './define-shape';
-import {exact, or, unknownShape} from './shape-specifiers';
+import {and, exact, or, unknownShape} from './shape-specifiers';
 
 describe(defineShape.name, () => {
     const exampleShape = defineShape({
@@ -49,13 +49,13 @@ describe(defineShape.name, () => {
     });
 
     it('works with bare specifiers', () => {
-        const myShape = defineShape(unknownShape());
-        const myInstance: (typeof myShape)['runTimeType'] = myShape.defaultValue;
+        const myUnknown = defineShape(unknownShape());
+        const myInstance: (typeof myUnknown)['runTimeType'] = myUnknown.defaultValue;
 
         assertTypeOf(myInstance).toEqualTypeOf<unknown>();
 
         const myNestedShape = defineShape({
-            nested: myShape,
+            nested: myUnknown,
         });
         const myNestedInstance: (typeof myNestedShape)['runTimeType'] = myNestedShape.defaultValue;
         assertTypeOf(myNestedInstance).toEqualTypeOf<{nested: unknown}>();
@@ -101,5 +101,50 @@ describe(defineShape.name, () => {
             b: number | 'hello there';
             c: number | 'hello there';
         }>();
+    });
+
+    it('expands nested shape types', () => {
+        const timezoneShape = defineShape({
+            _isTimezone: exact(true),
+            /** The IANA name of the timezone */
+            ianaName: 'utc',
+        });
+
+        const dateOnlyUnitsShape = defineShape({
+            /**
+             * The full, four digit year.
+             *
+             * @example
+             *     2023;
+             */
+            year: 0,
+            /** A month of the year: 1-12 */
+            month: 0,
+            /** A day of the month: 1-31 depending on the month */
+            day: 0,
+        });
+
+        const fullDateShape = defineShape(
+            and(dateOnlyUnitsShape, {
+                /**
+                 * The unix timestamp for the accompanying date and time units with the accompanying
+                 * timezone.
+                 */
+                timestamp: 0,
+                /** The timezone which the accompanying date units are meant to be expressed in. */
+                timezone: timezoneShape,
+            }),
+        );
+
+        const fullDate: (typeof fullDateShape)['runTimeType'] = {
+            day: 0,
+            month: 0,
+            timestamp: 0,
+            year: 0,
+            timezone: {
+                _isTimezone: true,
+                ianaName: 'anything',
+            },
+        };
     });
 });
