@@ -295,6 +295,22 @@ const testCases: ReadonlyArray<FunctionTestCase<typeof assertValidShape>> = [
         ],
         throws: ShapeMismatchError,
     },
+    {
+        it: 'passes a default value from an and',
+        inputs: [
+            {
+                a: 'what',
+                b: '',
+                c: {a: 0, c: ''},
+            },
+            defineShape({
+                a: 'what',
+                b: or('', 0),
+                c: and({a: 0}, {b: ''}),
+            }),
+        ],
+        throws: ShapeMismatchError,
+    },
 ];
 
 describe(assertValidShape.name, () => {
@@ -314,6 +330,31 @@ describe(assertValidShape.name, () => {
                 };
             }),
         );
+
+        it('works on multi-and shape', () => {
+            /** These types are copied out of the date-vir package */
+            const timezoneShape = defineShape({
+                ianaName: 'utc',
+            });
+            const timeOnlyUnitsShape = defineShape({
+                hour: 0,
+                minute: 0,
+                second: 0,
+            });
+            const dateOnlyUnitsShape = defineShape({
+                year: 0,
+                month: 0,
+                day: 0,
+            });
+
+            const fullDateShape = defineShape(
+                and(dateOnlyUnitsShape, timeOnlyUnitsShape, {
+                    timezone: timezoneShape,
+                }),
+            );
+
+            assertValidShape(fullDateShape.defaultValue, fullDateShape);
+        });
     });
 
     it('supports nested shapes', () => {

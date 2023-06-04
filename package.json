@@ -1,6 +1,6 @@
 {
     "name": "object-shape-tester",
-    "version": "0.2.5",
+    "version": "0.2.6",
     "description": "Test object properties and value types.",
     "keywords": [],
     "homepage": "https://github.com/electrovir/object-shape-tester",

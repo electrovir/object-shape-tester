@@ -57,7 +57,6 @@ function internalAssertValidShape<Shape>(
         return true;
     }
     if (isShapeDefinition(shape)) {
-        debugger;
         return internalAssertValidShape(subject, shape.shape, keys, options);
     }
 
