@@ -1,4 +1,9 @@
-import {getObjectTypedKeys, isObject, isRuntimeTypeOf} from '@augment-vir/common';
+import {
+    PartialAndUndefined,
+    getObjectTypedKeys,
+    isObject,
+    isRuntimeTypeOf,
+} from '@augment-vir/common';
 import {
     ShapeDefinition,
     getShapeSpecifier,
@@ -12,12 +17,17 @@ import {
 } from '../define-shape/shape-specifiers';
 import {ShapeMismatchError} from '../errors/shape-mismatch.error';
 
+export type CheckShapeValidityOptions = {
+    allowExtraKeys: boolean;
+};
+
 export function isValidShape<Shape>(
     subject: unknown,
     shapeDefinition: ShapeDefinition<Shape>,
+    options: PartialAndUndefined<CheckShapeValidityOptions> = {},
 ): subject is Shape {
     try {
-        assertValidShape(subject, shapeDefinition);
+        assertValidShape(subject, shapeDefinition, options);
         return true;
     } catch (error) {
         return false;
@@ -27,10 +37,11 @@ export function isValidShape<Shape>(
 export function assertValidShape<Shape>(
     subject: unknown,
     shapeDefinition: ShapeDefinition<Shape>,
+    options: PartialAndUndefined<CheckShapeValidityOptions> = {},
 ): asserts subject is ShapeDefinition<Shape>['runTimeType'] {
     internalAssertValidShape(subject, shapeDefinition.shape, ['top level'], {
         exactValues: false,
-        ignoreExtraKeys: false,
+        ignoreExtraKeys: !!options.allowExtraKeys,
     });
 }
 

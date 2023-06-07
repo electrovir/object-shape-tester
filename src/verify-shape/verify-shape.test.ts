@@ -206,6 +206,19 @@ const testCases: ReadonlyArray<FunctionTestCase<typeof assertValidShape>> = [
         throws: ShapeMismatchError,
     },
     {
+        it: 'allows extra keys when set in options',
+        inputs: [
+            {a: undefined, b: '', c: null, d: 'lol extra stuff'},
+            defineShape({
+                a: undefined,
+                b: or('', undefined),
+                c: null,
+            }),
+            {allowExtraKeys: true},
+        ],
+        throws: undefined,
+    },
+    {
         it: 'fails on invalid or strings',
         inputs: [
             {b: false},
