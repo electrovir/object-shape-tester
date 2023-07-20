@@ -28,6 +28,10 @@ describe('ShapeToRunTimeType', () => {
             myOr: or('', 0),
             myAnd: and('', 0),
             mySimpleArray: [''],
+            complexArray: [
+                '',
+                0,
+            ],
             idk: unknownShape(),
             myEnum: enumShape(TestEnum),
             myMultiArray: [
@@ -59,6 +63,7 @@ describe('ShapeToRunTimeType', () => {
             myOr: string | number;
             myAnd: string & number;
             mySimpleArray: string[];
+            complexArray: (string | number)[];
             idk: unknown;
             myEnum: TestEnum;
             myMultiArray: (string | number)[];
