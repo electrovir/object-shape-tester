@@ -324,6 +324,67 @@ const testCases: ReadonlyArray<FunctionTestCase<typeof assertValidShape>> = [
         ],
         throws: ShapeMismatchError,
     },
+    {
+        it: 'accepts methods',
+        inputs: [
+            {
+                myData: 'some string',
+                /**
+                 * Just any method will work because we can't check run-time types of a function
+                 * beyond checking that it is a function.
+                 */
+                myMethod: () => {},
+            },
+            defineShape({
+                myData: 'a',
+                myMethod: (input1: string, input2: number): string => {
+                    return [
+                        input1,
+                        input2,
+                    ].join(': ');
+                },
+            }),
+        ],
+        throws: undefined,
+    },
+    {
+        it: 'rejects an object assigned to a method',
+        inputs: [
+            {
+                myData: 'some string',
+                myMethod: {},
+            },
+            defineShape({
+                myData: 'a',
+                myMethod: (input1: string, input2: number): string => {
+                    return [
+                        input1,
+                        input2,
+                    ].join(': ');
+                },
+            }),
+        ],
+        throws: ShapeMismatchError,
+    },
+    {
+        it: 'rejects a number assigned to a method',
+        inputs: [
+            {
+                myData: 'some string',
+                myMethod: 5,
+            },
+            defineShape({
+                myData: 'a',
+                myMethod: (input1: string, input2: number): string => {
+                    return [
+                        input1,
+                        input2,
+                    ].join(': ');
+                },
+            }),
+        ],
+        throws: ShapeMismatchError,
+    },
 ];
 
 describe(assertValidShape.name, () => {

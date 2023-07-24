@@ -86,6 +86,10 @@ function internalAssertValidShape<Shape>(
         );
     }
 
+    if (isRuntimeTypeOf(shape, 'function')) {
+        return isRuntimeTypeOf(subject, 'function');
+    }
+
     if (isObject(subject)) {
         const objectSubject: Record<any, any> = subject;
         const keysPassed: Record<PropertyKey, boolean> = options.ignoreExtraKeys

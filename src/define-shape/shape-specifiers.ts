@@ -181,7 +181,9 @@ export function specifier<Parts extends BaseParts, Type extends ShapeSpecifierTy
     };
 }
 
-export type ShapeToRunTimeType<Shape, IsExact extends boolean = false> = Shape extends object
+export type ShapeToRunTimeType<Shape, IsExact extends boolean = false> = Shape extends Function
+    ? Shape
+    : Shape extends object
     ? Shape extends ShapeDefinition<infer InnerShape>
         ? ShapeToRunTimeType<InnerShape, IsExact>
         : Shape extends ShapeSpecifier<any, any>

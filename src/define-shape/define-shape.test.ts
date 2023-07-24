@@ -147,4 +147,33 @@ describe(defineShape.name, () => {
             },
         };
     });
+
+    it('preserves const assignments', () => {
+        const shapeA = defineShape({
+            first: 'a',
+            second: 'b',
+            third: 'c' as const,
+        });
+        assertTypeOf<typeof shapeA.runTimeType>().toEqualTypeOf<{
+            first: string;
+            second: string;
+            third: 'c';
+        }>();
+    });
+
+    it('allows function properties', () => {
+        const shapeWithMethod = defineShape({
+            myData: 'a',
+            myMethod: (input1: string, input2: number): string => {
+                return [
+                    input1,
+                    input2,
+                ].join(': ');
+            },
+        });
+        assertTypeOf<typeof shapeWithMethod.runTimeType>().toEqualTypeOf<{
+            myData: string;
+            myMethod: (a: string, b: number) => string;
+        }>();
+    });
 });
