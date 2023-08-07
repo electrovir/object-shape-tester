@@ -1,3 +1,4 @@
+import {randomString} from '@augment-vir/browser';
 import {FunctionTestCase, assertTypeOf, itCases} from '@augment-vir/browser-testing';
 import {ArrayElement} from '@augment-vir/common';
 import {defineShape} from '../define-shape/define-shape';
@@ -483,6 +484,95 @@ describe(assertValidShape.name, () => {
         const instance = {} as any;
 
         const result: MyType | undefined = isValidShape(instance, myShape) ? instance : undefined;
+    });
+
+    it('works', () => {
+        const result = {
+            id: randomString(),
+            message: 'Batch verification completed.',
+            reason_counts: {
+                rejected_email: 1,
+                accepted_email: 4,
+                invalid_domain: 0,
+                invalid_email: 0,
+                invalid_smtp: 0,
+                low_deliverability: 0,
+                low_quality: 0,
+                no_connect: 0,
+                timeout: 0,
+                unavailable_smtp: 0,
+                unexpected_error: 0,
+            },
+            total_counts: {
+                deliverable: 4,
+                undeliverable: 1,
+                duplicate: 0,
+                processed: 5,
+                imported: 0,
+                total: 5,
+                risky: 0,
+                unknown: 0,
+            },
+            emails: [
+                {
+                    email: randomString(),
+                    state: 'deliverable',
+                },
+                {
+                    email: randomString(),
+                    state: 'deliverable',
+                },
+                {
+                    email: randomString(),
+                    state: 'deliverable',
+                },
+                {
+                    email: randomString(),
+                    state: 'deliverable',
+                },
+                {
+                    email: randomString(),
+                    state: 'undeliverable',
+                },
+            ],
+        };
+
+        enum VerificationStateEnum {
+            Deliverable = 'deliverable',
+            Undeliverable = 'undeliverable',
+            Risky = 'risky',
+            Unknown = 'unknown',
+        }
+
+        enum EmailBatchVerificationStatusMessageEnum {
+            Completed = 'Batch verification completed.',
+            InProgress = 'Your batch is being processed.',
+        }
+
+        const verificationResultInProgressShape = defineShape({
+            message: exact(EmailBatchVerificationStatusMessageEnum.InProgress),
+        });
+
+        const verificationResultCompletedShape = defineShape({
+            message: exact(EmailBatchVerificationStatusMessageEnum.Completed),
+            emails: [
+                {
+                    email: '',
+                    state: enumShape(VerificationStateEnum),
+                },
+            ],
+        });
+
+        const VerificationResultShape = defineShape(
+            or(verificationResultInProgressShape, verificationResultCompletedShape),
+        );
+
+        type VerificationResultCompleted = typeof verificationResultCompletedShape.runTimeType;
+        type VerificationResultInProgress = typeof verificationResultInProgressShape.runTimeType;
+
+        assertValidShape(result, VerificationResultShape, {allowExtraKeys: true});
+
+        // assert.deepStrictEqual(VerificationResultShape.defaultValue, {});
     });
 });
 
