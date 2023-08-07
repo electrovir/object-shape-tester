@@ -1,6 +1,7 @@
 import {randomString} from '@augment-vir/browser';
 import {FunctionTestCase, assertTypeOf, itCases} from '@augment-vir/browser-testing';
 import {ArrayElement} from '@augment-vir/common';
+import {assert} from '@open-wc/testing';
 import {defineShape} from '../define-shape/define-shape';
 import {and, enumShape, exact, or, unknownShape} from '../define-shape/shape-specifiers';
 import {ShapeMismatchError} from '../errors/shape-mismatch.error';
@@ -486,7 +487,7 @@ describe(assertValidShape.name, () => {
         const result: MyType | undefined = isValidShape(instance, myShape) ? instance : undefined;
     });
 
-    it('works', () => {
+    it('works with complex or', () => {
         const result = {
             id: randomString(),
             message: 'Batch verification completed.',
@@ -572,7 +573,10 @@ describe(assertValidShape.name, () => {
 
         assertValidShape(result, VerificationResultShape, {allowExtraKeys: true});
 
-        // assert.deepStrictEqual(VerificationResultShape.defaultValue, {});
+        assert.deepStrictEqual(
+            VerificationResultShape.defaultValue,
+            verificationResultInProgressShape.defaultValue,
+        );
     });
 });
 
