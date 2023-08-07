@@ -25,7 +25,7 @@ export function isValidShape<Shape>(
     subject: unknown,
     shapeDefinition: ShapeDefinition<Shape>,
     options: PartialAndUndefined<CheckShapeValidityOptions> = {},
-): subject is Shape {
+): subject is ShapeDefinition<Shape>['runTimeType'] {
     try {
         assertValidShape(subject, shapeDefinition, options);
         return true;

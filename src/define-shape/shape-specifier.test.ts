@@ -80,6 +80,15 @@ describe('ShapeToRunTimeType', () => {
             myExact: 'hello there';
         }>();
     });
+
+    it('stuff', () => {
+        const myShape = defineShape({message: exact('hello')});
+        type MyType = typeof myShape.runTimeType;
+
+        assertTypeOf<MyType>().toEqualTypeOf<{
+            message: 'hello';
+        }>();
+    });
 });
 
 describe(matchesSpecifier.name, () => {

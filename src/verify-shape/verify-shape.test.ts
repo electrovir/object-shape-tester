@@ -7,9 +7,9 @@ import {assertValidShape, isValidShape} from './verify-shape';
 
 const sharedRegExp = /shared/;
 
-enum sharedEnum {
-    First = 'first',
-    Second = 'second',
+enum SharedEnum {
+    First = 'first with long value',
+    Second = 'second with long value',
 }
 
 const testCases: ReadonlyArray<FunctionTestCase<typeof assertValidShape>> = [
@@ -135,12 +135,12 @@ const testCases: ReadonlyArray<FunctionTestCase<typeof assertValidShape>> = [
             {
                 a: 'big key',
                 b: 42,
-                c: sharedEnum.First,
+                c: SharedEnum.First,
             },
             defineShape({
                 a: '',
                 b: 0,
-                c: enumShape(sharedEnum),
+                c: enumShape(SharedEnum),
             }),
         ],
         throws: undefined,
@@ -151,7 +151,7 @@ const testCases: ReadonlyArray<FunctionTestCase<typeof assertValidShape>> = [
             {
                 a: 'big key',
                 b: 42,
-                c: sharedEnum.First,
+                c: SharedEnum.First,
             },
             defineShape({
                 a: unknownShape(),
@@ -234,7 +234,7 @@ const testCases: ReadonlyArray<FunctionTestCase<typeof assertValidShape>> = [
             {
                 a: 'big key',
                 b: 42,
-                c: sharedEnum.First,
+                c: SharedEnum.First,
             },
             defineShape(unknownShape()),
         ],
@@ -253,7 +253,7 @@ const testCases: ReadonlyArray<FunctionTestCase<typeof assertValidShape>> = [
             defineShape({
                 a: '',
                 b: 0,
-                c: enumShape(sharedEnum),
+                c: enumShape(SharedEnum),
             }),
         ],
         throws: ShapeMismatchError,
@@ -466,6 +466,23 @@ describe(assertValidShape.name, () => {
         };
 
         assertValidShape(exampleInstance, shapeWithNested);
+
+        const assignmentAfterAssert: typeof shapeWithNested.runTimeType = exampleInstance;
+
+        const assignmentWithIsValidShape: typeof shapeWithNested.runTimeType | undefined =
+            isValidShape(exampleInstance, shapeWithNested) ? exampleInstance : undefined;
+    });
+
+    it('has proper types for a nested exact', () => {
+        const myShape = defineShape({
+            message: exact('hello'),
+        });
+
+        type MyType = typeof myShape.runTimeType;
+
+        const instance = {} as any;
+
+        const result: MyType | undefined = isValidShape(instance, myShape) ? instance : undefined;
     });
 });
 
