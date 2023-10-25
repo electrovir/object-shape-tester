@@ -1,7 +1,7 @@
-import {randomString} from '@augment-vir/browser';
-import {FunctionTestCase, assertTypeOf, itCases} from '@augment-vir/browser-testing';
-import {ArrayElement} from '@augment-vir/common';
+import {FunctionTestCase, itCases} from '@augment-vir/browser-testing';
+import {ArrayElement, randomString} from '@augment-vir/common';
 import {assert} from '@open-wc/testing';
+import {assertTypeOf} from 'run-time-assertions';
 import {defineShape} from '../define-shape/define-shape';
 import {and, enumShape, exact, or, unknownShape} from '../define-shape/shape-specifiers';
 import {ShapeMismatchError} from '../errors/shape-mismatch.error';
