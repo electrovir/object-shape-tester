@@ -487,6 +487,28 @@ describe(assertValidShape.name, () => {
         const result: MyType | undefined = isValidShape(instance, myShape) ? instance : undefined;
     });
 
+    it('allows optional properties', () => {
+        const myShape = defineShape(
+            or(
+                {
+                    prop1: '',
+                    prop2: 2,
+                },
+                {
+                    prop1: '',
+                    prop2: 2,
+                    prop3: or(undefined, ''),
+                },
+            ),
+        );
+        type MyShape = typeof myShape.runTimeType;
+
+        const instance: MyShape = {
+            prop1: 'hi',
+            prop2: 3,
+        };
+    });
+
     it('works with complex or', () => {
         const result = {
             id: randomString(),
