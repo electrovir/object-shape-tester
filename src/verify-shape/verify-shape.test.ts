@@ -507,6 +507,32 @@ describe(assertValidShape.name, () => {
             prop1: 'hi',
             prop2: 3,
         };
+        assertValidShape(instance, myShape);
+    });
+
+    it('allows readonly shapes', () => {
+        const myShape = defineShape(
+            or(
+                {
+                    prop1: '',
+                    prop2: 2,
+                },
+                {
+                    prop1: '',
+                    prop2: 2,
+                    prop3: or(undefined, ''),
+                },
+            ),
+            true,
+        );
+        type MyShape = typeof myShape.runTimeType;
+
+        const instance: MyShape = {
+            prop1: 'hi',
+            prop2: 3,
+        };
+
+        assertValidShape(instance, myShape);
     });
 
     it('works with complex or', () => {

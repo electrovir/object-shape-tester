@@ -21,11 +21,11 @@ export type CheckShapeValidityOptions = {
     allowExtraKeys: boolean;
 };
 
-export function isValidShape<Shape>(
+export function isValidShape<Shape, IsReadonly extends boolean>(
     subject: unknown,
-    shapeDefinition: ShapeDefinition<Shape>,
+    shapeDefinition: ShapeDefinition<Shape, IsReadonly>,
     options: PartialAndUndefined<CheckShapeValidityOptions> = {},
-): subject is ShapeDefinition<Shape>['runTimeType'] {
+): subject is ShapeDefinition<Shape, IsReadonly>['runTimeType'] {
     try {
         assertValidShape(subject, shapeDefinition, options);
         return true;
@@ -34,11 +34,11 @@ export function isValidShape<Shape>(
     }
 }
 
-export function assertValidShape<Shape>(
+export function assertValidShape<Shape, IsReadonly extends boolean>(
     subject: unknown,
-    shapeDefinition: ShapeDefinition<Shape>,
+    shapeDefinition: ShapeDefinition<Shape, IsReadonly>,
     options: PartialAndUndefined<CheckShapeValidityOptions> = {},
-): asserts subject is ShapeDefinition<Shape>['runTimeType'] {
+): asserts subject is ShapeDefinition<Shape, IsReadonly>['runTimeType'] {
     internalAssertValidShape(subject, shapeDefinition.shape, ['top level'], {
         exactValues: false,
         ignoreExtraKeys: !!options.allowExtraKeys,

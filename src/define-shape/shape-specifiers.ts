@@ -23,7 +23,7 @@ export const isShapeDefinitionKey =
     '__vir__shape__definition__key__do__not__use__in__actual__objects' as const;
 
 /** This definition has to be in this file because the types circularly depend on each other. */
-export type ShapeDefinition<Shape, IsReadonly extends boolean = false> = {
+export type ShapeDefinition<Shape, IsReadonly extends boolean> = {
     shape: Shape;
     runTimeType: ShapeToRunTimeType<Shape, false, IsReadonly>;
     isReadonly: IsReadonly;
@@ -77,15 +77,15 @@ type ExpandParts<
     Parts extends BaseParts,
     IsExact extends boolean,
     IsReadonly extends boolean,
-> = Extract<ArrayElement<Parts>, ShapeDefinition<any>> extends never
+> = Extract<ArrayElement<Parts>, ShapeDefinition<any, any>> extends never
     ? SpecifierToRunTimeType<ArrayElement<Parts>, IsExact, IsReadonly>
     :
           | SpecifierToRunTimeType<
-                Exclude<ArrayElement<Parts>, ShapeDefinition<any>>,
+                Exclude<ArrayElement<Parts>, ShapeDefinition<any, any>>,
                 IsExact,
                 IsReadonly
             >
-          | Extract<ArrayElement<Parts>, ShapeDefinition<any>>['runTimeType'];
+          | Extract<ArrayElement<Parts>, ShapeDefinition<any, any>>['runTimeType'];
 
 export type SpecifierToRunTimeType<
     PossiblySpecifier,
@@ -108,7 +108,7 @@ export type SpecifierToRunTimeType<
         ? PossiblySpecifier
         : LiteralToPrimitive<PossiblySpecifier>
     : PossiblySpecifier extends object
-    ? PossiblySpecifier extends ShapeDefinition<any>
+    ? PossiblySpecifier extends ShapeDefinition<any, any>
         ? PossiblySpecifier['runTimeType']
         : MaybeReadonly<
               IsReadonly,
@@ -203,7 +203,7 @@ export type ShapeToRunTimeType<
 > = Shape extends Function
     ? Shape
     : Shape extends object
-    ? Shape extends ShapeDefinition<infer InnerShape>
+    ? Shape extends ShapeDefinition<infer InnerShape, any>
         ? ShapeToRunTimeType<InnerShape, IsExact, IsReadonly>
         : Shape extends ShapeSpecifier<any, any>
         ? Shape extends ShapeSpecifier<any, typeof exactSymbol>
