@@ -20,6 +20,7 @@ export const typeDocConfig: Partial<TypeDocOptions> = {
         'ExpandParts',
         'BaseParts',
         'ShapeSpecifierType',
+        'MaybeReadonly',
     ],
     requiredToBeDocumented: [],
 };

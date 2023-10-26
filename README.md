@@ -1,16 +1,14 @@
 # object-shape-tester
 
-Create types, run-time type requirements, and run-time default values all at once.
+Create types, run-time type requirements, and run-time default values with a single definition.
 
 Can be used in tests and at run-time (it does not depend on any testing libraries).
 
-Exports both CommonJS modules (for Node.js) and ES modules (for the browser).
-
-Currently not feature complete but still very usable and useful.
+Full API docs: https://electrovir.github.io/object-shape-tester
 
 # Installation
 
-```bash
+```sh
 npm i object-shape-tester
 ```
 

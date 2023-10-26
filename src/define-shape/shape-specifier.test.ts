@@ -82,6 +82,74 @@ describe('ShapeToRunTimeType', () => {
         }>();
     });
 
+    it('applies readonly', () => {
+        const shapeDefinition = defineShape(
+            {
+                stringProp: 'hello',
+                nestedObjectProp: {
+                    nestedString: '',
+                    nestedMaybeNumber: or(0, undefined),
+                    myNestedAnd: and('', 0),
+                },
+                myOr: or('', 0),
+                myAnd: and('', 0),
+                mySimpleArray: [''],
+                complexArray: [
+                    '',
+                    0,
+                ],
+                idk: unknownShape(),
+                myEnum: enumShape(TestEnum),
+                myMultiArray: [
+                    '',
+                    0,
+                ],
+                myObjectOr: or(
+                    {
+                        hello: 'there',
+                        why: exact('are we here', 'are you there'),
+                    },
+                    0,
+                ),
+                myExactObject: exact({
+                    nestedExact: 'hello',
+                    moreNestedExact: 'why',
+                }),
+                myExact: exact('hello there'),
+            },
+            true,
+        );
+
+        assertTypeOf<typeof shapeDefinition.runTimeType>().toEqualTypeOf<
+            Readonly<{
+                stringProp: string;
+                nestedObjectProp: Readonly<{
+                    nestedString: string;
+                    nestedMaybeNumber: number | undefined;
+                    myNestedAnd: string & number;
+                }>;
+                myOr: string | number;
+                myAnd: string & number;
+                mySimpleArray: ReadonlyArray<string>;
+                complexArray: ReadonlyArray<string | number>;
+                idk: unknown;
+                myEnum: TestEnum;
+                myMultiArray: ReadonlyArray<string | number>;
+                myObjectOr:
+                    | Readonly<{
+                          hello: string;
+                          why: 'are we here' | 'are you there';
+                      }>
+                    | number;
+                myExactObject: Readonly<{
+                    nestedExact: 'hello';
+                    moreNestedExact: 'why';
+                }>;
+                myExact: 'hello there';
+            }>
+        >();
+    });
+
     it('stuff', () => {
         const myShape = defineShape({message: exact('hello')});
         type MyType = typeof myShape.runTimeType;
