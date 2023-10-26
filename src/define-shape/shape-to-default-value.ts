@@ -10,7 +10,10 @@ import {
     isUnknownShapeSpecifier,
 } from './shape-specifiers';
 
-export function shapeToDefaultValue<Shape>(shape: Shape): ShapeToRunTimeType<Shape> {
+export function shapeToDefaultValue<Shape, IsReadonly extends boolean = false>(
+    shape: Shape,
+    isReadonly: IsReadonly = false as IsReadonly,
+): ShapeToRunTimeType<Shape, false, IsReadonly> {
     return innerShapeToDefaultValue(shape);
 }
 

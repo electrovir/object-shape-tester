@@ -23,14 +23,15 @@ export const isShapeDefinitionKey =
     '__vir__shape__definition__key__do__not__use__in__actual__objects' as const;
 
 /** This definition has to be in this file because the types circularly depend on each other. */
-export type ShapeDefinition<Shape> = {
+export type ShapeDefinition<Shape, IsReadonly extends boolean = false> = {
     shape: Shape;
-    runTimeType: ShapeToRunTimeType<Shape>;
-    defaultValue: Readonly<ShapeToRunTimeType<Shape>>;
+    runTimeType: ShapeToRunTimeType<Shape, false, IsReadonly>;
+    isReadonly: IsReadonly;
+    defaultValue: Readonly<ShapeToRunTimeType<Shape, false, IsReadonly>>;
     [isShapeDefinitionKey]: true;
 };
 
-export function isShapeDefinition(input: unknown): input is ShapeDefinition<unknown> {
+export function isShapeDefinition(input: unknown): input is ShapeDefinition<unknown, false> {
     return typedHasProperty(input, isShapeDefinitionKey);
 }
 
@@ -181,11 +182,15 @@ export function specifier<Parts extends BaseParts, Type extends ShapeSpecifierTy
     };
 }
 
-export type ShapeToRunTimeType<Shape, IsExact extends boolean = false> = Shape extends Function
+export type ShapeToRunTimeType<
+    Shape,
+    IsExact extends boolean,
+    IsReadonly extends boolean,
+> = Shape extends Function
     ? Shape
     : Shape extends object
     ? Shape extends ShapeDefinition<infer InnerShape>
-        ? ShapeToRunTimeType<InnerShape, IsExact>
+        ? ShapeToRunTimeType<InnerShape, IsExact, IsReadonly>
         : Shape extends ShapeSpecifier<any, any>
         ? Shape extends ShapeSpecifier<any, typeof exactSymbol>
             ? SpecifierToRunTimeType<Shape, true>
@@ -195,8 +200,8 @@ export type ShapeToRunTimeType<Shape, IsExact extends boolean = false> = Shape e
                   any,
                   typeof exactSymbol
               >
-                  ? ShapeToRunTimeType<Shape[PropName], true>
-                  : ShapeToRunTimeType<Shape[PropName], IsExact>;
+                  ? ShapeToRunTimeType<Shape[PropName], true, IsReadonly>
+                  : ShapeToRunTimeType<Shape[PropName], IsExact, IsReadonly>;
           }
     : Shape;
 
