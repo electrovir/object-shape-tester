@@ -2,10 +2,10 @@ import {
     ArrayElement,
     AtLeastTuple,
     isObject,
-    isRuntimeTypeOf,
     typedArrayIncludes,
     typedHasProperty,
 } from '@augment-vir/common';
+import {isRunTimeType} from 'run-time-assertions';
 import {LiteralToPrimitive, Primitive, UnionToIntersection, WritableDeep} from 'type-fest';
 import {haveEqualTypes} from './type-equality';
 
@@ -95,32 +95,32 @@ export type SpecifierToRunTimeType<
     ? Type extends typeof andSymbol
         ? MaybeReadonly<IsReadonly, UnionToIntersection<ExpandParts<Parts, IsExact, IsReadonly>>>
         : Type extends typeof orSymbol
-        ? MaybeReadonly<IsReadonly, ExpandParts<Parts, IsExact, IsReadonly>>
-        : Type extends typeof exactSymbol
-        ? MaybeReadonly<IsReadonly, WritableDeep<ExpandParts<Parts, true, IsReadonly>>>
-        : Type extends typeof enumSymbol
-        ? MaybeReadonly<IsReadonly, WritableDeep<Parts[0][keyof Parts[0]]>>
-        : Type extends typeof unknownSymbol
-        ? unknown
-        : 'TypeError: found not match for shape specifier type.'
+          ? MaybeReadonly<IsReadonly, ExpandParts<Parts, IsExact, IsReadonly>>
+          : Type extends typeof exactSymbol
+            ? MaybeReadonly<IsReadonly, WritableDeep<ExpandParts<Parts, true, IsReadonly>>>
+            : Type extends typeof enumSymbol
+              ? MaybeReadonly<IsReadonly, WritableDeep<Parts[0][keyof Parts[0]]>>
+              : Type extends typeof unknownSymbol
+                ? unknown
+                : 'TypeError: found not match for shape specifier type.'
     : PossiblySpecifier extends Primitive
-    ? IsExact extends true
-        ? PossiblySpecifier
-        : LiteralToPrimitive<PossiblySpecifier>
-    : PossiblySpecifier extends object
-    ? PossiblySpecifier extends ShapeDefinition<any, any>
-        ? PossiblySpecifier['runTimeType']
-        : MaybeReadonly<
-              IsReadonly,
-              {
-                  [Prop in keyof PossiblySpecifier]: SpecifierToRunTimeType<
-                      PossiblySpecifier[Prop],
-                      IsExact,
-                      IsReadonly
-                  >;
-              }
-          >
-    : PossiblySpecifier;
+      ? IsExact extends true
+          ? PossiblySpecifier
+          : LiteralToPrimitive<PossiblySpecifier>
+      : PossiblySpecifier extends object
+        ? PossiblySpecifier extends ShapeDefinition<any, any>
+            ? PossiblySpecifier['runTimeType']
+            : MaybeReadonly<
+                  IsReadonly,
+                  {
+                      [Prop in keyof PossiblySpecifier]: SpecifierToRunTimeType<
+                          PossiblySpecifier[Prop],
+                          IsExact,
+                          IsReadonly
+                      >;
+                  }
+              >
+        : PossiblySpecifier;
 
 export function or<Parts extends AtLeastTuple<unknown, 1>>(...parts: Parts): ShapeOr<Parts> {
     return specifier(parts, orSymbol);
@@ -203,24 +203,24 @@ export type ShapeToRunTimeType<
 > = Shape extends Function
     ? Shape
     : Shape extends object
-    ? Shape extends ShapeDefinition<infer InnerShape, any>
-        ? ShapeToRunTimeType<InnerShape, IsExact, IsReadonly>
-        : Shape extends ShapeSpecifier<any, any>
-        ? Shape extends ShapeSpecifier<any, typeof exactSymbol>
-            ? SpecifierToRunTimeType<Shape, true, IsReadonly>
-            : SpecifierToRunTimeType<Shape, IsExact, IsReadonly>
-        : MaybeReadonly<
-              IsReadonly,
-              {
-                  [PropName in keyof Shape]: Shape[PropName] extends ShapeSpecifier<
-                      any,
-                      typeof exactSymbol
-                  >
-                      ? ShapeToRunTimeType<Shape[PropName], true, IsReadonly>
-                      : ShapeToRunTimeType<Shape[PropName], IsExact, IsReadonly>;
-              }
-          >
-    : Shape;
+      ? Shape extends ShapeDefinition<infer InnerShape, any>
+          ? ShapeToRunTimeType<InnerShape, IsExact, IsReadonly>
+          : Shape extends ShapeSpecifier<any, any>
+            ? Shape extends ShapeSpecifier<any, typeof exactSymbol>
+                ? SpecifierToRunTimeType<Shape, true, IsReadonly>
+                : SpecifierToRunTimeType<Shape, IsExact, IsReadonly>
+            : MaybeReadonly<
+                  IsReadonly,
+                  {
+                      [PropName in keyof Shape]: Shape[PropName] extends ShapeSpecifier<
+                          any,
+                          typeof exactSymbol
+                      >
+                          ? ShapeToRunTimeType<Shape[PropName], true, IsReadonly>
+                          : ShapeToRunTimeType<Shape[PropName], IsExact, IsReadonly>;
+                  }
+              >
+      : Shape;
 
 export function matchesSpecifier(subject: unknown, shape: unknown): boolean {
     const specifier = getShapeSpecifier(shape);
@@ -255,7 +255,7 @@ export function getShapeSpecifier(
         return undefined;
     }
 
-    if (!typedHasProperty(input, 'parts') || !isRuntimeTypeOf(input.parts, 'array')) {
+    if (!typedHasProperty(input, 'parts') || !isRunTimeType(input.parts, 'array')) {
         throw new Error('Found a shape specifier but its parts are not valid.');
     }
 

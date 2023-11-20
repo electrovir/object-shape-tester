@@ -1,9 +1,5 @@
-import {
-    PartialAndUndefined,
-    getObjectTypedKeys,
-    isObject,
-    isRuntimeTypeOf,
-} from '@augment-vir/common';
+import {PartialAndUndefined, getObjectTypedKeys, isObject} from '@augment-vir/common';
+import {isRunTimeType} from 'run-time-assertions';
 import {
     ShapeDefinition,
     getShapeSpecifier,
@@ -86,8 +82,8 @@ function internalAssertValidShape<Shape>(
         );
     }
 
-    if (isRuntimeTypeOf(shape, 'function')) {
-        return isRuntimeTypeOf(subject, 'function');
+    if (isRunTimeType(shape, 'function')) {
+        return isRunTimeType(subject, 'function');
     }
 
     if (isObject(subject)) {
@@ -150,7 +146,7 @@ function internalAssertValidShape<Shape>(
             throw new ShapeMismatchError(
                 `Cannot compare an enum specifier to an object at ${keysString}`,
             );
-        } else if (isRuntimeTypeOf(shape, 'array') && isRuntimeTypeOf(objectSubject, 'array')) {
+        } else if (isRunTimeType(shape, 'array') && isRunTimeType(objectSubject, 'array')) {
             // special case arrays
             matched = objectSubject.every((subjectEntry, index): boolean => {
                 const passed = shape.some((shapeEntry): boolean => {

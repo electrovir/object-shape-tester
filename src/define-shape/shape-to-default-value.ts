@@ -1,4 +1,5 @@
-import {isObject, isRuntimeTypeOf, mapObjectValues} from '@augment-vir/common';
+import {isObject, mapObjectValues} from '@augment-vir/common';
+import {isRunTimeType} from 'run-time-assertions';
 import {
     ShapeToRunTimeType,
     getShapeSpecifier,
@@ -44,7 +45,7 @@ function innerShapeToDefaultValue<Shape>(shape: Shape): any {
         return shapeToDefaultValue(shape.shape);
     } else if (shape instanceof RegExp) {
         return shape;
-    } else if (isRuntimeTypeOf(shape, 'array')) {
+    } else if (isRunTimeType(shape, 'array')) {
         return shape;
     } else if (isObject(shape)) {
         return mapObjectValues(shape, (key, value) => {
