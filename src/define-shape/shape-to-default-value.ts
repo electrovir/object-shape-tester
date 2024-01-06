@@ -46,7 +46,7 @@ function innerShapeToDefaultValue<Shape>(shape: Shape): any {
     } else if (shape instanceof RegExp) {
         return shape;
     } else if (isRunTimeType(shape, 'array')) {
-        return shape;
+        return shape.map(innerShapeToDefaultValue);
     } else if (isObject(shape)) {
         return mapObjectValues(shape, (key, value) => {
             return shapeToDefaultValue(value);

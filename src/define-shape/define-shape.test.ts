@@ -1,5 +1,6 @@
 import {assert} from '@open-wc/testing';
 import {assertTypeOf} from 'run-time-assertions';
+import {assertValidShape} from '../verify-shape/verify-shape';
 import {defineShape} from './define-shape';
 import {and, exact, or, unknownShape} from './shape-specifiers';
 
@@ -159,6 +160,26 @@ describe(defineShape.name, () => {
             second: string;
             third: 'c';
         }>();
+    });
+
+    it('allows a shape inside of an array', () => {
+        const shapeA = defineShape(
+            {
+                first: 'a',
+                second: 'b',
+                third: 'c' as const,
+            },
+            true,
+        );
+        const shapeB = defineShape(
+            {
+                one: [shapeA],
+                two: '',
+            },
+            true,
+        );
+        console.log(shapeB.defaultValue);
+        assertValidShape(shapeB.defaultValue, shapeB);
     });
 
     it('allows function properties', () => {
