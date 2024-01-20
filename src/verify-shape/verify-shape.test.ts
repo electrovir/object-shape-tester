@@ -1,9 +1,16 @@
 import {FunctionTestCase, itCases} from '@augment-vir/browser-testing';
 import {ArrayElement, randomString} from '@augment-vir/common';
 import {assert} from '@open-wc/testing';
-import {assertTypeOf} from 'run-time-assertions';
+import {assertThrows, assertTypeOf} from 'run-time-assertions';
 import {defineShape} from '../define-shape/define-shape';
-import {and, enumShape, exact, or, unknownShape} from '../define-shape/shape-specifiers';
+import {
+    and,
+    enumShape,
+    exact,
+    indexedKeys,
+    or,
+    unknownShape,
+} from '../define-shape/shape-specifiers';
 import {ShapeMismatchError} from '../errors/shape-mismatch.error';
 import {assertValidShape, isValidShape} from './verify-shape';
 
@@ -475,6 +482,56 @@ describe(assertValidShape.name, () => {
             isValidShape(exampleInstance, shapeWithNested) ? exampleInstance : undefined;
     });
 
+    it('works with indexedKeys shapes', () => {
+        assertValidShape(
+            {
+                stuff: 'hello there',
+                moreStuff: {
+                    derp: 0,
+                },
+            },
+            defineShape({
+                stuff: '',
+                moreStuff: indexedKeys({
+                    keys: '',
+                    values: 0,
+                }),
+            }),
+        );
+        assertThrows(() =>
+            assertValidShape(
+                {
+                    stuff: 'hello there',
+                    moreStuff: {
+                        derp: 0,
+                    },
+                },
+                defineShape({
+                    stuff: '',
+                    moreStuff: indexedKeys({
+                        keys: exact('hi'),
+                        values: 0,
+                    }),
+                }),
+            ),
+        );
+        assertValidShape(
+            {
+                stuff: 'hello there',
+                moreStuff: {
+                    hi: 0,
+                },
+            },
+            defineShape({
+                stuff: '',
+                moreStuff: indexedKeys({
+                    keys: exact('hi'),
+                    values: 0,
+                }),
+            }),
+        );
+    });
+
     it('has proper types for a nested exact', () => {
         const myShape = defineShape({
             message: exact('hello'),
@@ -615,9 +672,6 @@ describe(assertValidShape.name, () => {
         const VerificationResultShape = defineShape(
             or(verificationResultInProgressShape, verificationResultCompletedShape),
         );
-
-        type VerificationResultCompleted = typeof verificationResultCompletedShape.runTimeType;
-        type VerificationResultInProgress = typeof verificationResultInProgressShape.runTimeType;
 
         assertValidShape(result, VerificationResultShape, {allowExtraKeys: true});
 

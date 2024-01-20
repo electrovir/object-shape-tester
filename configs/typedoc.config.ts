@@ -15,12 +15,14 @@ export const typeDocConfig: Partial<TypeDocOptions> = {
         'andSymbol',
         'enumSymbol',
         'exactSymbol',
+        'indexedKeysSymbol',
         'orSymbol',
         'unknownSymbol',
-        'ExpandParts',
+
         'BaseParts',
-        'ShapeSpecifierType',
+        'ExpandParts',
         'MaybeReadonly',
+        'ShapeSpecifierType',
     ],
     requiredToBeDocumented: [],
 };

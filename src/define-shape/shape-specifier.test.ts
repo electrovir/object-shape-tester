@@ -1,4 +1,5 @@
 import {itCases} from '@augment-vir/browser-testing';
+import {randomInteger, randomString} from '@augment-vir/common';
 import {assertTypeOf} from 'run-time-assertions';
 import {defineShape} from './define-shape';
 import {
@@ -6,6 +7,7 @@ import {
     enumShape,
     exact,
     getShapeSpecifier,
+    indexedKeys,
     matchesSpecifier,
     or,
     unknownShape,
@@ -150,12 +152,44 @@ describe('ShapeToRunTimeType', () => {
         >();
     });
 
-    it('stuff', () => {
+    it('works with exact strings', () => {
         const myShape = defineShape({message: exact('hello')});
         type MyType = typeof myShape.runTimeType;
 
         assertTypeOf<MyType>().toEqualTypeOf<{
             message: 'hello';
+        }>();
+    });
+
+    it('works with exact indexed keys', () => {
+        const shapeWithIndexedKeys = defineShape({
+            thing: '',
+            nestedValues: indexedKeys({
+                keys: or(exact('hi'), exact('bye')),
+                values: {
+                    helloThere: 0,
+                },
+            }),
+        });
+
+        assertTypeOf<typeof shapeWithIndexedKeys.runTimeType>().toEqualTypeOf<{
+            thing: string;
+            nestedValues: Partial<Record<'hi' | 'bye', {helloThere: number}>>;
+        }>();
+    });
+
+    it('works with vague string indexed keys', () => {
+        const shapeWithIndexedKeys = defineShape({
+            thing: '',
+            nestedValues: indexedKeys({
+                keys: '',
+                values: 0,
+            }),
+        });
+
+        assertTypeOf<typeof shapeWithIndexedKeys.runTimeType>().toEqualTypeOf<{
+            thing: string;
+            nestedValues: Partial<Record<string, number>>;
         }>();
     });
 });
@@ -169,6 +203,72 @@ describe(matchesSpecifier.name, () => {
                 unknownShape(),
             ],
             expect: true,
+        },
+        {
+            it: 'accepts a valid indexed subject',
+            inputs: [
+                {[randomString()]: randomInteger({max: 100, min: 0})},
+                indexedKeys({
+                    keys: '',
+                    values: 0,
+                }),
+            ],
+            expect: true,
+        },
+        {
+            it: 'rejects indexedKeys subject that is not an object',
+            inputs: [
+                5,
+                indexedKeys({
+                    keys: '',
+                    values: 0,
+                }),
+            ],
+            expect: false,
+        },
+        {
+            it: 'accepts string/number indexedKeys subject keys mismatch because number keys are casted to strings anyway',
+            inputs: [
+                {0: 0},
+                indexedKeys({
+                    keys: '',
+                    values: 0,
+                }),
+            ],
+            expect: true,
+        },
+        {
+            it: 'rejects mismatched exact indexedKeys keys',
+            inputs: [
+                {no: 0},
+                indexedKeys({
+                    keys: exact('hi'),
+                    values: 0,
+                }),
+            ],
+            expect: false,
+        },
+        {
+            it: 'accepts valid exact indexedKeys keys',
+            inputs: [
+                {hi: 0},
+                indexedKeys({
+                    keys: exact('hi'),
+                    values: 0,
+                }),
+            ],
+            expect: true,
+        },
+        {
+            it: 'rejects invalid indexedKeys subject values',
+            inputs: [
+                {hi: 'hi'},
+                indexedKeys({
+                    keys: '',
+                    values: 0,
+                }),
+            ],
+            expect: false,
         },
     ]);
 });

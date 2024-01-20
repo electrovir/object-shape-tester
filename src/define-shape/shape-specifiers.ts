@@ -1,6 +1,8 @@
 import {
     ArrayElement,
     AtLeastTuple,
+    getObjectTypedKeys,
+    getObjectTypedValues,
     isObject,
     typedArrayIncludes,
     typedHasProperty,
@@ -14,6 +16,7 @@ const orSymbol = Symbol('or');
 const exactSymbol = Symbol('exact');
 const enumSymbol = Symbol('enum');
 const unknownSymbol = Symbol('unknown');
+const indexedKeysSymbol = Symbol('indexed-keys');
 
 /**
  * This should really be a symbol, but TypeScript freaks out about using names that cannot be named
@@ -44,6 +47,7 @@ export const shapeSpecifiersTypes = [
     exactSymbol,
     enumSymbol,
     unknownSymbol,
+    indexedKeysSymbol,
 ] as const;
 
 type ShapeSpecifierType = ArrayElement<typeof shapeSpecifiersTypes>;
@@ -55,6 +59,16 @@ export type ShapeSpecifier<Parts extends BaseParts, Type extends ShapeSpecifierT
     specifierType: Type;
 };
 
+export type ShapeIndexedKeys<
+    Parts extends Readonly<
+        [
+            {
+                keys: unknown;
+                values: unknown;
+            },
+        ]
+    >,
+> = ShapeSpecifier<Parts, typeof indexedKeysSymbol>;
 export type ShapeOr<Parts extends AtLeastTuple<unknown, 1>> = ShapeSpecifier<
     Parts,
     typeof orSymbol
@@ -104,9 +118,23 @@ export type SpecifierToRunTimeType<
                 ? MaybeReadonly<IsReadonly, WritableDeep<ExpandParts<Parts, true, IsReadonly>>>
                 : Type extends typeof enumSymbol
                   ? MaybeReadonly<IsReadonly, WritableDeep<Parts[0][keyof Parts[0]]>>
-                  : Type extends typeof unknownSymbol
-                    ? unknown
-                    : 'TypeError: found not match for shape specifier type.'
+                  : Type extends typeof indexedKeysSymbol
+                    ? Parts[0] extends {keys: unknown; values: unknown}
+                        ? ExpandParts<[Parts[0]['keys']], IsExact, IsReadonly> extends PropertyKey
+                            ? MaybeReadonly<
+                                  IsReadonly,
+                                  Partial<
+                                      Record<
+                                          ExpandParts<[Parts[0]['keys']], IsExact, IsReadonly>,
+                                          ExpandParts<[Parts[0]['values']], IsExact, IsReadonly>
+                                      >
+                                  >
+                              >
+                            : 'TypeError: indexedKeys keys be a subset of PropertyKey.'
+                        : 'TypeError: indexedKeys input is invalid.'
+                    : Type extends typeof unknownSymbol
+                      ? unknown
+                      : 'TypeError: found not match for shape specifier type.'
         : PossiblySpecifier extends Primitive
           ? IsExact extends true
               ? PossiblySpecifier
@@ -125,6 +153,19 @@ export type SpecifierToRunTimeType<
                       }
                   >
             : PossiblySpecifier;
+
+export function indexedKeys<
+    Parts extends Readonly<
+        [
+            {
+                keys: unknown;
+                values: unknown;
+            },
+        ]
+    >,
+>(...parts: Parts): ShapeIndexedKeys<Parts> {
+    return specifier(parts, indexedKeysSymbol);
+}
 
 export function or<Parts extends AtLeastTuple<unknown, 1>>(...parts: Parts): ShapeOr<Parts> {
     return specifier(parts, orSymbol);
@@ -148,6 +189,19 @@ export function enumShape<const Parts extends Readonly<[Record<string, number | 
 
 export function unknownShape(defaultValue?: unknown): ShapeUnknown<[unknown]> {
     return specifier([defaultValue], unknownSymbol);
+}
+
+export function isIndexedKeysSpecifier(maybeSpecifier: unknown): maybeSpecifier is ShapeIndexedKeys<
+    Readonly<
+        [
+            {
+                keys: unknown;
+                values: unknown;
+            },
+        ]
+    >
+> {
+    return specifierHasSymbol(maybeSpecifier, indexedKeysSymbol);
 }
 
 export function isOrShapeSpecifier(
@@ -226,7 +280,11 @@ export type ShapeToRunTimeType<
               >
       : Shape;
 
-export function matchesSpecifier(subject: unknown, shape: unknown): boolean {
+export function matchesSpecifier(
+    subject: unknown,
+    shape: unknown,
+    allowExtraKeys?: boolean | undefined,
+): boolean {
     const specifier = getShapeSpecifier(shape);
 
     if (specifier) {
@@ -242,6 +300,23 @@ export function matchesSpecifier(subject: unknown, shape: unknown): boolean {
             }
         } else if (isEnumShapeSpecifier(specifier)) {
             return Object.values(specifier.parts[0]).some((part) => part === subject);
+        } else if (isIndexedKeysSpecifier(specifier)) {
+            if (!isObject(subject)) {
+                return false;
+            }
+
+            const keysCheck = allowExtraKeys
+                ? true
+                : getObjectTypedKeys(subject).every((subjectKey) =>
+                      matchesSpecifier(subjectKey, specifier.parts[0].keys),
+                  );
+
+            return (
+                keysCheck &&
+                getObjectTypedValues(subject).every((subjectValue) =>
+                    matchesSpecifier(subjectValue, specifier.parts[0].values),
+                )
+            );
         } else if (isUnknownShapeSpecifier(specifier)) {
             return true;
         }

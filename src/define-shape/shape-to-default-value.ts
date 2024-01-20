@@ -6,6 +6,7 @@ import {
     isAndShapeSpecifier,
     isEnumShapeSpecifier,
     isExactShapeSpecifier,
+    isIndexedKeysSpecifier,
     isOrShapeSpecifier,
     isShapeDefinition,
     isUnknownShapeSpecifier,
@@ -30,8 +31,11 @@ function innerShapeToDefaultValue<Shape>(shape: Shape): any {
             }, {});
         } else if (isEnumShapeSpecifier(specifier)) {
             return Object.values(specifier.parts[0])[0];
+        } else if (isIndexedKeysSpecifier(specifier)) {
+            return {};
         } else if (isUnknownShapeSpecifier(specifier)) {
             return specifier.parts[0] ?? {};
+            /* v8 ignore next 7: this is an edge case fallback */
         } else {
             throw new Error(
                 `found specifier but it matches no expected specifiers: ${String(

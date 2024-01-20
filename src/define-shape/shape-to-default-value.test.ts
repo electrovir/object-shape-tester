@@ -1,5 +1,5 @@
 import {itCases} from '@augment-vir/browser-testing';
-import {unknownShape} from './shape-specifiers';
+import {exact, indexedKeys, unknownShape} from './shape-specifiers';
 import {shapeToDefaultValue} from './shape-to-default-value';
 
 describe(shapeToDefaultValue.name, () => {
@@ -12,9 +12,21 @@ describe(shapeToDefaultValue.name, () => {
             expect: 'my default value',
         },
         {
-            it: 'unknown shape default to empty object',
+            it: 'defaults unknown shape to empty object',
             inputs: [
                 unknownShape(),
+            ],
+            expect: {},
+        },
+        {
+            it: 'defaults indexed keys shape to empty object',
+            inputs: [
+                indexedKeys({
+                    keys: exact('hi'),
+                    values: {
+                        hi: '',
+                    },
+                }),
             ],
             expect: {},
         },
