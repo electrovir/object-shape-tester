@@ -245,13 +245,13 @@ describe(enumShape.name, () => {
 });
 
 describe(unknownShape.name, () => {
-    it('blocks all inputs', () => {
+    it('optionally allows a single input', () => {
+        // omitting inputs entirely is allowed
         unknownShape();
-        // @ts-expect-error
-        unknownShape('no inputs are accepted');
-        // @ts-expect-error
-        unknownShape(TestEnum);
-        // @ts-expect-error
+        unknownShape('single input is allowed');
+        // any input is allowed
+        unknownShape({});
+        // @ts-expect-error: multiple inputs are not allowed
         unknownShape('multiple', 'are not allowed either');
     });
 });

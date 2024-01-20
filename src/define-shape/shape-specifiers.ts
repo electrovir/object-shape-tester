@@ -71,56 +71,60 @@ export type ShapeEnum<Parts extends Readonly<[Record<string, number | string>]>>
     Parts,
     typeof enumSymbol
 >;
-export type ShapeUnknown<Parts extends Readonly<[]>> = ShapeSpecifier<Parts, typeof unknownSymbol>;
+export type ShapeUnknown<Parts extends Readonly<[unknown]>> = ShapeSpecifier<
+    Parts,
+    typeof unknownSymbol
+>;
 
-type ExpandParts<
-    Parts extends BaseParts,
-    IsExact extends boolean,
-    IsReadonly extends boolean,
-> = Extract<ArrayElement<Parts>, ShapeDefinition<any, any>> extends never
-    ? SpecifierToRunTimeType<ArrayElement<Parts>, IsExact, IsReadonly>
-    :
-          | SpecifierToRunTimeType<
-                Exclude<ArrayElement<Parts>, ShapeDefinition<any, any>>,
-                IsExact,
-                IsReadonly
-            >
-          | Extract<ArrayElement<Parts>, ShapeDefinition<any, any>>['runTimeType'];
+type ExpandParts<Parts extends BaseParts, IsExact extends boolean, IsReadonly extends boolean> =
+    Extract<ArrayElement<Parts>, ShapeDefinition<any, any>> extends never
+        ? SpecifierToRunTimeType<ArrayElement<Parts>, IsExact, IsReadonly>
+        :
+              | SpecifierToRunTimeType<
+                    Exclude<ArrayElement<Parts>, ShapeDefinition<any, any>>,
+                    IsExact,
+                    IsReadonly
+                >
+              | Extract<ArrayElement<Parts>, ShapeDefinition<any, any>>['runTimeType'];
 
 export type SpecifierToRunTimeType<
     PossiblySpecifier,
     IsExact extends boolean,
     IsReadonly extends boolean,
-> = PossiblySpecifier extends ShapeSpecifier<infer Parts, infer Type>
-    ? Type extends typeof andSymbol
-        ? MaybeReadonly<IsReadonly, UnionToIntersection<ExpandParts<Parts, IsExact, IsReadonly>>>
-        : Type extends typeof orSymbol
-          ? MaybeReadonly<IsReadonly, ExpandParts<Parts, IsExact, IsReadonly>>
-          : Type extends typeof exactSymbol
-            ? MaybeReadonly<IsReadonly, WritableDeep<ExpandParts<Parts, true, IsReadonly>>>
-            : Type extends typeof enumSymbol
-              ? MaybeReadonly<IsReadonly, WritableDeep<Parts[0][keyof Parts[0]]>>
-              : Type extends typeof unknownSymbol
-                ? unknown
-                : 'TypeError: found not match for shape specifier type.'
-    : PossiblySpecifier extends Primitive
-      ? IsExact extends true
-          ? PossiblySpecifier
-          : LiteralToPrimitive<PossiblySpecifier>
-      : PossiblySpecifier extends object
-        ? PossiblySpecifier extends ShapeDefinition<any, any>
-            ? PossiblySpecifier['runTimeType']
-            : MaybeReadonly<
+> =
+    PossiblySpecifier extends ShapeSpecifier<infer Parts, infer Type>
+        ? Type extends typeof andSymbol
+            ? MaybeReadonly<
                   IsReadonly,
-                  {
-                      [Prop in keyof PossiblySpecifier]: SpecifierToRunTimeType<
-                          PossiblySpecifier[Prop],
-                          IsExact,
-                          IsReadonly
-                      >;
-                  }
+                  UnionToIntersection<ExpandParts<Parts, IsExact, IsReadonly>>
               >
-        : PossiblySpecifier;
+            : Type extends typeof orSymbol
+              ? MaybeReadonly<IsReadonly, ExpandParts<Parts, IsExact, IsReadonly>>
+              : Type extends typeof exactSymbol
+                ? MaybeReadonly<IsReadonly, WritableDeep<ExpandParts<Parts, true, IsReadonly>>>
+                : Type extends typeof enumSymbol
+                  ? MaybeReadonly<IsReadonly, WritableDeep<Parts[0][keyof Parts[0]]>>
+                  : Type extends typeof unknownSymbol
+                    ? unknown
+                    : 'TypeError: found not match for shape specifier type.'
+        : PossiblySpecifier extends Primitive
+          ? IsExact extends true
+              ? PossiblySpecifier
+              : LiteralToPrimitive<PossiblySpecifier>
+          : PossiblySpecifier extends object
+            ? PossiblySpecifier extends ShapeDefinition<any, any>
+                ? PossiblySpecifier['runTimeType']
+                : MaybeReadonly<
+                      IsReadonly,
+                      {
+                          [Prop in keyof PossiblySpecifier]: SpecifierToRunTimeType<
+                              PossiblySpecifier[Prop],
+                              IsExact,
+                              IsReadonly
+                          >;
+                      }
+                  >
+            : PossiblySpecifier;
 
 export function or<Parts extends AtLeastTuple<unknown, 1>>(...parts: Parts): ShapeOr<Parts> {
     return specifier(parts, orSymbol);
@@ -142,8 +146,8 @@ export function enumShape<const Parts extends Readonly<[Record<string, number | 
     return specifier(parts, enumSymbol);
 }
 
-export function unknownShape(): ShapeUnknown<[]> {
-    return specifier([], unknownSymbol);
+export function unknownShape(defaultValue?: unknown): ShapeUnknown<[unknown]> {
+    return specifier([defaultValue], unknownSymbol);
 }
 
 export function isOrShapeSpecifier(
@@ -171,7 +175,7 @@ export function isEnumShapeSpecifier(
 }
 export function isUnknownShapeSpecifier(
     maybeSpecifier: unknown,
-): maybeSpecifier is ShapeUnknown<[]> {
+): maybeSpecifier is ShapeUnknown<[unknown]> {
     return specifierHasSymbol(maybeSpecifier, unknownSymbol);
 }
 
