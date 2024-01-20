@@ -31,7 +31,7 @@ function innerShapeToDefaultValue<Shape>(shape: Shape): any {
         } else if (isEnumShapeSpecifier(specifier)) {
             return Object.values(specifier.parts[0])[0];
         } else if (isUnknownShapeSpecifier(specifier)) {
-            return 'unknown';
+            return specifier.parts[0] ?? {};
         } else {
             throw new Error(
                 `found specifier but it matches no expected specifiers: ${String(
