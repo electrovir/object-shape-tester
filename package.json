@@ -72,5 +72,8 @@
         "virmator": "^11.3.1",
         "vite": "^4.5.0",
         "vite-tsconfig-paths": "^4.3.1"
+    },
+    "overrides": {
+        "ip": ">1.1.8"
     }
 }
