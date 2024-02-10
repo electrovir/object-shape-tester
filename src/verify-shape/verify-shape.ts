@@ -251,7 +251,14 @@ function internalAssertValidShape<Shape>({
             const failedKeys = Object.keys(keysPassed).filter((key) => {
                 return !keysPassed[key];
             });
-            const errorMessage = `Failed on key(s): ${failedKeys.join(',')}`;
+            const errorMessage = `Failed on key(s): ${failedKeys
+                .map((failedKey) =>
+                    createKeyString([
+                        ...keys,
+                        failedKey,
+                    ]),
+                )
+                .join(',')}`;
             throw new ShapeMismatchError(errorMessage);
         }
 

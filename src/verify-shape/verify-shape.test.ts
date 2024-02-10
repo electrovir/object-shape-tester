@@ -680,6 +680,40 @@ describe(assertValidShape.name, () => {
             verificationResultInProgressShape.defaultValue,
         );
     });
+
+    it('throws useful errors', () => {
+        assertThrows(
+            () => {
+                assertValidShape(
+                    {
+                        top: {
+                            second: {
+                                third: {
+                                    hi: [
+                                        'valid',
+                                        -1,
+                                    ],
+                                },
+                            },
+                        },
+                    },
+                    defineShape({
+                        top: {
+                            second: {
+                                third: {
+                                    hi: [''],
+                                },
+                            },
+                        },
+                    }),
+                );
+            },
+            {
+                matchMessage:
+                    "Failed on key(s): top level -> 'top' -> 'second' -> 'third' -> 'hi' -> '1'",
+            },
+        );
+    });
 });
 
 describe(isValidShape.name, () => {
