@@ -126,7 +126,7 @@ export function and<Parts extends AtLeastTuple<unknown, 1>>(...parts: Parts): Sh
     return specifier(parts, andSymbol);
 }
 /** Define a shape that is an instance of the given class constructor. */
-export function classShape<Parts extends [AnyConstructor]>(...parts: Parts) {
+export function classShape<Parts extends [AnyConstructor]>(...parts: Parts): ShapeClass<Parts> {
     return specifier(parts, classSymbol);
 }
 export function enumShape<const Parts extends Readonly<[Record<string, number | string>]>>(
