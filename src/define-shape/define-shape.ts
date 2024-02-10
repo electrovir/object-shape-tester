@@ -11,7 +11,9 @@ export function defineShape<Shape, IsReadonly extends boolean = false>(
             throw new Error(`runTimeType cannot be used as a value, it is only for types.`);
         },
         isReadonly,
-        defaultValue: shapeToDefaultValue(shape),
+        get defaultValue() {
+            return shapeToDefaultValue(shape);
+        },
         [isShapeDefinitionKey]: true,
     };
 }

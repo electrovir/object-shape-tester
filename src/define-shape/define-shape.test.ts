@@ -1,8 +1,8 @@
 import {assert} from '@open-wc/testing';
-import {assertTypeOf} from 'run-time-assertions';
+import {assertInstanceOf, assertTypeOf} from 'run-time-assertions';
 import {assertValidShape} from '../verify-shape/verify-shape';
 import {defineShape} from './define-shape';
-import {and, exact, or, unknownShape} from './shape-specifiers';
+import {and, classShape, exact, or, unknownShape} from './shape-specifiers';
 
 describe(defineShape.name, () => {
     const exampleShape = defineShape({
@@ -160,6 +160,27 @@ describe(defineShape.name, () => {
             second: string;
             third: 'c';
         }>();
+    });
+
+    it('constructs class shapes', () => {
+        const shapeA = defineShape({
+            first: 'a',
+            second: 'b',
+            myClass: classShape(Error),
+        });
+        assertTypeOf<typeof shapeA.runTimeType>().toEqualTypeOf<{
+            first: string;
+            second: string;
+            myClass: Error;
+        }>();
+        const defaultValue = shapeA.defaultValue;
+        assert.deepStrictEqual(defaultValue, {
+            first: 'a',
+            second: 'b',
+            myClass: defaultValue.myClass,
+        });
+
+        assertInstanceOf(defaultValue.myClass, Error);
     });
 
     it('allows a shape inside of an array', () => {

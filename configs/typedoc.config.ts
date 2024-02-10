@@ -13,6 +13,7 @@ export const typeDocConfig: Partial<TypeDocOptions> = {
     ],
     intentionallyNotExported: [
         'andSymbol',
+        'classSymbol',
         'enumSymbol',
         'exactSymbol',
         'indexedKeysSymbol',

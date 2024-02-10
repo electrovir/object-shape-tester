@@ -11,13 +11,13 @@ import {isRunTimeType} from 'run-time-assertions';
 import {LiteralToPrimitive, Primitive, UnionToIntersection, WritableDeep} from 'type-fest';
 import {haveEqualTypes} from './type-equality';
 
-const andSymbol = Symbol('and');
-const orSymbol = Symbol('or');
-const exactSymbol = Symbol('exact');
-const enumSymbol = Symbol('enum');
-const unknownSymbol = Symbol('unknown');
-const indexedKeysSymbol = Symbol('indexed-keys');
-
+/**
+ * ========================================
+ *
+ * Shape Definition
+ *
+ * ========================================
+ */
 /**
  * This should really be a symbol, but TypeScript freaks out about using names that cannot be named
  * in that case.
@@ -38,27 +38,63 @@ export function isShapeDefinition(input: unknown): input is ShapeDefinition<unkn
     return typedHasProperty(input, isShapeDefinitionKey);
 }
 
-export const isShapeSpecifierKey =
-    '__vir__shape__specifier__key__do__not__use__in__actual__objects' as const;
+/**
+ * ========================================
+ *
+ * Specifier Symbols
+ *
+ * ========================================
+ */
+const andSymbol = Symbol('and');
+const classSymbol = Symbol('instance');
+const enumSymbol = Symbol('enum');
+const exactSymbol = Symbol('exact');
+const indexedKeysSymbol = Symbol('indexed-keys');
+const orSymbol = Symbol('or');
+const unknownSymbol = Symbol('unknown');
 
 export const shapeSpecifiersTypes = [
     andSymbol,
-    orSymbol,
-    exactSymbol,
     enumSymbol,
-    unknownSymbol,
+    exactSymbol,
     indexedKeysSymbol,
+    classSymbol,
+    orSymbol,
+    unknownSymbol,
 ] as const;
 
-type ShapeSpecifierType = ArrayElement<typeof shapeSpecifiersTypes>;
 type BaseParts = AtLeastTuple<unknown, 0>;
-
+export const isShapeSpecifierKey =
+    '__vir__shape__specifier__key__do__not__use__in__actual__objects' as const;
+type ShapeSpecifierType = ArrayElement<typeof shapeSpecifiersTypes>;
 export type ShapeSpecifier<Parts extends BaseParts, Type extends ShapeSpecifierType> = {
     [isShapeSpecifierKey]: true;
     parts: Parts;
     specifierType: Type;
 };
 
+/**
+ * ========================================
+ *
+ * Shape Types
+ *
+ * ========================================
+ */
+
+export type ShapeAnd<Parts extends AtLeastTuple<unknown, 1>> = ShapeSpecifier<
+    Parts,
+    typeof andSymbol
+>;
+export type AnyConstructor = new (...args: any[]) => any;
+export type ShapeClass<Parts extends [AnyConstructor]> = ShapeSpecifier<Parts, typeof classSymbol>;
+export type ShapeEnum<Parts extends Readonly<[Record<string, number | string>]>> = ShapeSpecifier<
+    Parts,
+    typeof enumSymbol
+>;
+export type ShapeExact<Parts extends Readonly<AtLeastTuple<unknown, 1>>> = ShapeSpecifier<
+    Parts,
+    typeof exactSymbol
+>;
 export type ShapeIndexedKeys<
     Parts extends Readonly<
         [
@@ -73,23 +109,112 @@ export type ShapeOr<Parts extends AtLeastTuple<unknown, 1>> = ShapeSpecifier<
     Parts,
     typeof orSymbol
 >;
-export type ShapeAnd<Parts extends AtLeastTuple<unknown, 1>> = ShapeSpecifier<
-    Parts,
-    typeof andSymbol
->;
-export type ShapeExact<Parts extends Readonly<AtLeastTuple<unknown, 1>>> = ShapeSpecifier<
-    Parts,
-    typeof exactSymbol
->;
-export type ShapeEnum<Parts extends Readonly<[Record<string, number | string>]>> = ShapeSpecifier<
-    Parts,
-    typeof enumSymbol
->;
 export type ShapeUnknown<Parts extends Readonly<[unknown]>> = ShapeSpecifier<
     Parts,
     typeof unknownSymbol
 >;
 
+/**
+ * ========================================
+ *
+ * Shape Functions
+ *
+ * ========================================
+ */
+
+export function and<Parts extends AtLeastTuple<unknown, 1>>(...parts: Parts): ShapeAnd<Parts> {
+    return specifier(parts, andSymbol);
+}
+/** Define a shape that is an instance of the given class constructor. */
+export function classShape<Parts extends [AnyConstructor]>(...parts: Parts) {
+    return specifier(parts, classSymbol);
+}
+export function enumShape<const Parts extends Readonly<[Record<string, number | string>]>>(
+    ...parts: Parts
+): ShapeEnum<Parts> {
+    return specifier(parts, enumSymbol);
+}
+export function exact<const Parts extends Readonly<AtLeastTuple<unknown, 1>>>(
+    ...parts: Parts
+): ShapeExact<Parts> {
+    return specifier(parts, exactSymbol);
+}
+export function indexedKeys<
+    Parts extends Readonly<
+        [
+            {
+                keys: unknown;
+                values: unknown;
+            },
+        ]
+    >,
+>(...parts: Parts): ShapeIndexedKeys<Parts> {
+    return specifier(parts, indexedKeysSymbol);
+}
+export function or<Parts extends AtLeastTuple<unknown, 1>>(...parts: Parts): ShapeOr<Parts> {
+    return specifier(parts, orSymbol);
+}
+export function unknownShape(defaultValue?: unknown): ShapeUnknown<[unknown]> {
+    return specifier([defaultValue], unknownSymbol);
+}
+
+/**
+ * ========================================
+ *
+ * Shape Specifier Type Guards
+ *
+ * ========================================
+ */
+export function isAndShapeSpecifier(
+    maybeSpecifier: unknown,
+): maybeSpecifier is ShapeAnd<AtLeastTuple<unknown, 1>> {
+    return specifierHasSymbol(maybeSpecifier, andSymbol);
+}
+export function isClassShapeSpecifier(
+    maybeSpecifier: unknown,
+): maybeSpecifier is ShapeClass<[AnyConstructor]> {
+    return specifierHasSymbol(maybeSpecifier, classSymbol);
+}
+export function isEnumShapeSpecifier(
+    maybeSpecifier: unknown,
+): maybeSpecifier is ShapeEnum<[Record<string, number | string>]> {
+    return specifierHasSymbol(maybeSpecifier, enumSymbol);
+}
+export function isExactShapeSpecifier(
+    maybeSpecifier: unknown,
+): maybeSpecifier is ShapeExact<[unknown]> {
+    return specifierHasSymbol(maybeSpecifier, exactSymbol);
+}
+export function isIndexedKeysSpecifier(maybeSpecifier: unknown): maybeSpecifier is ShapeIndexedKeys<
+    Readonly<
+        [
+            {
+                keys: unknown;
+                values: unknown;
+            },
+        ]
+    >
+> {
+    return specifierHasSymbol(maybeSpecifier, indexedKeysSymbol);
+}
+export function isOrShapeSpecifier(
+    maybeSpecifier: unknown,
+): maybeSpecifier is ShapeOr<AtLeastTuple<unknown, 1>> {
+    return specifierHasSymbol(maybeSpecifier, orSymbol);
+}
+export function isUnknownShapeSpecifier(
+    maybeSpecifier: unknown,
+): maybeSpecifier is ShapeUnknown<[unknown]> {
+    return specifierHasSymbol(maybeSpecifier, unknownSymbol);
+}
+
+/**
+ * ========================================
+ *
+ * Shape Value Run Time Type
+ *
+ * ========================================
+ */
 type ExpandParts<Parts extends BaseParts, IsExact extends boolean, IsReadonly extends boolean> =
     Extract<ArrayElement<Parts>, ShapeDefinition<any, any>> extends never
         ? SpecifierToRunTimeType<ArrayElement<Parts>, IsExact, IsReadonly>
@@ -112,29 +237,33 @@ export type SpecifierToRunTimeType<
                   IsReadonly,
                   UnionToIntersection<ExpandParts<Parts, IsExact, IsReadonly>>
               >
-            : Type extends typeof orSymbol
-              ? MaybeReadonly<IsReadonly, ExpandParts<Parts, IsExact, IsReadonly>>
-              : Type extends typeof exactSymbol
-                ? MaybeReadonly<IsReadonly, WritableDeep<ExpandParts<Parts, true, IsReadonly>>>
-                : Type extends typeof enumSymbol
-                  ? MaybeReadonly<IsReadonly, WritableDeep<Parts[0][keyof Parts[0]]>>
-                  : Type extends typeof indexedKeysSymbol
-                    ? Parts[0] extends {keys: unknown; values: unknown}
-                        ? ExpandParts<[Parts[0]['keys']], IsExact, IsReadonly> extends PropertyKey
-                            ? MaybeReadonly<
-                                  IsReadonly,
-                                  Partial<
-                                      Record<
-                                          ExpandParts<[Parts[0]['keys']], IsExact, IsReadonly>,
-                                          ExpandParts<[Parts[0]['values']], IsExact, IsReadonly>
-                                      >
-                                  >
-                              >
-                            : 'TypeError: indexedKeys keys be a subset of PropertyKey.'
-                        : 'TypeError: indexedKeys input is invalid.'
-                    : Type extends typeof unknownSymbol
-                      ? unknown
-                      : 'TypeError: found not match for shape specifier type.'
+            : Type extends typeof classSymbol
+              ? Parts[0] extends AnyConstructor
+                  ? MaybeReadonly<IsReadonly, InstanceType<Parts[0]>>
+                  : 'TypeError: classShape input must be a constructor.'
+              : Type extends typeof orSymbol
+                ? MaybeReadonly<IsReadonly, ExpandParts<Parts, IsExact, IsReadonly>>
+                : Type extends typeof exactSymbol
+                  ? MaybeReadonly<IsReadonly, WritableDeep<ExpandParts<Parts, true, IsReadonly>>>
+                  : Type extends typeof enumSymbol
+                    ? MaybeReadonly<IsReadonly, WritableDeep<Parts[0][keyof Parts[0]]>>
+                    : Type extends typeof indexedKeysSymbol
+                      ? Parts[0] extends {keys: unknown; values: unknown}
+                          ? ExpandParts<[Parts[0]['keys']], IsExact, IsReadonly> extends PropertyKey
+                              ? MaybeReadonly<
+                                    IsReadonly,
+                                    Partial<
+                                        Record<
+                                            ExpandParts<[Parts[0]['keys']], IsExact, IsReadonly>,
+                                            ExpandParts<[Parts[0]['values']], IsExact, IsReadonly>
+                                        >
+                                    >
+                                >
+                              : 'TypeError: indexedKeys keys be a subset of PropertyKey.'
+                          : 'TypeError: indexedKeys input is invalid.'
+                      : Type extends typeof unknownSymbol
+                        ? unknown
+                        : 'TypeError: found not match for shape specifier type.'
         : PossiblySpecifier extends Primitive
           ? IsExact extends true
               ? PossiblySpecifier
@@ -153,102 +282,6 @@ export type SpecifierToRunTimeType<
                       }
                   >
             : PossiblySpecifier;
-
-export function indexedKeys<
-    Parts extends Readonly<
-        [
-            {
-                keys: unknown;
-                values: unknown;
-            },
-        ]
-    >,
->(...parts: Parts): ShapeIndexedKeys<Parts> {
-    return specifier(parts, indexedKeysSymbol);
-}
-
-export function or<Parts extends AtLeastTuple<unknown, 1>>(...parts: Parts): ShapeOr<Parts> {
-    return specifier(parts, orSymbol);
-}
-
-export function and<Parts extends AtLeastTuple<unknown, 1>>(...parts: Parts): ShapeAnd<Parts> {
-    return specifier(parts, andSymbol);
-}
-
-export function exact<const Parts extends Readonly<AtLeastTuple<unknown, 1>>>(
-    ...parts: Parts
-): ShapeExact<Parts> {
-    return specifier(parts, exactSymbol);
-}
-
-export function enumShape<const Parts extends Readonly<[Record<string, number | string>]>>(
-    ...parts: Parts
-): ShapeEnum<Parts> {
-    return specifier(parts, enumSymbol);
-}
-
-export function unknownShape(defaultValue?: unknown): ShapeUnknown<[unknown]> {
-    return specifier([defaultValue], unknownSymbol);
-}
-
-export function isIndexedKeysSpecifier(maybeSpecifier: unknown): maybeSpecifier is ShapeIndexedKeys<
-    Readonly<
-        [
-            {
-                keys: unknown;
-                values: unknown;
-            },
-        ]
-    >
-> {
-    return specifierHasSymbol(maybeSpecifier, indexedKeysSymbol);
-}
-
-export function isOrShapeSpecifier(
-    maybeSpecifier: unknown,
-): maybeSpecifier is ShapeOr<AtLeastTuple<unknown, 1>> {
-    return specifierHasSymbol(maybeSpecifier, orSymbol);
-}
-
-export function isAndShapeSpecifier(
-    maybeSpecifier: unknown,
-): maybeSpecifier is ShapeAnd<AtLeastTuple<unknown, 1>> {
-    return specifierHasSymbol(maybeSpecifier, andSymbol);
-}
-
-export function isExactShapeSpecifier(
-    maybeSpecifier: unknown,
-): maybeSpecifier is ShapeExact<[unknown]> {
-    return specifierHasSymbol(maybeSpecifier, exactSymbol);
-}
-
-export function isEnumShapeSpecifier(
-    maybeSpecifier: unknown,
-): maybeSpecifier is ShapeEnum<[Record<string, number | string>]> {
-    return specifierHasSymbol(maybeSpecifier, enumSymbol);
-}
-export function isUnknownShapeSpecifier(
-    maybeSpecifier: unknown,
-): maybeSpecifier is ShapeUnknown<[unknown]> {
-    return specifierHasSymbol(maybeSpecifier, unknownSymbol);
-}
-
-export function specifierHasSymbol(maybeSpecifier: unknown, symbol: ShapeSpecifierType) {
-    const specifier = getShapeSpecifier(maybeSpecifier);
-
-    return !!specifier && specifier.specifierType === symbol;
-}
-
-export function specifier<Parts extends BaseParts, Type extends ShapeSpecifierType>(
-    parts: Parts,
-    specifierType: Type,
-): ShapeSpecifier<Parts, Type> {
-    return {
-        [isShapeSpecifierKey]: true,
-        specifierType,
-        parts,
-    };
-}
 
 type MaybeReadonly<IsReadonly extends boolean, OriginalType> = IsReadonly extends true
     ? Readonly<OriginalType>
@@ -280,6 +313,30 @@ export type ShapeToRunTimeType<
               >
       : Shape;
 
+/**
+ * ========================================
+ *
+ * Specifier Utilities
+ *
+ * ========================================
+ */
+export function specifierHasSymbol(maybeSpecifier: unknown, symbol: ShapeSpecifierType) {
+    const specifier = getShapeSpecifier(maybeSpecifier);
+
+    return !!specifier && specifier.specifierType === symbol;
+}
+
+export function specifier<Parts extends BaseParts, Type extends ShapeSpecifierType>(
+    parts: Parts,
+    specifierType: Type,
+): ShapeSpecifier<Parts, Type> {
+    return {
+        [isShapeSpecifierKey]: true,
+        specifierType,
+        parts,
+    };
+}
+
 export function matchesSpecifier(
     subject: unknown,
     shape: unknown,
@@ -288,7 +345,9 @@ export function matchesSpecifier(
     const specifier = getShapeSpecifier(shape);
 
     if (specifier) {
-        if (isAndShapeSpecifier(specifier)) {
+        if (isClassShapeSpecifier(specifier)) {
+            return subject instanceof specifier.parts[0];
+        } else if (isAndShapeSpecifier(specifier)) {
             return specifier.parts.every((part) => matchesSpecifier(subject, part));
         } else if (isOrShapeSpecifier(specifier)) {
             return specifier.parts.some((part) => matchesSpecifier(subject, part));

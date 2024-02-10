@@ -4,6 +4,7 @@ import {assertTypeOf} from 'run-time-assertions';
 import {defineShape} from './define-shape';
 import {
     and,
+    classShape,
     enumShape,
     exact,
     getShapeSpecifier,
@@ -31,6 +32,7 @@ describe('ShapeToRunTimeType', () => {
             myOr: or('', 0),
             myAnd: and('', 0),
             mySimpleArray: [''],
+            myClassShape: classShape(Error),
             complexArray: [
                 '',
                 0,
@@ -66,6 +68,7 @@ describe('ShapeToRunTimeType', () => {
             myOr: string | number;
             myAnd: string & number;
             mySimpleArray: string[];
+            myClassShape: Error;
             complexArray: (string | number)[];
             idk: unknown;
             myEnum: TestEnum;
@@ -96,6 +99,7 @@ describe('ShapeToRunTimeType', () => {
                 myOr: or('', 0),
                 myAnd: and('', 0),
                 mySimpleArray: [''],
+                myClassShape: classShape(Error),
                 complexArray: [
                     '',
                     0,
@@ -133,6 +137,7 @@ describe('ShapeToRunTimeType', () => {
                 myOr: string | number;
                 myAnd: string & number;
                 mySimpleArray: ReadonlyArray<string>;
+                myClassShape: Readonly<Error>;
                 complexArray: ReadonlyArray<string | number>;
                 idk: unknown;
                 myEnum: TestEnum;
@@ -260,6 +265,22 @@ describe(matchesSpecifier.name, () => {
             expect: true,
         },
         {
+            it: 'accepts a class instance',
+            inputs: [
+                new Error(),
+                classShape(Error),
+            ],
+            expect: true,
+        },
+        {
+            it: 'rejects the wrong class instance',
+            inputs: [
+                new Error(),
+                classShape(HTMLElement),
+            ],
+            expect: false,
+        },
+        {
             it: 'rejects invalid indexedKeys subject values',
             inputs: [
                 {hi: 'hi'},
@@ -287,7 +308,7 @@ describe(getShapeSpecifier.name, () => {
             throws: Error,
         },
         {
-            it: 'errors if parts is not an array',
+            it: 'errors if or parts is not an array',
             input: (() => {
                 const orResult: any = or('');
 
@@ -353,6 +374,20 @@ describe(unknownShape.name, () => {
         unknownShape({});
         // @ts-expect-error: multiple inputs are not allowed
         unknownShape('multiple', 'are not allowed either');
+    });
+});
+
+describe(classShape.name, () => {
+    it('requires a constructor input', () => {
+        // @ts-expect-error: a string instance is not a constructor
+        classShape('hi');
+        // @ts-expect-error an object is not a constructor
+        classShape({});
+        // @ts-expect-error a function is not a constructor
+        classShape(() => {});
+
+        classShape(Error);
+        classShape(HTMLElement);
     });
 });
 

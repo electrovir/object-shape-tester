@@ -1,5 +1,8 @@
 import {itCases} from '@augment-vir/browser-testing';
-import {exact, indexedKeys, unknownShape} from './shape-specifiers';
+import {assertInstanceOf} from 'run-time-assertions';
+import {DefaultValueConstructionError} from '../errors/default-value-construction.error';
+import {defineShape} from './define-shape';
+import {classShape, exact, indexedKeys, unknownShape} from './shape-specifiers';
 import {shapeToDefaultValue} from './shape-to-default-value';
 
 describe(shapeToDefaultValue.name, () => {
@@ -30,5 +33,17 @@ describe(shapeToDefaultValue.name, () => {
             ],
             expect: {},
         },
+        {
+            it: 'fails to call a constructor that cannot be called',
+            inputs: [
+                classShape(HTMLElement),
+            ],
+            throws: DefaultValueConstructionError,
+        },
     ]);
+
+    it('creates class default values', () => {
+        const myShape = defineShape(classShape(Error));
+        assertInstanceOf(myShape.defaultValue, Error);
+    });
 });

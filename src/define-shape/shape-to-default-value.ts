@@ -1,9 +1,11 @@
-import {isObject, mapObjectValues} from '@augment-vir/common';
+import {extractErrorMessage, isObject, mapObjectValues} from '@augment-vir/common';
 import {isRunTimeType} from 'run-time-assertions';
+import {DefaultValueConstructionError} from '../errors/default-value-construction.error';
 import {
     ShapeToRunTimeType,
     getShapeSpecifier,
     isAndShapeSpecifier,
+    isClassShapeSpecifier,
     isEnumShapeSpecifier,
     isExactShapeSpecifier,
     isIndexedKeysSpecifier,
@@ -23,7 +25,16 @@ function innerShapeToDefaultValue<Shape>(shape: Shape): any {
     const specifier = getShapeSpecifier(shape);
 
     if (specifier) {
-        if (isOrShapeSpecifier(specifier) || isExactShapeSpecifier(specifier)) {
+        if (isClassShapeSpecifier(specifier)) {
+            const classConstructor = specifier.parts[0];
+            try {
+                return new classConstructor();
+            } catch (caught) {
+                throw new DefaultValueConstructionError(
+                    `Failed to create default value for classShape for class '${classConstructor.name}': ${extractErrorMessage(caught)}`,
+                );
+            }
+        } else if (isOrShapeSpecifier(specifier) || isExactShapeSpecifier(specifier)) {
             return innerShapeToDefaultValue(specifier.parts[0]);
         } else if (isAndShapeSpecifier(specifier)) {
             return specifier.parts.reduce((combined: any, part) => {
@@ -37,7 +48,7 @@ function innerShapeToDefaultValue<Shape>(shape: Shape): any {
             return specifier.parts[0] ?? {};
             /* v8 ignore next 7: this is an edge case fallback */
         } else {
-            throw new Error(
+            throw new DefaultValueConstructionError(
                 `found specifier but it matches no expected specifiers: ${String(
                     specifier.specifierType,
                 )}`,

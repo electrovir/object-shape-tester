@@ -9,6 +9,7 @@ import {
     ShapeDefinition,
     getShapeSpecifier,
     isAndShapeSpecifier,
+    isClassShapeSpecifier,
     isEnumShapeSpecifier,
     isExactShapeSpecifier,
     isIndexedKeysSpecifier,
@@ -100,6 +101,10 @@ function internalAssertValidShape<Shape>({
 
     if (isRunTimeType(shape, 'function')) {
         return isRunTimeType(subject, 'function');
+    }
+
+    if (isClassShapeSpecifier(shape)) {
+        return subject instanceof shape.parts[0];
     }
 
     if (isObject(subject)) {

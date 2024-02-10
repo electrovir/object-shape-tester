@@ -5,6 +5,7 @@ import {assertThrows, assertTypeOf} from 'run-time-assertions';
 import {defineShape} from '../define-shape/define-shape';
 import {
     and,
+    classShape,
     enumShape,
     exact,
     indexedKeys,
@@ -318,7 +319,7 @@ const testCases: ReadonlyArray<FunctionTestCase<typeof assertValidShape>> = [
         throws: ShapeMismatchError,
     },
     {
-        it: 'passes a default value from an and',
+        it: 'fails an incorrect and',
         inputs: [
             {
                 a: 'what',
@@ -332,6 +333,20 @@ const testCases: ReadonlyArray<FunctionTestCase<typeof assertValidShape>> = [
             }),
         ],
         throws: ShapeMismatchError,
+    },
+    {
+        it: 'accepts a valid class instance',
+        inputs: [
+            {
+                a: new Error(),
+                b: '',
+            },
+            defineShape({
+                a: classShape(Error),
+                b: or('', 0),
+            }),
+        ],
+        throws: undefined,
     },
     {
         it: 'accepts methods',
