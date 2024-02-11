@@ -696,7 +696,7 @@ describe(assertValidShape.name, () => {
         );
     });
 
-    it('throws useful errors', () => {
+    it('error message includes whole key chain', () => {
         assertThrows(
             () => {
                 assertValidShape(
@@ -725,7 +725,39 @@ describe(assertValidShape.name, () => {
             },
             {
                 matchMessage:
-                    "Failed on key(s): top level -> 'top' -> 'second' -> 'third' -> 'hi' -> '1'",
+                    "Subject does not match shape definition at key top level -> 'top' -> 'second' -> 'third' -> 'hi' -> '1'",
+            },
+        );
+    });
+
+    it('errors keys go into arrays', () => {
+        assertThrows(
+            () => {
+                assertValidShape(
+                    {
+                        top: [
+                            {
+                                nested: 'hi',
+                            },
+                            {
+                                nested: 'bye',
+                            },
+                            {
+                                notNested: 'invalid',
+                            },
+                        ],
+                    },
+                    defineShape({
+                        top: [
+                            {
+                                nested: '',
+                            },
+                        ],
+                    }),
+                );
+            },
+            {
+                matchMessage: "Subject has extra key 'notNested' in top level -> 'top' -> '2'",
             },
         );
     });

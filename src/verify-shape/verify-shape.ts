@@ -1,6 +1,8 @@
 import {
     PartialAndUndefined,
+    combineErrorMessages,
     getObjectTypedKeys,
+    isLengthAtLeast,
     isObject,
     mapObjectValues,
 } from '@augment-vir/common';
@@ -122,6 +124,7 @@ function internalAssertValidShape<Shape>({
         let matched = false;
 
         if (isOrShapeSpecifier(shape)) {
+            const orErrors: ShapeMismatchError[] = [];
             matched = shape.parts.some((shapePart) => {
                 try {
                     const newKeysPassed = internalAssertValidShape({
@@ -136,13 +139,17 @@ function internalAssertValidShape<Shape>({
                     return true;
                 } catch (error) {
                     if (error instanceof ShapeMismatchError) {
-                        errors.push(error);
+                        orErrors.push(error);
                         return false;
                     } else {
                         throw error;
                     }
                 }
             });
+
+            if (!matched && isLengthAtLeast(orErrors, 1)) {
+                errors.push(orErrors[0]);
+            }
         } else if (isAndShapeSpecifier(shape)) {
             matched = shape.parts.every((shapePart) => {
                 try {
@@ -250,6 +257,10 @@ function internalAssertValidShape<Shape>({
             });
             Object.assign(keysPassed, newKeysPassed);
             matched = true;
+        }
+
+        if (errors.length) {
+            throw new ShapeMismatchError(combineErrorMessages(errors));
         }
 
         if (!matched) {
