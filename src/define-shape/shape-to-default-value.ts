@@ -3,6 +3,7 @@ import {isRunTimeType} from 'run-time-assertions';
 import {DefaultValueConstructionError} from '../errors/default-value-construction.error';
 import {
     ShapeToRunTimeType,
+    expandIndexedKeysKeys,
     getShapeSpecifier,
     isAndShapeSpecifier,
     isClassShapeSpecifier,
@@ -43,7 +44,18 @@ function innerShapeToDefaultValue<Shape>(shape: Shape): any {
         } else if (isEnumShapeSpecifier(specifier)) {
             return Object.values(specifier.parts[0])[0];
         } else if (isIndexedKeysSpecifier(specifier)) {
-            return {};
+            const keys = expandIndexedKeysKeys(specifier);
+
+            if (!specifier.parts[0].required || isRunTimeType(keys, 'boolean')) {
+                return {};
+            }
+
+            return Object.fromEntries(
+                keys.map((key) => [
+                    key,
+                    innerShapeToDefaultValue(specifier.parts[0].values),
+                ]),
+            );
         } else if (isUnknownShapeSpecifier(specifier)) {
             return specifier.parts[0] ?? {};
             /* v8 ignore next 7: this is an edge case fallback */

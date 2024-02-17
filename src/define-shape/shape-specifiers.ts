@@ -397,7 +397,7 @@ function matchesIndexedKeysSpecifierKeys(
             matchesSpecifier(subjectKey, keys),
         );
     } else if (required) {
-        const allRequiredKeys = expandKeysSpecifier(specifier);
+        const allRequiredKeys = expandIndexedKeysKeys(specifier);
 
         if (isRunTimeType(allRequiredKeys, 'boolean')) {
             return allRequiredKeys;
@@ -414,7 +414,7 @@ function matchesIndexedKeysSpecifierKeys(
     }
 }
 
-function expandKeysSpecifier(
+export function expandIndexedKeysKeys(
     specifier: ShapeIndexedKeys<Readonly<[BaseIndexedKeys]>>,
 ): PropertyKey[] | boolean {
     const keys = specifier.parts[0].keys;
@@ -430,7 +430,7 @@ function expandKeysSpecifier(
             return false;
         } else if (isOrShapeSpecifier(nestedSpecifier)) {
             const nestedPropertyKeys = nestedSpecifier.parts.map((part) => {
-                return expandKeysSpecifier(
+                return expandIndexedKeysKeys(
                     indexedKeys({
                         ...specifier.parts[0],
                         keys: part as any,
