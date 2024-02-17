@@ -29,6 +29,7 @@ describe(shapeToDefaultValue.name, () => {
                     values: {
                         hi: '',
                     },
+                    required: false,
                 }),
             ],
             expect: {},

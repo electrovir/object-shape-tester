@@ -7,7 +7,7 @@ import {
     typedArrayIncludes,
     typedHasProperty,
 } from '@augment-vir/common';
-import {isRunTimeType} from 'run-time-assertions';
+import {isPropertyKey, isRunTimeType} from 'run-time-assertions';
 import {LiteralToPrimitive, Primitive, UnionToIntersection, WritableDeep} from 'type-fest';
 import {haveEqualTypes} from './type-equality';
 
@@ -73,6 +73,20 @@ export type ShapeSpecifier<Parts extends BaseParts, Type extends ShapeSpecifierT
     specifierType: Type;
 };
 
+/** Allowed types for keys in the base input for the `indexedKeys` shape. */
+export type AllowedIndexKeysKeysSpecifiers =
+    | ShapeEnum<Readonly<[Record<string, number | string>]>>
+    | ShapeExact<Readonly<AtLeastTuple<PropertyKey, 1>>>
+    | ShapeUnknown<[unknown]>
+    | PropertyKey;
+
+/** Base type for inputs to the `indexedKeys` shape. */
+export type BaseIndexedKeys = {
+    keys: ShapeOr<AtLeastTuple<AllowedIndexKeysKeysSpecifiers, 1>> | AllowedIndexKeysKeysSpecifiers;
+    values: unknown;
+    required: boolean;
+};
+
 /**
  * ========================================
  *
@@ -95,16 +109,10 @@ export type ShapeExact<Parts extends Readonly<AtLeastTuple<unknown, 1>>> = Shape
     Parts,
     typeof exactSymbol
 >;
-export type ShapeIndexedKeys<
-    Parts extends Readonly<
-        [
-            {
-                keys: unknown;
-                values: unknown;
-            },
-        ]
-    >,
-> = ShapeSpecifier<Parts, typeof indexedKeysSymbol>;
+export type ShapeIndexedKeys<Parts extends Readonly<[BaseIndexedKeys]>> = ShapeSpecifier<
+    Parts,
+    typeof indexedKeysSymbol
+>;
 export type ShapeOr<Parts extends AtLeastTuple<unknown, 1>> = ShapeSpecifier<
     Parts,
     typeof orSymbol
@@ -139,16 +147,9 @@ export function exact<const Parts extends Readonly<AtLeastTuple<unknown, 1>>>(
 ): ShapeExact<Parts> {
     return specifier(parts, exactSymbol);
 }
-export function indexedKeys<
-    Parts extends Readonly<
-        [
-            {
-                keys: unknown;
-                values: unknown;
-            },
-        ]
-    >,
->(...parts: Parts): ShapeIndexedKeys<Parts> {
+export function indexedKeys<Parts extends Readonly<[BaseIndexedKeys]>>(
+    ...parts: Parts
+): ShapeIndexedKeys<Parts> {
     return specifier(parts, indexedKeysSymbol);
 }
 export function or<Parts extends AtLeastTuple<unknown, 1>>(...parts: Parts): ShapeOr<Parts> {
@@ -185,16 +186,9 @@ export function isExactShapeSpecifier(
 ): maybeSpecifier is ShapeExact<[unknown]> {
     return specifierHasSymbol(maybeSpecifier, exactSymbol);
 }
-export function isIndexedKeysSpecifier(maybeSpecifier: unknown): maybeSpecifier is ShapeIndexedKeys<
-    Readonly<
-        [
-            {
-                keys: unknown;
-                values: unknown;
-            },
-        ]
-    >
-> {
+export function isIndexedKeysSpecifier(
+    maybeSpecifier: unknown,
+): maybeSpecifier is ShapeIndexedKeys<Readonly<[BaseIndexedKeys]>> {
     return specifierHasSymbol(maybeSpecifier, indexedKeysSymbol);
 }
 export function isOrShapeSpecifier(
@@ -226,6 +220,10 @@ type ExpandParts<Parts extends BaseParts, IsExact extends boolean, IsReadonly ex
                 >
               | Extract<ArrayElement<Parts>, ShapeDefinition<any, any>>['runTimeType'];
 
+type MaybeRequired<T, IsPartial extends boolean> = IsPartial extends true
+    ? Required<T>
+    : Partial<T>;
+
 export type SpecifierToRunTimeType<
     PossiblySpecifier,
     IsExact extends boolean,
@@ -233,30 +231,34 @@ export type SpecifierToRunTimeType<
 > =
     PossiblySpecifier extends ShapeSpecifier<infer Parts, infer Type>
         ? Type extends typeof andSymbol
-            ? MaybeReadonly<
+            ? OptionallyReadonly<
                   IsReadonly,
                   UnionToIntersection<ExpandParts<Parts, IsExact, IsReadonly>>
               >
             : Type extends typeof classSymbol
               ? Parts[0] extends AnyConstructor
-                  ? MaybeReadonly<IsReadonly, InstanceType<Parts[0]>>
+                  ? OptionallyReadonly<IsReadonly, InstanceType<Parts[0]>>
                   : 'TypeError: classShape input must be a constructor.'
               : Type extends typeof orSymbol
-                ? MaybeReadonly<IsReadonly, ExpandParts<Parts, IsExact, IsReadonly>>
+                ? OptionallyReadonly<IsReadonly, ExpandParts<Parts, IsExact, IsReadonly>>
                 : Type extends typeof exactSymbol
-                  ? MaybeReadonly<IsReadonly, WritableDeep<ExpandParts<Parts, true, IsReadonly>>>
+                  ? OptionallyReadonly<
+                        IsReadonly,
+                        WritableDeep<ExpandParts<Parts, true, IsReadonly>>
+                    >
                   : Type extends typeof enumSymbol
-                    ? MaybeReadonly<IsReadonly, WritableDeep<Parts[0][keyof Parts[0]]>>
+                    ? OptionallyReadonly<IsReadonly, WritableDeep<Parts[0][keyof Parts[0]]>>
                     : Type extends typeof indexedKeysSymbol
-                      ? Parts[0] extends {keys: unknown; values: unknown}
+                      ? Parts[0] extends {keys: unknown; values: unknown; required: boolean}
                           ? ExpandParts<[Parts[0]['keys']], IsExact, IsReadonly> extends PropertyKey
-                              ? MaybeReadonly<
+                              ? OptionallyReadonly<
                                     IsReadonly,
-                                    Partial<
+                                    MaybeRequired<
                                         Record<
                                             ExpandParts<[Parts[0]['keys']], IsExact, IsReadonly>,
                                             ExpandParts<[Parts[0]['values']], IsExact, IsReadonly>
-                                        >
+                                        >,
+                                        Parts[0]['required']
                                     >
                                 >
                               : 'TypeError: indexedKeys keys be a subset of PropertyKey.'
@@ -271,7 +273,7 @@ export type SpecifierToRunTimeType<
           : PossiblySpecifier extends object
             ? PossiblySpecifier extends ShapeDefinition<any, any>
                 ? PossiblySpecifier['runTimeType']
-                : MaybeReadonly<
+                : OptionallyReadonly<
                       IsReadonly,
                       {
                           [Prop in keyof PossiblySpecifier]: SpecifierToRunTimeType<
@@ -283,7 +285,7 @@ export type SpecifierToRunTimeType<
                   >
             : PossiblySpecifier;
 
-type MaybeReadonly<IsReadonly extends boolean, OriginalType> = IsReadonly extends true
+type OptionallyReadonly<IsReadonly extends boolean, OriginalType> = IsReadonly extends true
     ? Readonly<OriginalType>
     : OriginalType;
 
@@ -300,7 +302,7 @@ export type ShapeToRunTimeType<
             ? Shape extends ShapeSpecifier<any, typeof exactSymbol>
                 ? SpecifierToRunTimeType<Shape, true, IsReadonly>
                 : SpecifierToRunTimeType<Shape, IsExact, IsReadonly>
-            : MaybeReadonly<
+            : OptionallyReadonly<
                   IsReadonly,
                   {
                       [PropName in keyof Shape]: Shape[PropName] extends ShapeSpecifier<
@@ -341,6 +343,7 @@ export function matchesSpecifier(
     subject: unknown,
     shape: unknown,
     allowExtraKeys?: boolean | undefined,
+    checkValues?: boolean | undefined,
 ): boolean {
     const specifier = getShapeSpecifier(shape);
 
@@ -364,14 +367,8 @@ export function matchesSpecifier(
                 return false;
             }
 
-            const keysCheck = allowExtraKeys
-                ? true
-                : getObjectTypedKeys(subject).every((subjectKey) =>
-                      matchesSpecifier(subjectKey, specifier.parts[0].keys),
-                  );
-
             return (
-                keysCheck &&
+                matchesIndexedKeysSpecifierKeys(subject, specifier, !!allowExtraKeys) &&
                 getObjectTypedValues(subject).every((subjectValue) =>
                     matchesSpecifier(subjectValue, specifier.parts[0].values),
                 )
@@ -380,7 +377,100 @@ export function matchesSpecifier(
             return true;
         }
     }
-    return haveEqualTypes(subject, shape);
+    if (checkValues) {
+        return shape === subject;
+    } else {
+        return haveEqualTypes(subject, shape);
+    }
+}
+
+function matchesIndexedKeysSpecifierKeys(
+    subject: object,
+    specifier: ShapeIndexedKeys<Readonly<[BaseIndexedKeys]>>,
+    allowExtraKeys: boolean,
+): boolean {
+    const required = specifier.parts[0].required;
+    const keys = specifier.parts[0].keys;
+
+    if (!allowExtraKeys) {
+        return getObjectTypedKeys(subject).every((subjectKey) =>
+            matchesSpecifier(subjectKey, keys),
+        );
+    } else if (required) {
+        const allRequiredKeys = expandKeysSpecifier(specifier);
+
+        if (isRunTimeType(allRequiredKeys, 'boolean')) {
+            return allRequiredKeys;
+        }
+
+        return allRequiredKeys.every((requiredKey) => {
+            return getObjectTypedKeys(subject).some((subjectKey) =>
+                matchesSpecifier(subjectKey, requiredKey, false, true),
+            );
+        });
+    } else {
+        /** No checks necessary in this case. */
+        return true;
+    }
+}
+
+function expandKeysSpecifier(
+    specifier: ShapeIndexedKeys<Readonly<[BaseIndexedKeys]>>,
+): PropertyKey[] | boolean {
+    const keys = specifier.parts[0].keys;
+
+    const nestedSpecifier = getShapeSpecifier(keys);
+
+    if (isPropertyKey(keys)) {
+        return [keys];
+    } else if (nestedSpecifier) {
+        if (isClassShapeSpecifier(nestedSpecifier)) {
+            return false;
+        } else if (isAndShapeSpecifier(nestedSpecifier)) {
+            return false;
+        } else if (isOrShapeSpecifier(nestedSpecifier)) {
+            const nestedPropertyKeys = nestedSpecifier.parts.map((part) => {
+                return expandKeysSpecifier(
+                    indexedKeys({
+                        ...specifier.parts[0],
+                        keys: part as any,
+                    }),
+                );
+            });
+
+            let nestedBoolean: boolean | undefined = undefined;
+            nestedPropertyKeys.forEach((nested) => {
+                if (!isRunTimeType(nested, 'boolean')) {
+                    return;
+                }
+                if (nested && nestedBoolean == undefined) {
+                    nestedBoolean = true;
+                } else {
+                    nestedBoolean = false;
+                }
+            });
+
+            if (isRunTimeType(nestedBoolean, 'boolean')) {
+                return nestedBoolean;
+            }
+
+            return nestedPropertyKeys.flat().filter(isPropertyKey);
+        } else if (isExactShapeSpecifier(nestedSpecifier)) {
+            const propertyKeyParts = nestedSpecifier.parts.filter(isPropertyKey);
+            if (propertyKeyParts.length !== nestedSpecifier.parts.length) {
+                return false;
+            }
+            return propertyKeyParts;
+        } else if (isEnumShapeSpecifier(nestedSpecifier)) {
+            return Object.values(nestedSpecifier.parts[0]);
+        } else if (isIndexedKeysSpecifier(nestedSpecifier)) {
+            return false;
+        } else if (isUnknownShapeSpecifier(nestedSpecifier)) {
+            return true;
+        }
+    }
+
+    return false;
 }
 
 export function getShapeSpecifier(

@@ -32,6 +32,16 @@ describe('ShapeToRunTimeType', () => {
             myOr: or('', 0),
             myAnd: and('', 0),
             mySimpleArray: [''],
+            indexedPartial: indexedKeys({
+                keys: enumShape(TestEnum),
+                values: '',
+                required: false,
+            }),
+            indexedRequired: indexedKeys({
+                keys: enumShape(TestEnum),
+                values: '',
+                required: true,
+            }),
             myClassShape: classShape(Error),
             complexArray: [
                 '',
@@ -68,6 +78,8 @@ describe('ShapeToRunTimeType', () => {
             myOr: string | number;
             myAnd: string & number;
             mySimpleArray: string[];
+            indexedPartial: Partial<Record<TestEnum, string>>;
+            indexedRequired: Record<TestEnum, string>;
             myClassShape: Error;
             complexArray: (string | number)[];
             idk: unknown;
@@ -157,6 +169,14 @@ describe('ShapeToRunTimeType', () => {
         >();
     });
 
+    it('works with or and null', () => {
+        const myNullableShape = defineShape(or(null, {hello: ''}), true);
+
+        assertTypeOf<typeof myNullableShape.runTimeType>().toEqualTypeOf<
+            Readonly<{hello: string} | null>
+        >();
+    });
+
     it('works with exact strings', () => {
         const myShape = defineShape({message: exact('hello')});
         type MyType = typeof myShape.runTimeType;
@@ -174,6 +194,7 @@ describe('ShapeToRunTimeType', () => {
                 values: {
                     helloThere: 0,
                 },
+                required: false,
             }),
         });
 
@@ -189,6 +210,7 @@ describe('ShapeToRunTimeType', () => {
             nestedValues: indexedKeys({
                 keys: '',
                 values: 0,
+                required: false,
             }),
         });
 
@@ -196,6 +218,31 @@ describe('ShapeToRunTimeType', () => {
             thing: string;
             nestedValues: Partial<Record<string, number>>;
         }>();
+    });
+
+    it('works with nonsensically required vague string indexed keys', () => {
+        const shapeWithIndexedKeys = defineShape({
+            thing: '',
+            nestedValues: indexedKeys({
+                keys: '',
+                values: 0,
+                required: true,
+            }),
+        });
+
+        assertTypeOf<typeof shapeWithIndexedKeys.runTimeType>().toEqualTypeOf<{
+            thing: string;
+            nestedValues: Record<string, number>;
+        }>();
+
+        /**
+         * Despite the required, an empty object still works here because it doesn't make any sense
+         * to require a key of type `string`.
+         */
+        const example: typeof shapeWithIndexedKeys.runTimeType = {
+            thing: 'hi',
+            nestedValues: {},
+        };
     });
 });
 
@@ -216,6 +263,7 @@ describe(matchesSpecifier.name, () => {
                 indexedKeys({
                     keys: '',
                     values: 0,
+                    required: false,
                 }),
             ],
             expect: true,
@@ -227,6 +275,7 @@ describe(matchesSpecifier.name, () => {
                 indexedKeys({
                     keys: '',
                     values: 0,
+                    required: false,
                 }),
             ],
             expect: false,
@@ -238,6 +287,7 @@ describe(matchesSpecifier.name, () => {
                 indexedKeys({
                     keys: '',
                     values: 0,
+                    required: false,
                 }),
             ],
             expect: true,
@@ -249,6 +299,7 @@ describe(matchesSpecifier.name, () => {
                 indexedKeys({
                     keys: exact('hi'),
                     values: 0,
+                    required: false,
                 }),
             ],
             expect: false,
@@ -260,6 +311,7 @@ describe(matchesSpecifier.name, () => {
                 indexedKeys({
                     keys: exact('hi'),
                     values: 0,
+                    required: false,
                 }),
             ],
             expect: true,
@@ -287,6 +339,7 @@ describe(matchesSpecifier.name, () => {
                 indexedKeys({
                     keys: '',
                     values: 0,
+                    required: false,
                 }),
             ],
             expect: false,

@@ -497,7 +497,7 @@ describe(assertValidShape.name, () => {
             isValidShape(exampleInstance, shapeWithNested) ? exampleInstance : undefined;
     });
 
-    it('works with indexedKeys shapes', () => {
+    it('works with partial indexedKeys shapes', () => {
         assertValidShape(
             {
                 stuff: 'hello there',
@@ -510,6 +510,7 @@ describe(assertValidShape.name, () => {
                 moreStuff: indexedKeys({
                     keys: '',
                     values: 0,
+                    required: false,
                 }),
             }),
         );
@@ -526,6 +527,7 @@ describe(assertValidShape.name, () => {
                     moreStuff: indexedKeys({
                         keys: exact('hi'),
                         values: 0,
+                        required: false,
                     }),
                 }),
             ),
@@ -542,8 +544,140 @@ describe(assertValidShape.name, () => {
                 moreStuff: indexedKeys({
                     keys: exact('hi'),
                     values: 0,
+                    required: false,
                 }),
             }),
+        );
+    });
+
+    it('works with required indexedKeys shapes', () => {
+        assertValidShape(
+            {
+                stuff: 'hello there',
+                moreStuff: {
+                    hi: 0,
+                },
+            },
+            defineShape({
+                stuff: '',
+                moreStuff: indexedKeys({
+                    keys: exact('hi'),
+                    values: 0,
+                    required: true,
+                }),
+            }),
+        );
+        assertValidShape(
+            {
+                stuff: 'hello there',
+                moreStuff: {
+                    [SharedEnum.First]: 42,
+                    [SharedEnum.Second]: -1,
+                },
+            },
+            defineShape({
+                stuff: '',
+                moreStuff: indexedKeys({
+                    keys: enumShape(SharedEnum),
+                    values: 0,
+                    required: true,
+                }),
+            }),
+        );
+        assertValidShape(
+            {
+                stuff: 'hello there',
+                moreStuff: {
+                    hi: 0,
+                    bye: 1,
+                },
+            },
+            defineShape({
+                stuff: '',
+                moreStuff: indexedKeys({
+                    keys: or(exact('hi'), exact('bye')),
+                    values: 0,
+                    required: true,
+                }),
+            }),
+        );
+    });
+
+    it('rejects missing required indexedKeys shapes', () => {
+        assertThrows(
+            () =>
+                assertValidShape(
+                    {
+                        stuff: 'hello there',
+                        /** Needs at least one key */
+                        moreStuff: {},
+                    },
+                    defineShape({
+                        stuff: '',
+                        moreStuff: indexedKeys({
+                            keys: '',
+                            values: 0,
+                            required: true,
+                        }),
+                    }),
+                ),
+            undefined,
+        );
+        assertThrows(() =>
+            assertValidShape(
+                {
+                    stuff: 'hello there',
+                    moreStuff: {
+                        /** Missing exact key. */
+                        derp: 0,
+                    },
+                },
+                defineShape({
+                    stuff: '',
+                    moreStuff: indexedKeys({
+                        keys: exact('hi'),
+                        values: 0,
+                        required: true,
+                    }),
+                }),
+            ),
+        );
+        assertThrows(() =>
+            assertValidShape(
+                {
+                    stuff: 'hello there',
+                    moreStuff: {
+                        /** Missing all `SharedEnum` values. */
+                        [SharedEnum.First]: 42,
+                    },
+                },
+                defineShape({
+                    stuff: '',
+                    moreStuff: indexedKeys({
+                        keys: enumShape(SharedEnum),
+                        values: 0,
+                        required: true,
+                    }),
+                }),
+            ),
+        );
+        assertThrows(() =>
+            assertValidShape(
+                {
+                    stuff: 'hello there',
+                    moreStuff: {
+                        hi: 0,
+                    },
+                },
+                defineShape({
+                    stuff: '',
+                    moreStuff: indexedKeys({
+                        keys: or(exact('hi'), exact('bye')),
+                        values: 0,
+                        required: true,
+                    }),
+                }),
+            ),
         );
     });
 
