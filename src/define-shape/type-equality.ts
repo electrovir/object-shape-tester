@@ -1,7 +1,12 @@
 import {getRunTimeType} from 'run-time-assertions';
 
-export function haveEqualTypes(a: unknown, b: unknown): boolean {
-    const constructorsMatch = (a as any)?.constructor === (b as any)?.constructor;
+export function haveEqualTypes(subject: unknown, shape: unknown): boolean {
+    const shapeConstructor = shape?.constructor;
+    const subjectPrototype = (subject as any)?.constructor?.prototype;
+    const constructorsEqual = (subject as any)?.constructor === shapeConstructor;
+    const constructorsInstanceOf =
+        shapeConstructor && subjectPrototype ? subjectPrototype instanceof shapeConstructor : false;
 
-    return getRunTimeType(a) === getRunTimeType(b) && constructorsMatch;
+    const constructorsMatch = constructorsEqual || constructorsInstanceOf;
+    return getRunTimeType(subject) === getRunTimeType(shape) && constructorsMatch;
 }

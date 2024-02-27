@@ -199,7 +199,6 @@ describe(defineShape.name, () => {
             },
             true,
         );
-        console.log(shapeB.defaultValue);
         assertValidShape(shapeB.defaultValue, shapeB);
     });
 

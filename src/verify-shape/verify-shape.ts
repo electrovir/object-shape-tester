@@ -315,8 +315,16 @@ function isValidRawObjectShape<Shape>({
     const keysPassed: Record<PropertyKey, boolean> = {};
 
     if (isObject(shape)) {
-        const subjectKeys = new Set<PropertyKey>(getObjectTypedKeys(subject));
         const shapeKeys = new Set<PropertyKey>(getObjectTypedKeys(shape));
+        const subjectKeys = new Set<PropertyKey>(getObjectTypedKeys(subject));
+
+        shapeKeys.forEach((shapeKey) => {
+            // try to account for non-enumerable keys
+            if (shapeKey in subject) {
+                subjectKeys.add(shapeKey);
+            }
+        });
+
         if (!options.ignoreExtraKeys) {
             subjectKeys.forEach((subjectKey) => {
                 if (!shapeKeys.has(subjectKey)) {

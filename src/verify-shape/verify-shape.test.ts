@@ -603,6 +603,17 @@ describe(assertValidShape.name, () => {
         );
     });
 
+    it('allows class instances to match objects', () => {
+        assertValidShape(
+            new RegExp('stuff'),
+            defineShape({
+                flags: '',
+                source: '',
+            }),
+            {allowExtraKeys: true},
+        );
+    });
+
     it('rejects missing required indexedKeys shapes', () => {
         assertThrows(
             () =>
