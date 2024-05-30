@@ -1,6 +1,7 @@
 import {
     PartialAndUndefined,
     combineErrorMessages,
+    ensureErrorAndPrependMessage,
     getObjectTypedKeys,
     isLengthAtLeast,
     isObject,
@@ -43,16 +44,25 @@ export function assertValidShape<Shape, IsReadonly extends boolean>(
     subject: unknown,
     shapeDefinition: ShapeDefinition<Shape, IsReadonly>,
     options: PartialAndUndefined<CheckShapeValidityOptions> = {},
+    failureMessage = '',
 ): asserts subject is ShapeDefinition<Shape, IsReadonly>['runTimeType'] {
-    internalAssertValidShape({
-        subject,
-        shape: shapeDefinition.shape,
-        keys: ['top level'],
-        options: {
-            exactValues: false,
-            ignoreExtraKeys: !!options.allowExtraKeys,
-        },
-    });
+    try {
+        internalAssertValidShape({
+            subject,
+            shape: shapeDefinition.shape,
+            keys: ['top level'],
+            options: {
+                exactValues: false,
+                ignoreExtraKeys: !!options.allowExtraKeys,
+            },
+        });
+    } catch (error) {
+        if (failureMessage) {
+            throw ensureErrorAndPrependMessage(error, failureMessage);
+        } else {
+            throw error;
+        }
+    }
 }
 
 function createKeyString(keys: ReadonlyArray<PropertyKey>): string {

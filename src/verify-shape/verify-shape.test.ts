@@ -1,5 +1,6 @@
 import {FunctionTestCase, itCases} from '@augment-vir/browser-testing';
-import {ArrayElement, randomString} from '@augment-vir/common';
+import type {ArrayElement} from '@augment-vir/common';
+import {randomString} from '@augment-vir/common';
 import {assert} from '@open-wc/testing';
 import {assertThrows, assertTypeOf} from 'run-time-assertions';
 import {defineShape} from '../define-shape/define-shape';
@@ -428,6 +429,23 @@ describe(assertValidShape.name, () => {
                 };
             }),
         );
+
+        it('prepends custom message', () => {
+            assertThrows(
+                () =>
+                    assertValidShape(
+                        {
+                            hour: 0,
+                            minute: 0,
+                            second: 0,
+                        },
+                        defineShape({hi: ''}),
+                        {},
+                        'oh no this failed',
+                    ),
+                {matchMessage: 'oh no this failed'},
+            );
+        });
 
         it('works on multi-and shape', () => {
             /** These types are copied out of the date-vir package */

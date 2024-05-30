@@ -1,8 +1,15 @@
 {
     "name": "object-shape-tester",
-    "version": "2.3.2",
+    "version": "2.4.0",
     "description": "Test object properties and value types.",
-    "keywords": ["object", "shape", "comparison", "verification", "type", "run-time"],
+    "keywords": [
+        "object",
+        "shape",
+        "comparison",
+        "verification",
+        "type",
+        "run-time"
+    ],
     "homepage": "https://github.com/electrovir/object-shape-tester",
     "bugs": {
         "url": "https://github.com/electrovir/object-shape-tester/issues"
