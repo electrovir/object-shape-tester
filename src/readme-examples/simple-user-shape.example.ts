@@ -1,11 +1,11 @@
-import {defineShape, isValidShape} from '..';
+import {defineShape, isValidShape} from '../index.js';
 
 const userShapeDefinition = defineShape({
     name: 'empty name',
     id: 0,
 });
 
-export type User = typeof userShapeDefinition.runTimeType;
+export type User = typeof userShapeDefinition.runtimeType;
 
 export const emptyUser = userShapeDefinition.defaultValue;
 

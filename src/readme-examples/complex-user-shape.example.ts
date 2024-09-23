@@ -1,4 +1,4 @@
-import {and, defineShape, enumShape, exact, isValidShape, or, unknownShape} from '..';
+import {and, defineShape, enumShape, exact, isValidShape, or, unknownShape} from '../index.js';
 
 enum AuthLevel {
     Basic = 'basic',
@@ -16,7 +16,7 @@ const complexUserShapeDefinition = defineShape({
     extraDetails: unknownShape(),
 });
 
-export type ComplexUser = typeof complexUserShapeDefinition.runTimeType;
+export type ComplexUser = typeof complexUserShapeDefinition.runtimeType;
 
 export const emptyComplexUser = complexUserShapeDefinition.defaultValue;
 

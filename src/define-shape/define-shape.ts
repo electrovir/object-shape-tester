@@ -1,4 +1,4 @@
-import {ShapeDefinition, ShapeToRunTimeType, isShapeDefinitionKey} from './shape-specifiers.js';
+import {ShapeDefinition, ShapeToRuntimeType, isShapeDefinitionKey} from './shape-specifiers.js';
 import {shapeToDefaultValue} from './shape-to-default-value.js';
 
 export function defineShape<Shape, IsReadonly extends boolean = false>(
@@ -7,8 +7,8 @@ export function defineShape<Shape, IsReadonly extends boolean = false>(
 ): ShapeDefinition<Shape, IsReadonly> {
     return {
         shape,
-        get runTimeType(): ShapeToRunTimeType<Shape, false, IsReadonly> {
-            throw new Error(`runTimeType cannot be used as a value, it is only for types.`);
+        get runtimeType(): ShapeToRuntimeType<Shape, false, IsReadonly> {
+            throw new Error(`runtimeType cannot be used as a value, it is only for types.`);
         },
         isReadonly,
         get defaultValue() {

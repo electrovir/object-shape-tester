@@ -2,7 +2,7 @@ import {check} from '@augment-vir/assert';
 import {extractErrorMessage, mapObjectValues} from '@augment-vir/common';
 import {DefaultValueConstructionError} from '../errors/default-value-construction.error.js';
 import {
-    ShapeToRunTimeType,
+    ShapeToRuntimeType,
     expandIndexedKeysKeys,
     getShapeSpecifier,
     isAndShapeSpecifier,
@@ -18,7 +18,7 @@ import {
 export function shapeToDefaultValue<Shape, IsReadonly extends boolean = false>(
     shape: Shape,
     isReadonly: IsReadonly = false as IsReadonly,
-): ShapeToRunTimeType<Shape, false, IsReadonly> {
+): ShapeToRuntimeType<Shape, false, IsReadonly> {
     return innerShapeToDefaultValue(shape);
 }
 

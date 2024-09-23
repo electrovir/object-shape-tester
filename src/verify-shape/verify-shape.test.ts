@@ -511,7 +511,7 @@ describe(assertValidShape.name, () => {
             exactProp: exact('derp'),
         });
 
-        assert.tsType<(typeof shapeWithNested)['runTimeType']>().equals<{
+        assert.tsType<(typeof shapeWithNested)['runtimeType']>().equals<{
             stringProp: string;
             andProp: {
                 hi: string;
@@ -527,7 +527,7 @@ describe(assertValidShape.name, () => {
             exactProp: 'derp';
         }>();
 
-        const exampleInstance: (typeof shapeWithNested)['runTimeType'] = {
+        const exampleInstance: (typeof shapeWithNested)['runtimeType'] = {
             stringProp: 'yo',
             andProp: {hi: 'hello', bye: 'good bye'},
             nestedShape: {
@@ -541,9 +541,9 @@ describe(assertValidShape.name, () => {
 
         assertValidShape(exampleInstance, shapeWithNested);
 
-        const assignmentAfterAssert: typeof shapeWithNested.runTimeType = exampleInstance;
+        const assignmentAfterAssert: typeof shapeWithNested.runtimeType = exampleInstance;
 
-        const assignmentWithIsValidShape: typeof shapeWithNested.runTimeType | undefined =
+        const assignmentWithIsValidShape: typeof shapeWithNested.runtimeType | undefined =
             isValidShape(exampleInstance, shapeWithNested) ? exampleInstance : undefined;
     });
 
@@ -747,7 +747,7 @@ describe(assertValidShape.name, () => {
             message: exact('hello'),
         });
 
-        type MyType = typeof myShape.runTimeType;
+        type MyType = typeof myShape.runtimeType;
 
         const instance = {} as any;
 
@@ -768,7 +768,7 @@ describe(assertValidShape.name, () => {
                 },
             ),
         );
-        type MyShape = typeof myShape.runTimeType;
+        type MyShape = typeof myShape.runtimeType;
 
         const instance: MyShape = {
             prop1: 'hi',
@@ -792,7 +792,7 @@ describe(assertValidShape.name, () => {
             ),
             true,
         );
-        type MyShape = typeof myShape.runTimeType;
+        type MyShape = typeof myShape.runtimeType;
 
         const instance: MyShape = {
             prop1: 'hi',

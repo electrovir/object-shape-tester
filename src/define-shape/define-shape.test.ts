@@ -9,10 +9,10 @@ describe(defineShape.name, () => {
         helloThere: 'hi',
     });
 
-    type MyShape = typeof exampleShape.runTimeType;
+    type MyShape = typeof exampleShape.runtimeType;
 
     it('creates a simple shape object with correct type', () => {
-        assert.tsType<(typeof exampleShape)['runTimeType']>().equals<{
+        assert.tsType<(typeof exampleShape)['runtimeType']>().equals<{
             helloThere: string;
         }>();
         assert.tsType(exampleShape.shape).equals({helloThere: 'hi'});
@@ -20,7 +20,7 @@ describe(defineShape.name, () => {
     });
 
     it('converts shape specifiers', () => {
-        assert.tsType<(typeof exampleShape)['runTimeType']>().equals<{
+        assert.tsType<(typeof exampleShape)['runtimeType']>().equals<{
             helloThere: string;
         }>();
         assert.tsType(exampleShape.shape).equals({helloThere: 'hi'});
@@ -29,7 +29,7 @@ describe(defineShape.name, () => {
 
     it('throws an error if runtimeType is accessed as a value', () => {
         assert.throws(() => {
-            exampleShape.runTimeType;
+            exampleShape.runtimeType;
         });
     });
 
@@ -39,7 +39,7 @@ describe(defineShape.name, () => {
         };
 
         const shapeWithExact = defineShape({exactProp: exact('derp')});
-        type MyExact = typeof shapeWithExact.runTimeType;
+        type MyExact = typeof shapeWithExact.runtimeType;
         const myExactAssignment: MyExact = {
             exactProp: 'derp',
         };
@@ -51,14 +51,14 @@ describe(defineShape.name, () => {
 
     it('works with bare specifiers', () => {
         const myUnknown = defineShape(unknownShape());
-        const myInstance: (typeof myUnknown)['runTimeType'] = myUnknown.defaultValue;
+        const myInstance: (typeof myUnknown)['runtimeType'] = myUnknown.defaultValue;
 
         assert.tsType(myInstance).equals<unknown>();
 
         const myNestedShape = defineShape({
             nested: myUnknown,
         });
-        const myNestedInstance: (typeof myNestedShape)['runTimeType'] = myNestedShape.defaultValue;
+        const myNestedInstance: (typeof myNestedShape)['runtimeType'] = myNestedShape.defaultValue;
         assert.tsType(myNestedInstance).equals<{nested: unknown}>();
     });
 
@@ -74,7 +74,7 @@ describe(defineShape.name, () => {
         const myNestedShape = defineShape({
             nested: or(myShape, 0),
         });
-        const myNestedInstance: (typeof myNestedShape)['runTimeType'] = myNestedShape.defaultValue;
+        const myNestedInstance: (typeof myNestedShape)['runtimeType'] = myNestedShape.defaultValue;
         assert.tsType(myNestedInstance).equals<{
             nested:
                 | number
@@ -97,7 +97,7 @@ describe(defineShape.name, () => {
             c: or(0, exact('hello there')),
         });
 
-        assert.tsType<(typeof myShape)['runTimeType']>().equals<{
+        assert.tsType<(typeof myShape)['runtimeType']>().equals<{
             a: {what: 'who'};
             b: number | 'hello there';
             c: number | 'hello there';
@@ -136,7 +136,7 @@ describe(defineShape.name, () => {
             }),
         );
 
-        const fullDate: (typeof fullDateShape)['runTimeType'] = {
+        const fullDate: (typeof fullDateShape)['runtimeType'] = {
             day: 0,
             month: 0,
             timestamp: 0,
@@ -154,7 +154,7 @@ describe(defineShape.name, () => {
             second: 'b',
             third: 'c' as const,
         });
-        assert.tsType<typeof shapeA.runTimeType>().equals<{
+        assert.tsType<typeof shapeA.runtimeType>().equals<{
             first: string;
             second: string;
             third: 'c';
@@ -167,7 +167,7 @@ describe(defineShape.name, () => {
             second: 'b',
             myClass: classShape(Error),
         });
-        assert.tsType<typeof shapeA.runTimeType>().equals<{
+        assert.tsType<typeof shapeA.runtimeType>().equals<{
             first: string;
             second: string;
             myClass: Error;
@@ -211,7 +211,7 @@ describe(defineShape.name, () => {
                 ].join(': ');
             },
         });
-        assert.tsType<typeof shapeWithMethod.runTimeType>().equals<{
+        assert.tsType<typeof shapeWithMethod.runtimeType>().equals<{
             myData: string;
             myMethod: (a: string, b: number) => string;
         }>();

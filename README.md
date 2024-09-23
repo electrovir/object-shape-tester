@@ -30,7 +30,7 @@ const userShapeDefinition = defineShape({
     id: 0,
 });
 
-export type User = typeof userShapeDefinition.runTimeType;
+export type User = typeof userShapeDefinition.runtimeType;
 
 export const emptyUser = userShapeDefinition.defaultValue;
 
@@ -80,7 +80,7 @@ const complexUserShapeDefinition = defineShape({
     extraDetails: unknownShape(),
 });
 
-export type ComplexUser = typeof complexUserShapeDefinition.runTimeType;
+export type ComplexUser = typeof complexUserShapeDefinition.runtimeType;
 
 export const emptyComplexUser = complexUserShapeDefinition.defaultValue;
 

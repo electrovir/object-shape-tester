@@ -20,7 +20,7 @@ enum TestEnum {
     Third = 'third',
 }
 
-describe('ShapeToRunTimeType', () => {
+describe('ShapeToRuntimeType', () => {
     it('converts specifiers into their part types', () => {
         const shapeDefinition = defineShape({
             stringProp: 'hello',
@@ -68,7 +68,7 @@ describe('ShapeToRunTimeType', () => {
             myExact: exact('hello there'),
         });
 
-        assert.tsType<typeof shapeDefinition.runTimeType>().slowEquals<{
+        assert.tsType<typeof shapeDefinition.runtimeType>().slowEquals<{
             stringProp: string;
             nestedObjectProp: {
                 nestedString: string;
@@ -141,7 +141,7 @@ describe('ShapeToRunTimeType', () => {
             true,
         );
 
-        assert.tsType<typeof shapeDefinition.runTimeType>().slowEquals<
+        assert.tsType<typeof shapeDefinition.runtimeType>().slowEquals<
             Readonly<{
                 stringProp: string;
                 nestedObjectProp: Readonly<{
@@ -179,13 +179,13 @@ describe('ShapeToRunTimeType', () => {
         const myNullableShape = defineShape(or(null, {hello: ''}), true);
 
         assert
-            .tsType<typeof myNullableShape.runTimeType>()
+            .tsType<typeof myNullableShape.runtimeType>()
             .equals<Readonly<{hello: string} | null>>();
     });
 
     it('works with exact strings', () => {
         const myShape = defineShape({message: exact('hello')});
-        type MyType = typeof myShape.runTimeType;
+        type MyType = typeof myShape.runtimeType;
 
         assert.tsType<MyType>().equals<{
             message: 'hello';
@@ -204,7 +204,7 @@ describe('ShapeToRunTimeType', () => {
             }),
         });
 
-        assert.tsType<typeof shapeWithIndexedKeys.runTimeType>().equals<{
+        assert.tsType<typeof shapeWithIndexedKeys.runtimeType>().equals<{
             thing: string;
             nestedValues: Partial<Record<'hi' | 'bye', {helloThere: number}>>;
         }>();
@@ -220,7 +220,7 @@ describe('ShapeToRunTimeType', () => {
             }),
         });
 
-        assert.tsType<typeof shapeWithIndexedKeys.runTimeType>().equals<{
+        assert.tsType<typeof shapeWithIndexedKeys.runtimeType>().equals<{
             thing: string;
             nestedValues: Partial<Record<string, number>>;
         }>();
@@ -236,7 +236,7 @@ describe('ShapeToRunTimeType', () => {
             }),
         });
 
-        assert.tsType<typeof shapeWithIndexedKeys.runTimeType>().equals<{
+        assert.tsType<typeof shapeWithIndexedKeys.runtimeType>().equals<{
             thing: string;
             nestedValues: Record<string, number>;
         }>();
@@ -245,7 +245,7 @@ describe('ShapeToRunTimeType', () => {
          * Despite the required, an empty object still works here because it doesn't make any sense
          * to require a key of type `string`.
          */
-        const example: typeof shapeWithIndexedKeys.runTimeType = {
+        const example: typeof shapeWithIndexedKeys.runtimeType = {
             thing: 'hi',
             nestedValues: {},
         };

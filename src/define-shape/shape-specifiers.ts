@@ -26,9 +26,9 @@ export const isShapeDefinitionKey =
 /** This definition has to be in this file because the types circularly depend on each other. */
 export type ShapeDefinition<Shape, IsReadonly extends boolean> = {
     shape: Shape;
-    runTimeType: ShapeToRunTimeType<Shape, false, IsReadonly>;
+    runtimeType: ShapeToRuntimeType<Shape, false, IsReadonly>;
     isReadonly: IsReadonly;
-    defaultValue: Readonly<ShapeToRunTimeType<Shape, false, IsReadonly>>;
+    defaultValue: Readonly<ShapeToRuntimeType<Shape, false, IsReadonly>>;
     [isShapeDefinitionKey]: true;
 };
 
@@ -209,20 +209,20 @@ export function isUnknownShapeSpecifier(
  */
 type ExpandParts<Parts extends BaseParts, IsExact extends boolean, IsReadonly extends boolean> =
     Extract<ArrayElement<Parts>, ShapeDefinition<any, any>> extends never
-        ? SpecifierToRunTimeType<ArrayElement<Parts>, IsExact, IsReadonly>
+        ? SpecifierToRuntimeType<ArrayElement<Parts>, IsExact, IsReadonly>
         :
-              | SpecifierToRunTimeType<
+              | SpecifierToRuntimeType<
                     Exclude<ArrayElement<Parts>, ShapeDefinition<any, any>>,
                     IsExact,
                     IsReadonly
                 >
-              | Extract<ArrayElement<Parts>, ShapeDefinition<any, any>>['runTimeType'];
+              | Extract<ArrayElement<Parts>, ShapeDefinition<any, any>>['runtimeType'];
 
 type MaybeRequired<T, IsPartial extends boolean> = IsPartial extends true
     ? Required<T>
     : Partial<T>;
 
-export type SpecifierToRunTimeType<
+export type SpecifierToRuntimeType<
     PossiblySpecifier,
     IsExact extends boolean,
     IsReadonly extends boolean,
@@ -270,11 +270,11 @@ export type SpecifierToRunTimeType<
               : LiteralToPrimitive<PossiblySpecifier>
           : PossiblySpecifier extends object
             ? PossiblySpecifier extends ShapeDefinition<any, any>
-                ? PossiblySpecifier['runTimeType']
+                ? PossiblySpecifier['runtimeType']
                 : OptionallyReadonly<
                       IsReadonly,
                       {
-                          [Prop in keyof PossiblySpecifier]: SpecifierToRunTimeType<
+                          [Prop in keyof PossiblySpecifier]: SpecifierToRuntimeType<
                               PossiblySpecifier[Prop],
                               IsExact,
                               IsReadonly
@@ -287,7 +287,7 @@ type OptionallyReadonly<IsReadonly extends boolean, OriginalType> = IsReadonly e
     ? Readonly<OriginalType>
     : OriginalType;
 
-export type ShapeToRunTimeType<
+export type ShapeToRuntimeType<
     Shape,
     IsExact extends boolean,
     IsReadonly extends boolean,
@@ -295,11 +295,11 @@ export type ShapeToRunTimeType<
     ? Shape
     : Shape extends object
       ? Shape extends ShapeDefinition<infer InnerShape, any>
-          ? ShapeToRunTimeType<InnerShape, IsExact, IsReadonly>
+          ? ShapeToRuntimeType<InnerShape, IsExact, IsReadonly>
           : Shape extends ShapeSpecifier<any, any>
             ? Shape extends ShapeSpecifier<any, typeof exactSymbol>
-                ? SpecifierToRunTimeType<Shape, true, IsReadonly>
-                : SpecifierToRunTimeType<Shape, IsExact, IsReadonly>
+                ? SpecifierToRuntimeType<Shape, true, IsReadonly>
+                : SpecifierToRuntimeType<Shape, IsExact, IsReadonly>
             : OptionallyReadonly<
                   IsReadonly,
                   {
@@ -307,8 +307,8 @@ export type ShapeToRunTimeType<
                           any,
                           typeof exactSymbol
                       >
-                          ? ShapeToRunTimeType<Shape[PropName], true, IsReadonly>
-                          : ShapeToRunTimeType<Shape[PropName], IsExact, IsReadonly>;
+                          ? ShapeToRuntimeType<Shape[PropName], true, IsReadonly>
+                          : ShapeToRuntimeType<Shape[PropName], IsExact, IsReadonly>;
                   }
               >
       : Shape;

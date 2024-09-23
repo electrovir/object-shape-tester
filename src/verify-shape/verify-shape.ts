@@ -29,7 +29,7 @@ export function isValidShape<Shape, IsReadonly extends boolean>(
     subject: unknown,
     shapeDefinition: ShapeDefinition<Shape, IsReadonly>,
     options: PartialWithUndefined<CheckShapeValidityOptions> = {},
-): subject is ShapeDefinition<Shape, IsReadonly>['runTimeType'] {
+): subject is ShapeDefinition<Shape, IsReadonly>['runtimeType'] {
     try {
         assertValidShape(subject, shapeDefinition, options);
         return true;
@@ -43,7 +43,7 @@ export function assertValidShape<Shape, IsReadonly extends boolean>(
     shapeDefinition: ShapeDefinition<Shape, IsReadonly>,
     options: PartialWithUndefined<CheckShapeValidityOptions> = {},
     failureMessage = '',
-): asserts subject is ShapeDefinition<Shape, IsReadonly>['runTimeType'] {
+): asserts subject is ShapeDefinition<Shape, IsReadonly>['runtimeType'] {
     try {
         internalAssertValidShape({
             subject,
