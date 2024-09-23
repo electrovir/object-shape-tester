@@ -23,7 +23,7 @@ See this simple example for defining a simple user type:
 <!-- example-link: src/readme-examples/simple-user-shape.example.ts -->
 
 ```TypeScript
-import {defineShape, isValidShape} from '..';
+import {defineShape, isValidShape} from 'object-shape-tester';
 
 const userShapeDefinition = defineShape({
     name: 'empty name',
@@ -62,7 +62,7 @@ Here's a more complex user example that uses all of the above specifiers:
 <!-- example-link: src/readme-examples/complex-user-shape.example.ts -->
 
 ```TypeScript
-import {and, defineShape, enumShape, exact, isValidShape, or, unknownShape} from '..';
+import {and, defineShape, enumShape, exact, isValidShape, or, unknownShape} from 'object-shape-tester';
 
 enum AuthLevel {
     Basic = 'basic',

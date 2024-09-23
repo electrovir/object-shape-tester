@@ -1,8 +1,8 @@
-import {assert} from '@open-wc/testing';
-import {assertInstanceOf, assertTypeOf} from 'run-time-assertions';
-import {assertValidShape} from '../verify-shape/verify-shape';
-import {defineShape} from './define-shape';
-import {and, classShape, exact, or, unknownShape} from './shape-specifiers';
+import {assert} from '@augment-vir/assert';
+import {describe, it} from '@augment-vir/test';
+import {assertValidShape} from '../verify-shape/verify-shape.js';
+import {defineShape} from './define-shape.js';
+import {and, classShape, exact, or, unknownShape} from './shape-specifiers.js';
 
 describe(defineShape.name, () => {
     const exampleShape = defineShape({
@@ -12,19 +12,19 @@ describe(defineShape.name, () => {
     type MyShape = typeof exampleShape.runTimeType;
 
     it('creates a simple shape object with correct type', () => {
-        assertTypeOf<(typeof exampleShape)['runTimeType']>().toEqualTypeOf<{
+        assert.tsType<(typeof exampleShape)['runTimeType']>().equals<{
             helloThere: string;
         }>();
-        assertTypeOf(exampleShape.shape).toEqualTypeOf({helloThere: 'hi'});
-        assertTypeOf(exampleShape.shape).toEqualTypeOf<{helloThere: string}>();
+        assert.tsType(exampleShape.shape).equals({helloThere: 'hi'});
+        assert.tsType(exampleShape.shape).equals<{helloThere: string}>();
     });
 
     it('converts shape specifiers', () => {
-        assertTypeOf<(typeof exampleShape)['runTimeType']>().toEqualTypeOf<{
+        assert.tsType<(typeof exampleShape)['runTimeType']>().equals<{
             helloThere: string;
         }>();
-        assertTypeOf(exampleShape.shape).toEqualTypeOf({helloThere: 'hi'});
-        assertTypeOf(exampleShape.shape).toEqualTypeOf<{helloThere: string}>();
+        assert.tsType(exampleShape.shape).equals({helloThere: 'hi'});
+        assert.tsType(exampleShape.shape).equals<{helloThere: string}>();
     });
 
     it('throws an error if runtimeType is accessed as a value', () => {
@@ -44,7 +44,7 @@ describe(defineShape.name, () => {
             exactProp: 'derp',
         };
         const myBadExactAssignment: MyExact = {
-            // @ts-expect-error
+            // @ts-expect-error: intentionally wrong value
             exactProp: 'four',
         };
     });
@@ -53,13 +53,13 @@ describe(defineShape.name, () => {
         const myUnknown = defineShape(unknownShape());
         const myInstance: (typeof myUnknown)['runTimeType'] = myUnknown.defaultValue;
 
-        assertTypeOf(myInstance).toEqualTypeOf<unknown>();
+        assert.tsType(myInstance).equals<unknown>();
 
         const myNestedShape = defineShape({
             nested: myUnknown,
         });
         const myNestedInstance: (typeof myNestedShape)['runTimeType'] = myNestedShape.defaultValue;
-        assertTypeOf(myNestedInstance).toEqualTypeOf<{nested: unknown}>();
+        assert.tsType(myNestedInstance).equals<{nested: unknown}>();
     });
 
     it('works with complex nested shapes', () => {
@@ -75,7 +75,7 @@ describe(defineShape.name, () => {
             nested: or(myShape, 0),
         });
         const myNestedInstance: (typeof myNestedShape)['runTimeType'] = myNestedShape.defaultValue;
-        assertTypeOf(myNestedInstance).toEqualTypeOf<{
+        assert.tsType(myNestedInstance).equals<{
             nested:
                 | number
                 | {
@@ -97,7 +97,7 @@ describe(defineShape.name, () => {
             c: or(0, exact('hello there')),
         });
 
-        assertTypeOf<(typeof myShape)['runTimeType']>().toEqualTypeOf<{
+        assert.tsType<(typeof myShape)['runTimeType']>().equals<{
             a: {what: 'who'};
             b: number | 'hello there';
             c: number | 'hello there';
@@ -115,8 +115,7 @@ describe(defineShape.name, () => {
             /**
              * The full, four digit year.
              *
-             * @example
-             *     2023;
+             * @example 2023;
              */
             year: 0,
             /** A month of the year: 1-12 */
@@ -155,7 +154,7 @@ describe(defineShape.name, () => {
             second: 'b',
             third: 'c' as const,
         });
-        assertTypeOf<typeof shapeA.runTimeType>().toEqualTypeOf<{
+        assert.tsType<typeof shapeA.runTimeType>().equals<{
             first: string;
             second: string;
             third: 'c';
@@ -168,19 +167,19 @@ describe(defineShape.name, () => {
             second: 'b',
             myClass: classShape(Error),
         });
-        assertTypeOf<typeof shapeA.runTimeType>().toEqualTypeOf<{
+        assert.tsType<typeof shapeA.runTimeType>().equals<{
             first: string;
             second: string;
             myClass: Error;
         }>();
         const defaultValue = shapeA.defaultValue;
-        assert.deepStrictEqual(defaultValue, {
+        assert.deepEquals(defaultValue, {
             first: 'a',
             second: 'b',
             myClass: defaultValue.myClass,
         });
 
-        assertInstanceOf(defaultValue.myClass, Error);
+        assert.instanceOf(defaultValue.myClass, Error);
     });
 
     it('allows a shape inside of an array', () => {
@@ -212,7 +211,7 @@ describe(defineShape.name, () => {
                 ].join(': ');
             },
         });
-        assertTypeOf<typeof shapeWithMethod.runTimeType>().toEqualTypeOf<{
+        assert.tsType<typeof shapeWithMethod.runTimeType>().equals<{
             myData: string;
             myMethod: (a: string, b: number) => string;
         }>();

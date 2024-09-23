@@ -1,6 +1,6 @@
-import {extractErrorMessage, isObject, mapObjectValues} from '@augment-vir/common';
-import {isRunTimeType} from 'run-time-assertions';
-import {DefaultValueConstructionError} from '../errors/default-value-construction.error';
+import {check} from '@augment-vir/assert';
+import {extractErrorMessage, mapObjectValues} from '@augment-vir/common';
+import {DefaultValueConstructionError} from '../errors/default-value-construction.error.js';
 import {
     ShapeToRunTimeType,
     expandIndexedKeysKeys,
@@ -13,7 +13,7 @@ import {
     isOrShapeSpecifier,
     isShapeDefinition,
     isUnknownShapeSpecifier,
-} from './shape-specifiers';
+} from './shape-specifiers.js';
 
 export function shapeToDefaultValue<Shape, IsReadonly extends boolean = false>(
     shape: Shape,
@@ -46,7 +46,7 @@ function innerShapeToDefaultValue<Shape>(shape: Shape): any {
         } else if (isIndexedKeysSpecifier(specifier)) {
             const keys = expandIndexedKeysKeys(specifier);
 
-            if (!specifier.parts[0].required || isRunTimeType(keys, 'boolean')) {
+            if (!specifier.parts[0].required || check.isBoolean(keys)) {
                 return {};
             }
 
@@ -72,9 +72,9 @@ function innerShapeToDefaultValue<Shape>(shape: Shape): any {
         return shapeToDefaultValue(shape.shape);
     } else if (shape instanceof RegExp) {
         return shape;
-    } else if (isRunTimeType(shape, 'array')) {
+    } else if (check.isArray(shape)) {
         return shape.map(innerShapeToDefaultValue);
-    } else if (isObject(shape)) {
+    } else if (check.isObject(shape)) {
         return mapObjectValues(shape, (key, value) => {
             return shapeToDefaultValue(value);
         });

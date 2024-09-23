@@ -1,15 +1,13 @@
+import {check} from '@augment-vir/assert';
 import {
     ArrayElement,
     AtLeastTuple,
     getObjectTypedKeys,
     getObjectTypedValues,
-    isObject,
-    typedArrayIncludes,
-    typedHasProperty,
+    type AnyFunction,
 } from '@augment-vir/common';
-import {isPropertyKey, isRunTimeType} from 'run-time-assertions';
 import {LiteralToPrimitive, Primitive, UnionToIntersection, WritableDeep} from 'type-fest';
-import {haveEqualTypes} from './type-equality';
+import {haveEqualTypes} from './type-equality.js';
 
 /**
  * ========================================
@@ -23,7 +21,7 @@ import {haveEqualTypes} from './type-equality';
  * in that case.
  */
 export const isShapeDefinitionKey =
-    '__vir__shape__definition__key__do__not__use__in__actual__objects' as const;
+    '__vir__shape__definition__key__do__not__use__in__actual__objects';
 
 /** This definition has to be in this file because the types circularly depend on each other. */
 export type ShapeDefinition<Shape, IsReadonly extends boolean> = {
@@ -35,7 +33,7 @@ export type ShapeDefinition<Shape, IsReadonly extends boolean> = {
 };
 
 export function isShapeDefinition(input: unknown): input is ShapeDefinition<unknown, false> {
-    return typedHasProperty(input, isShapeDefinitionKey);
+    return check.hasKey(input, isShapeDefinitionKey);
 }
 
 /**
@@ -65,7 +63,7 @@ export const shapeSpecifiersTypes = [
 
 type BaseParts = AtLeastTuple<unknown, 0>;
 export const isShapeSpecifierKey =
-    '__vir__shape__specifier__key__do__not__use__in__actual__objects' as const;
+    '__vir__shape__specifier__key__do__not__use__in__actual__objects';
 type ShapeSpecifierType = ArrayElement<typeof shapeSpecifiersTypes>;
 export type ShapeSpecifier<Parts extends BaseParts, Type extends ShapeSpecifierType> = {
     [isShapeSpecifierKey]: true;
@@ -247,7 +245,7 @@ export type SpecifierToRunTimeType<
                         WritableDeep<ExpandParts<Parts, true, IsReadonly>>
                     >
                   : Type extends typeof enumSymbol
-                    ? OptionallyReadonly<IsReadonly, WritableDeep<Parts[0][keyof Parts[0]]>>
+                    ? OptionallyReadonly<IsReadonly, Parts[0][keyof Parts[0]]>
                     : Type extends typeof indexedKeysSymbol
                       ? Parts[0] extends {keys: unknown; values: unknown; required: boolean}
                           ? ExpandParts<[Parts[0]['keys']], IsExact, IsReadonly> extends PropertyKey
@@ -293,7 +291,7 @@ export type ShapeToRunTimeType<
     Shape,
     IsExact extends boolean,
     IsReadonly extends boolean,
-> = Shape extends Function
+> = Shape extends AnyFunction
     ? Shape
     : Shape extends object
       ? Shape extends ShapeDefinition<infer InnerShape, any>
@@ -355,15 +353,15 @@ export function matchesSpecifier(
         } else if (isOrShapeSpecifier(specifier)) {
             return specifier.parts.some((part) => matchesSpecifier(subject, part));
         } else if (isExactShapeSpecifier(specifier)) {
-            if (isObject(subject)) {
+            if (check.isObject(subject)) {
                 return matchesSpecifier(subject, specifier.parts[0]);
             } else {
                 return subject === specifier.parts[0];
             }
         } else if (isEnumShapeSpecifier(specifier)) {
-            return Object.values(specifier.parts[0]).some((part) => part === subject);
+            return check.hasValue(Object.values(specifier.parts[0]), subject);
         } else if (isIndexedKeysSpecifier(specifier)) {
-            if (!isObject(subject)) {
+            if (!check.isObject(subject)) {
                 return false;
             }
 
@@ -399,7 +397,7 @@ function matchesIndexedKeysSpecifierKeys(
     } else if (required) {
         const allRequiredKeys = expandIndexedKeysKeys(specifier);
 
-        if (isRunTimeType(allRequiredKeys, 'boolean')) {
+        if (check.isBoolean(allRequiredKeys)) {
             return allRequiredKeys;
         }
 
@@ -421,7 +419,7 @@ export function expandIndexedKeysKeys(
 
     const nestedSpecifier = getShapeSpecifier(keys);
 
-    if (isPropertyKey(keys)) {
+    if (check.isPropertyKey(keys)) {
         return [keys];
     } else if (nestedSpecifier) {
         if (isClassShapeSpecifier(nestedSpecifier)) {
@@ -440,7 +438,7 @@ export function expandIndexedKeysKeys(
 
             let nestedBoolean: boolean | undefined = undefined;
             nestedPropertyKeys.forEach((nested) => {
-                if (!isRunTimeType(nested, 'boolean')) {
+                if (!check.isBoolean(nested)) {
                     return;
                 }
                 if (nested && nestedBoolean == undefined) {
@@ -450,13 +448,13 @@ export function expandIndexedKeysKeys(
                 }
             });
 
-            if (isRunTimeType(nestedBoolean, 'boolean')) {
+            if (check.isBoolean(nestedBoolean)) {
                 return nestedBoolean;
             }
 
-            return nestedPropertyKeys.flat().filter(isPropertyKey);
+            return nestedPropertyKeys.flat().filter(check.isPropertyKey);
         } else if (isExactShapeSpecifier(nestedSpecifier)) {
-            const propertyKeyParts = nestedSpecifier.parts.filter(isPropertyKey);
+            const propertyKeyParts = nestedSpecifier.parts.filter(check.isPropertyKey);
             if (propertyKeyParts.length !== nestedSpecifier.parts.length) {
                 return false;
             }
@@ -476,20 +474,20 @@ export function expandIndexedKeysKeys(
 export function getShapeSpecifier(
     input: unknown,
 ): ShapeSpecifier<BaseParts, ShapeSpecifierType> | undefined {
-    if (!isObject(input)) {
+    if (!check.isObject(input)) {
         return undefined;
     }
-    if (!typedHasProperty(input, isShapeSpecifierKey)) {
+    if (!check.hasKey(input, isShapeSpecifierKey)) {
         return undefined;
     }
 
-    if (!typedHasProperty(input, 'parts') || !isRunTimeType(input.parts, 'array')) {
+    if (!check.hasKey(input, 'parts') || !check.isArray(input.parts)) {
         throw new Error('Found a shape specifier but its parts are not valid.');
     }
 
     if (
-        !typedHasProperty(input, 'specifierType') ||
-        !typedArrayIncludes(shapeSpecifiersTypes, input.specifierType)
+        !check.hasKey(input, 'specifierType') ||
+        !check.hasValue(shapeSpecifiersTypes, input.specifierType)
     ) {
         throw new Error('Found a shape specifier but its specifier type is not valid.');
     }

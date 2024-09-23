@@ -1,5 +1,5 @@
-import {ShapeDefinition, ShapeToRunTimeType, isShapeDefinitionKey} from './shape-specifiers';
-import {shapeToDefaultValue} from './shape-to-default-value';
+import {ShapeDefinition, ShapeToRunTimeType, isShapeDefinitionKey} from './shape-specifiers.js';
+import {shapeToDefaultValue} from './shape-to-default-value.js';
 
 export function defineShape<Shape, IsReadonly extends boolean = false>(
     shape: Shape,

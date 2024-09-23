@@ -1,13 +1,11 @@
+import {check} from '@augment-vir/assert';
 import {
-    PartialAndUndefined,
+    PartialWithUndefined,
     combineErrorMessages,
     ensureErrorAndPrependMessage,
     getObjectTypedKeys,
-    isLengthAtLeast,
-    isObject,
     mapObjectValues,
 } from '@augment-vir/common';
-import {isRunTimeType} from 'run-time-assertions';
 import {
     ShapeDefinition,
     getShapeSpecifier,
@@ -20,8 +18,8 @@ import {
     isShapeDefinition,
     isUnknownShapeSpecifier,
     matchesSpecifier,
-} from '../define-shape/shape-specifiers';
-import {ShapeMismatchError} from '../errors/shape-mismatch.error';
+} from '../define-shape/shape-specifiers.js';
+import {ShapeMismatchError} from '../errors/shape-mismatch.error.js';
 
 export type CheckShapeValidityOptions = {
     allowExtraKeys: boolean;
@@ -30,12 +28,12 @@ export type CheckShapeValidityOptions = {
 export function isValidShape<Shape, IsReadonly extends boolean>(
     subject: unknown,
     shapeDefinition: ShapeDefinition<Shape, IsReadonly>,
-    options: PartialAndUndefined<CheckShapeValidityOptions> = {},
+    options: PartialWithUndefined<CheckShapeValidityOptions> = {},
 ): subject is ShapeDefinition<Shape, IsReadonly>['runTimeType'] {
     try {
         assertValidShape(subject, shapeDefinition, options);
         return true;
-    } catch (error) {
+    } catch {
         return false;
     }
 }
@@ -43,7 +41,7 @@ export function isValidShape<Shape, IsReadonly extends boolean>(
 export function assertValidShape<Shape, IsReadonly extends boolean>(
     subject: unknown,
     shapeDefinition: ShapeDefinition<Shape, IsReadonly>,
-    options: PartialAndUndefined<CheckShapeValidityOptions> = {},
+    options: PartialWithUndefined<CheckShapeValidityOptions> = {},
     failureMessage = '',
 ): asserts subject is ShapeDefinition<Shape, IsReadonly>['runTimeType'] {
     try {
@@ -111,15 +109,15 @@ function internalAssertValidShape<Shape>({
         );
     }
 
-    if (isRunTimeType(shape, 'function')) {
-        return isRunTimeType(subject, 'function');
+    if (check.isFunction(shape)) {
+        return check.isFunction(subject);
     }
 
     if (isClassShapeSpecifier(shape)) {
         return subject instanceof shape.parts[0];
     }
 
-    if (isObject(subject)) {
+    if (check.isObject(subject)) {
         const objectSubject: Record<any, any> = subject;
         const keysPassed: Record<PropertyKey, boolean> = options.ignoreExtraKeys
             ? {}
@@ -130,11 +128,11 @@ function internalAssertValidShape<Shape>({
                   ]),
               );
 
-        const errors: ShapeMismatchError[] = [];
+        const errors: string[] = [];
         let matched = false;
 
         if (isOrShapeSpecifier(shape)) {
-            const orErrors: ShapeMismatchError[] = [];
+            const orErrors: string[] = [];
             matched = shape.parts.some((shapePart) => {
                 try {
                     const newKeysPassed = internalAssertValidShape({
@@ -149,7 +147,7 @@ function internalAssertValidShape<Shape>({
                     return true;
                 } catch (error) {
                     if (error instanceof ShapeMismatchError) {
-                        orErrors.push(error);
+                        orErrors.push(error.message);
                         return false;
                     } else {
                         throw error;
@@ -157,7 +155,7 @@ function internalAssertValidShape<Shape>({
                 }
             });
 
-            if (!matched && isLengthAtLeast(orErrors, 1)) {
+            if (!matched && check.isLengthAtLeast(orErrors, 1)) {
                 errors.push(orErrors[0]);
             }
         } else if (isAndShapeSpecifier(shape)) {
@@ -176,7 +174,7 @@ function internalAssertValidShape<Shape>({
                     return true;
                 } catch (error) {
                     if (error instanceof ShapeMismatchError) {
-                        errors.push(error);
+                        errors.push(error.message);
                         return false;
                     } else {
                         throw error;
@@ -199,7 +197,7 @@ function internalAssertValidShape<Shape>({
             throw new ShapeMismatchError(
                 `Cannot compare an enum specifier to an object at ${keysString}`,
             );
-        } else if (isRunTimeType(shape, 'array') && isRunTimeType(objectSubject, 'array')) {
+        } else if (check.isArray(shape) && check.isArray(objectSubject)) {
             // special case arrays
             matched = objectSubject.every((subjectEntry, index): boolean => {
                 const passed = shape.some((shapeEntry): boolean => {
@@ -216,7 +214,7 @@ function internalAssertValidShape<Shape>({
                         return true;
                     } catch (error) {
                         if (error instanceof ShapeMismatchError) {
-                            errors.push(error);
+                            errors.push(error.message);
                             return false;
                             /* v8 ignore next 3: edge case catch for internal errors*/
                         } else {
@@ -324,7 +322,7 @@ function isValidRawObjectShape<Shape>({
     const keysString = createKeyString(keys);
     const keysPassed: Record<PropertyKey, boolean> = {};
 
-    if (isObject(shape)) {
+    if (check.isObject(shape)) {
         const shapeKeys = new Set<PropertyKey>(getObjectTypedKeys(shape));
         const subjectKeys = new Set<PropertyKey>(getObjectTypedKeys(subject));
 

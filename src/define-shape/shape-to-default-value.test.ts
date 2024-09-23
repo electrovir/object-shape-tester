@@ -1,10 +1,10 @@
-import {itCases} from '@augment-vir/browser-testing';
-import {assertInstanceOf} from 'run-time-assertions';
-import {DefaultValueConstructionError} from '../errors/default-value-construction.error';
-import {assertValidShape} from '../verify-shape/verify-shape';
-import {defineShape} from './define-shape';
-import {classShape, enumShape, exact, indexedKeys, unknownShape} from './shape-specifiers';
-import {shapeToDefaultValue} from './shape-to-default-value';
+import {assert} from '@augment-vir/assert';
+import {describe, it, itCases} from '@augment-vir/test';
+import {DefaultValueConstructionError} from '../errors/default-value-construction.error.js';
+import {assertValidShape} from '../verify-shape/verify-shape.js';
+import {defineShape} from './define-shape.js';
+import {classShape, enumShape, exact, indexedKeys, unknownShape} from './shape-specifiers.js';
+import {shapeToDefaultValue} from './shape-to-default-value.js';
 
 enum TestEnum {
     First = 'first',
@@ -46,13 +46,15 @@ describe(shapeToDefaultValue.name, () => {
             inputs: [
                 classShape(HTMLElement),
             ],
-            throws: DefaultValueConstructionError,
+            throws: {
+                matchConstructor: DefaultValueConstructionError,
+            },
         },
     ]);
 
     it('creates class default values', () => {
         const myShape = defineShape(classShape(Error));
-        assertInstanceOf(myShape.defaultValue, Error);
+        assert.instanceOf(myShape.defaultValue, Error);
     });
 
     it('creates a valid default value for required indexed keys', () => {

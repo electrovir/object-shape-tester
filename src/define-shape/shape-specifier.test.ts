@@ -1,7 +1,7 @@
-import {itCases} from '@augment-vir/browser-testing';
+import {assert} from '@augment-vir/assert';
 import {randomInteger, randomString} from '@augment-vir/common';
-import {assertTypeOf} from 'run-time-assertions';
-import {defineShape} from './define-shape';
+import {describe, it, itCases} from '@augment-vir/test';
+import {defineShape} from './define-shape.js';
 import {
     and,
     classShape,
@@ -12,7 +12,7 @@ import {
     matchesSpecifier,
     or,
     unknownShape,
-} from './shape-specifiers';
+} from './shape-specifiers.js';
 
 enum TestEnum {
     First = 'first',
@@ -30,7 +30,7 @@ describe('ShapeToRunTimeType', () => {
                 myNestedAnd: and('', 0),
             },
             myOr: or('', 0),
-            myAnd: and('', 0),
+            myAnd: and({a: ''}, {b: 0}),
             mySimpleArray: [''],
             indexedPartial: indexedKeys({
                 keys: enumShape(TestEnum),
@@ -68,15 +68,18 @@ describe('ShapeToRunTimeType', () => {
             myExact: exact('hello there'),
         });
 
-        assertTypeOf<typeof shapeDefinition.runTimeType>().toEqualTypeOf<{
+        assert.tsType<typeof shapeDefinition.runTimeType>().slowEquals<{
             stringProp: string;
             nestedObjectProp: {
                 nestedString: string;
                 nestedMaybeNumber: number | undefined;
-                myNestedAnd: string & number;
+                myNestedAnd: never;
             };
             myOr: string | number;
-            myAnd: string & number;
+            myAnd: {
+                a: string;
+                b: number;
+            };
             mySimpleArray: string[];
             indexedPartial: Partial<Record<TestEnum, string>>;
             indexedRequired: Record<TestEnum, string>;
@@ -109,7 +112,7 @@ describe('ShapeToRunTimeType', () => {
                     myNestedAnd: and('', 0),
                 },
                 myOr: or('', 0),
-                myAnd: and('', 0),
+                myAnd: and({a: ''}, {b: 0}),
                 mySimpleArray: [''],
                 myClassShape: classShape(Error),
                 complexArray: [
@@ -138,7 +141,7 @@ describe('ShapeToRunTimeType', () => {
             true,
         );
 
-        assertTypeOf<typeof shapeDefinition.runTimeType>().toEqualTypeOf<
+        assert.tsType<typeof shapeDefinition.runTimeType>().slowEquals<
             Readonly<{
                 stringProp: string;
                 nestedObjectProp: Readonly<{
@@ -147,7 +150,10 @@ describe('ShapeToRunTimeType', () => {
                     myNestedAnd: string & number;
                 }>;
                 myOr: string | number;
-                myAnd: string & number;
+                myAnd: Readonly<{
+                    a: string;
+                    b: number;
+                }>;
                 mySimpleArray: ReadonlyArray<string>;
                 myClassShape: Readonly<Error>;
                 complexArray: ReadonlyArray<string | number>;
@@ -172,16 +178,16 @@ describe('ShapeToRunTimeType', () => {
     it('works with or and null', () => {
         const myNullableShape = defineShape(or(null, {hello: ''}), true);
 
-        assertTypeOf<typeof myNullableShape.runTimeType>().toEqualTypeOf<
-            Readonly<{hello: string} | null>
-        >();
+        assert
+            .tsType<typeof myNullableShape.runTimeType>()
+            .equals<Readonly<{hello: string} | null>>();
     });
 
     it('works with exact strings', () => {
         const myShape = defineShape({message: exact('hello')});
         type MyType = typeof myShape.runTimeType;
 
-        assertTypeOf<MyType>().toEqualTypeOf<{
+        assert.tsType<MyType>().equals<{
             message: 'hello';
         }>();
     });
@@ -198,7 +204,7 @@ describe('ShapeToRunTimeType', () => {
             }),
         });
 
-        assertTypeOf<typeof shapeWithIndexedKeys.runTimeType>().toEqualTypeOf<{
+        assert.tsType<typeof shapeWithIndexedKeys.runTimeType>().equals<{
             thing: string;
             nestedValues: Partial<Record<'hi' | 'bye', {helloThere: number}>>;
         }>();
@@ -214,7 +220,7 @@ describe('ShapeToRunTimeType', () => {
             }),
         });
 
-        assertTypeOf<typeof shapeWithIndexedKeys.runTimeType>().toEqualTypeOf<{
+        assert.tsType<typeof shapeWithIndexedKeys.runTimeType>().equals<{
             thing: string;
             nestedValues: Partial<Record<string, number>>;
         }>();
@@ -230,7 +236,7 @@ describe('ShapeToRunTimeType', () => {
             }),
         });
 
-        assertTypeOf<typeof shapeWithIndexedKeys.runTimeType>().toEqualTypeOf<{
+        assert.tsType<typeof shapeWithIndexedKeys.runTimeType>().equals<{
             thing: string;
             nestedValues: Record<string, number>;
         }>();
@@ -358,7 +364,7 @@ describe(getShapeSpecifier.name, () => {
 
                 return orResult;
             })(),
-            throws: Error,
+            throws: {matchConstructor: Error},
         },
         {
             it: 'errors if or parts is not an array',
@@ -369,7 +375,7 @@ describe(getShapeSpecifier.name, () => {
 
                 return orResult;
             })(),
-            throws: Error,
+            throws: {matchConstructor: Error},
         },
         {
             it: 'errors if specifierType is missing',
@@ -380,7 +386,7 @@ describe(getShapeSpecifier.name, () => {
 
                 return orResult;
             })(),
-            throws: Error,
+            throws: {matchConstructor: Error},
         },
         {
             it: 'errors if specifierType is an unexpected value',
@@ -391,14 +397,14 @@ describe(getShapeSpecifier.name, () => {
 
                 return orResult;
             })(),
-            throws: Error,
+            throws: {matchConstructor: Error},
         },
     ]);
 });
 
 describe(or.name, () => {
     it('requires at least one input', () => {
-        // @ts-expect-error
+        // @ts-expect-error: missing args
         or();
         or('one input is okay');
         or('multiple', 'inputs', 'are okay');
@@ -407,13 +413,13 @@ describe(or.name, () => {
 
 describe(enumShape.name, () => {
     it('only allows one input', () => {
-        // @ts-expect-error
+        // @ts-expect-error: missing args
         enumShape();
-        // @ts-expect-error
+        // @ts-expect-error: wrong input
         enumShape('input must be an object');
         enumShape(TestEnum);
         enumShape({objectIs: 'okay too'});
-        // @ts-expect-error
+        // @ts-expect-error: can only have one input
         enumShape(TestEnum, {multipleEnums: 'is not okay'});
     });
 });
@@ -446,7 +452,7 @@ describe(classShape.name, () => {
 
 describe(and.name, () => {
     it('requires at least one input', () => {
-        // @ts-expect-error
+        // @ts-expect-error: missing inputs
         and();
         and('one input is okay');
         and('multiple', 'inputs', 'are okay');
@@ -455,7 +461,7 @@ describe(and.name, () => {
 
 describe(exact.name, () => {
     it('requires only one input', () => {
-        // @ts-expect-error
+        // @ts-expect-error: missing inputs
         exact();
         exact('one input is okay');
         exact('multiple', 'inputs', 'are okay');

@@ -1,4 +1,4 @@
-import {getRunTimeType} from 'run-time-assertions';
+import {getRuntimeType} from '@augment-vir/assert';
 
 export function haveEqualTypes(subject: unknown, shape: unknown): boolean {
     const shapeConstructor = shape?.constructor;
@@ -8,5 +8,5 @@ export function haveEqualTypes(subject: unknown, shape: unknown): boolean {
         shapeConstructor && subjectPrototype ? subjectPrototype instanceof shapeConstructor : false;
 
     const constructorsMatch = constructorsEqual || constructorsInstanceOf;
-    return getRunTimeType(subject) === getRunTimeType(shape) && constructorsMatch;
+    return getRuntimeType(subject) === getRuntimeType(shape) && constructorsMatch;
 }

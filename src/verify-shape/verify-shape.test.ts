@@ -1,9 +1,8 @@
-import {FunctionTestCase, itCases} from '@augment-vir/browser-testing';
+import {assert} from '@augment-vir/assert';
 import type {ArrayElement} from '@augment-vir/common';
 import {randomString} from '@augment-vir/common';
-import {assert} from '@open-wc/testing';
-import {assertThrows, assertTypeOf} from 'run-time-assertions';
-import {defineShape} from '../define-shape/define-shape';
+import {FunctionTestCase, describe, it, itCases} from '@augment-vir/test';
+import {defineShape} from '../define-shape/define-shape.js';
 import {
     and,
     classShape,
@@ -12,9 +11,9 @@ import {
     indexedKeys,
     or,
     unknownShape,
-} from '../define-shape/shape-specifiers';
-import {ShapeMismatchError} from '../errors/shape-mismatch.error';
-import {assertValidShape, isValidShape} from './verify-shape';
+} from '../define-shape/shape-specifiers.js';
+import {ShapeMismatchError} from '../errors/shape-mismatch.error.js';
+import {assertValidShape, isValidShape} from './verify-shape.js';
 
 const sharedRegExp = /shared/;
 
@@ -46,7 +45,9 @@ const testCases: ReadonlyArray<FunctionTestCase<typeof assertValidShape>> = [
             'yo',
             defineShape(exact('hello there')),
         ],
-        throws: ShapeMismatchError,
+        throws: {
+            matchConstructor: ShapeMismatchError,
+        },
     },
     {
         it: 'passes a bare object',
@@ -59,7 +60,7 @@ const testCases: ReadonlyArray<FunctionTestCase<typeof assertValidShape>> = [
             defineShape({
                 a: '',
                 b: 0,
-                c: new RegExp(''),
+                c: new RegExp('f'),
             }),
         ],
         throws: undefined,
@@ -90,7 +91,9 @@ const testCases: ReadonlyArray<FunctionTestCase<typeof assertValidShape>> = [
                 a: exact('what'),
             }),
         ],
-        throws: ShapeMismatchError,
+        throws: {
+            matchConstructor: ShapeMismatchError,
+        },
     },
     {
         it: 'passes an object with specifiers',
@@ -138,7 +141,9 @@ const testCases: ReadonlyArray<FunctionTestCase<typeof assertValidShape>> = [
             },
             defineShape(and({a: 0}, {b: ''})),
         ],
-        throws: ShapeMismatchError,
+        throws: {
+            matchConstructor: ShapeMismatchError,
+        },
     },
     {
         it: 'works with enum shapes',
@@ -214,7 +219,9 @@ const testCases: ReadonlyArray<FunctionTestCase<typeof assertValidShape>> = [
                 c: null,
             }),
         ],
-        throws: ShapeMismatchError,
+        throws: {
+            matchConstructor: ShapeMismatchError,
+        },
     },
     {
         it: 'allows extra keys when set in options',
@@ -237,7 +244,9 @@ const testCases: ReadonlyArray<FunctionTestCase<typeof assertValidShape>> = [
                 b: or('', 4),
             }),
         ],
-        throws: ShapeMismatchError,
+        throws: {
+            matchConstructor: ShapeMismatchError,
+        },
     },
     {
         it: 'accepts anything for unknownShape at the top level',
@@ -267,7 +276,9 @@ const testCases: ReadonlyArray<FunctionTestCase<typeof assertValidShape>> = [
                 c: enumShape(SharedEnum),
             }),
         ],
-        throws: ShapeMismatchError,
+        throws: {
+            matchConstructor: ShapeMismatchError,
+        },
     },
     {
         it: 'fails if extra keys exist',
@@ -279,7 +290,9 @@ const testCases: ReadonlyArray<FunctionTestCase<typeof assertValidShape>> = [
             },
             defineShape(or({a: 0}, {b: ''})),
         ],
-        throws: ShapeMismatchError,
+        throws: {
+            matchConstructor: ShapeMismatchError,
+        },
     },
     {
         it: 'fails with an invalid array',
@@ -290,7 +303,9 @@ const testCases: ReadonlyArray<FunctionTestCase<typeof assertValidShape>> = [
             ],
             defineShape(['']),
         ],
-        throws: ShapeMismatchError,
+        throws: {
+            matchConstructor: ShapeMismatchError,
+        },
     },
     {
         it: 'passes with an top-level array',
@@ -317,7 +332,9 @@ const testCases: ReadonlyArray<FunctionTestCase<typeof assertValidShape>> = [
                 c: and({a: 0}, {b: ''}),
             }),
         ],
-        throws: ShapeMismatchError,
+        throws: {
+            matchConstructor: ShapeMismatchError,
+        },
     },
     {
         it: 'fails an incorrect and',
@@ -333,7 +350,9 @@ const testCases: ReadonlyArray<FunctionTestCase<typeof assertValidShape>> = [
                 c: and({a: 0}, {b: ''}),
             }),
         ],
-        throws: ShapeMismatchError,
+        throws: {
+            matchConstructor: ShapeMismatchError,
+        },
     },
     {
         it: 'accepts a valid class instance',
@@ -389,7 +408,9 @@ const testCases: ReadonlyArray<FunctionTestCase<typeof assertValidShape>> = [
                 },
             }),
         ],
-        throws: ShapeMismatchError,
+        throws: {
+            matchConstructor: ShapeMismatchError,
+        },
     },
     {
         it: 'rejects a number assigned to a method',
@@ -408,7 +429,9 @@ const testCases: ReadonlyArray<FunctionTestCase<typeof assertValidShape>> = [
                 },
             }),
         ],
-        throws: ShapeMismatchError,
+        throws: {
+            matchConstructor: ShapeMismatchError,
+        },
     },
 ];
 
@@ -431,7 +454,7 @@ describe(assertValidShape.name, () => {
         );
 
         it('prepends custom message', () => {
-            assertThrows(
+            assert.throws(
                 () =>
                     assertValidShape(
                         {
@@ -488,10 +511,19 @@ describe(assertValidShape.name, () => {
             exactProp: exact('derp'),
         });
 
-        assertTypeOf<(typeof shapeWithNested)['runTimeType']>().toEqualTypeOf<{
+        assert.tsType<(typeof shapeWithNested)['runTimeType']>().equals<{
             stringProp: string;
-            andProp: {hi: string; bye: string};
-            nestedShape: (typeof lowerLevelShape)['runTimeType'];
+            andProp: {
+                hi: string;
+            } & {
+                bye: string;
+            };
+            nestedShape: {
+                example: {
+                    first: string;
+                    second: number;
+                };
+            };
             exactProp: 'derp';
         }>();
 
@@ -532,7 +564,7 @@ describe(assertValidShape.name, () => {
                 }),
             }),
         );
-        assertThrows(() =>
+        assert.throws(() =>
             assertValidShape(
                 {
                     stuff: 'hello there',
@@ -633,7 +665,7 @@ describe(assertValidShape.name, () => {
     });
 
     it('rejects missing required indexedKeys shapes', () => {
-        assertThrows(
+        assert.throws(
             () =>
                 assertValidShape(
                     {
@@ -652,7 +684,7 @@ describe(assertValidShape.name, () => {
                 ),
             undefined,
         );
-        assertThrows(() =>
+        assert.throws(() =>
             assertValidShape(
                 {
                     stuff: 'hello there',
@@ -671,7 +703,7 @@ describe(assertValidShape.name, () => {
                 }),
             ),
         );
-        assertThrows(() =>
+        assert.throws(() =>
             assertValidShape(
                 {
                     stuff: 'hello there',
@@ -690,7 +722,7 @@ describe(assertValidShape.name, () => {
                 }),
             ),
         );
-        assertThrows(() =>
+        assert.throws(() =>
             assertValidShape(
                 {
                     stuff: 'hello there',
@@ -853,14 +885,14 @@ describe(assertValidShape.name, () => {
 
         assertValidShape(result, VerificationResultShape, {allowExtraKeys: true});
 
-        assert.deepStrictEqual(
+        assert.deepEquals(
             VerificationResultShape.defaultValue,
             verificationResultInProgressShape.defaultValue,
         );
     });
 
     it('error message includes whole key chain', () => {
-        assertThrows(
+        assert.throws(
             () => {
                 assertValidShape(
                     {
@@ -894,7 +926,7 @@ describe(assertValidShape.name, () => {
     });
 
     it('errors keys go into arrays', () => {
-        assertThrows(
+        assert.throws(
             () => {
                 assertValidShape(
                     {
