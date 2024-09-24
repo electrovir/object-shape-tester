@@ -9,7 +9,7 @@ import {
     exact,
     getShapeSpecifier,
     indexedKeys,
-    matchesSpecifier,
+    matchesShape,
     or,
     unknownShape,
 } from './shape-specifiers.js';
@@ -252,8 +252,8 @@ describe('ShapeToRuntimeType', () => {
     });
 });
 
-describe(matchesSpecifier.name, () => {
-    itCases(matchesSpecifier, [
+describe(matchesShape.name, () => {
+    itCases(matchesShape, [
         {
             it: 'always true for unknown specifier',
             inputs: [

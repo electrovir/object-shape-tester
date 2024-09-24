@@ -17,14 +17,39 @@ import {
     isOrShapeSpecifier,
     isShapeDefinition,
     isUnknownShapeSpecifier,
-    matchesSpecifier,
+    matchesShape,
 } from '../define-shape/shape-specifiers.js';
 import {ShapeMismatchError} from '../errors/shape-mismatch.error.js';
 
+/**
+ * Extra options for {@link isValidShape} and {@link assertValidShape}.
+ *
+ * @category Util
+ */
 export type CheckShapeValidityOptions = {
     allowExtraKeys: boolean;
 };
 
+/**
+ * Check if a variable matches the given shape.
+ *
+ * @category Main
+ * @example
+ *
+ * ```ts
+ * import {defineShape, isValidShape} from 'object-shape-tester';
+ *
+ * const myShape = defineShape({
+ *     a: '',
+ * });
+ *
+ * isValidShape(myShape, {a: 'hi'}); // `true`
+ * isValidShape(myShape, {a: 3}); // `false`
+ * isValidShape(myShape, {a: 'hi', b: 'bye'}, {allowExtraKeys: true}); // `true`
+ * ```
+ *
+ * @returns `true` or `false`
+ */
 export function isValidShape<Shape, IsReadonly extends boolean>(
     subject: unknown,
     shapeDefinition: ShapeDefinition<Shape, IsReadonly>,
@@ -38,6 +63,26 @@ export function isValidShape<Shape, IsReadonly extends boolean>(
     }
 }
 
+/**
+ * Assets that a variable matches the given shape.
+ *
+ * @category Main
+ * @example
+ *
+ * ```ts
+ * import {defineShape, assertValidShape} from 'object-shape-tester';
+ *
+ * const myShape = defineShape({
+ *     a: '',
+ * });
+ *
+ * assertValidShape(myShape, {a: 'hi'}); // succeeds
+ * assertValidShape(myShape, {a: 'hi', b: 'bye'}, {allowExtraKeys: true}); // succeeds
+ * assertValidShape(myShape, {a: 3}); // fails
+ * ```
+ *
+ * @throws {@link ShapeMismatchError} If there is a mismatch
+ */
 export function assertValidShape<Shape, IsReadonly extends boolean>(
     subject: unknown,
     shapeDefinition: ShapeDefinition<Shape, IsReadonly>,
@@ -103,7 +148,7 @@ function internalAssertValidShape<Shape>({
         );
     }
 
-    if (!matchesSpecifier(subject, shape, !options.ignoreExtraKeys)) {
+    if (!matchesShape(subject, shape, !options.ignoreExtraKeys)) {
         throw new ShapeMismatchError(
             `Subject does not match shape definition at key ${keysString}`,
         );
