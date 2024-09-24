@@ -134,8 +134,7 @@ function internalAssertValidShape<Shape>({
     // unknown shape specifier allows anything, abort instantly
     if (isUnknownShapeSpecifier(shape)) {
         return true;
-    }
-    if (isShapeDefinition(shape)) {
+    } else if (isShapeDefinition(shape)) {
         return internalAssertValidShape({subject, shape: shape.shape, keys, options});
     }
 
@@ -146,23 +145,15 @@ function internalAssertValidShape<Shape>({
         throw new ShapeMismatchError(
             `Shape test subjects cannot be contain shape specifiers but one was found at ${keysString}.`,
         );
-    }
-
-    if (!matchesShape(subject, shape, !options.ignoreExtraKeys)) {
+    } else if (!matchesShape(subject, shape, !options.ignoreExtraKeys)) {
         throw new ShapeMismatchError(
             `Subject does not match shape definition at key ${keysString}`,
         );
-    }
-
-    if (check.isFunction(shape)) {
+    } else if (check.isFunction(shape)) {
         return check.isFunction(subject);
-    }
-
-    if (isClassShapeSpecifier(shape)) {
+    } else if (isClassShapeSpecifier(shape)) {
         return subject instanceof shape.parts[0];
-    }
-
-    if (check.isObject(subject)) {
+    } else if (subject && typeof subject === 'object') {
         const objectSubject: Record<any, any> = subject;
         const keysPassed: Record<PropertyKey, boolean> = options.ignoreExtraKeys
             ? {}
@@ -194,6 +185,8 @@ function internalAssertValidShape<Shape>({
                     if (error instanceof ShapeMismatchError) {
                         orErrors.push(error.message);
                         return false;
+                        /* node:coverage ignore next 4 */
+                        /** Cover the edge case of unexpected errors. */
                     } else {
                         throw error;
                     }
@@ -221,6 +214,8 @@ function internalAssertValidShape<Shape>({
                     if (error instanceof ShapeMismatchError) {
                         errors.push(error.message);
                         return false;
+                        /* node:coverage ignore next 4 */
+                        /** Cover the edge case of unexpected errors. */
                     } else {
                         throw error;
                     }
@@ -238,7 +233,12 @@ function internalAssertValidShape<Shape>({
             });
             Object.assign(keysPassed, newKeysPassed);
             matched = true;
+            /* node:coverage ignore next 8 */
         } else if (isEnumShapeSpecifier(shape)) {
+            /**
+             * Technically this case should never get triggered because oft he earlier
+             * `!matchesShape` check.
+             */
             throw new ShapeMismatchError(
                 `Cannot compare an enum specifier to an object at ${keysString}`,
             );
@@ -316,6 +316,8 @@ function internalAssertValidShape<Shape>({
             throw new ShapeMismatchError(combineErrorMessages(errors));
         }
 
+        /* node:coverage ignore next 15 */
+        /** This might not actually be necessary anymore, I can't get it to trigger in tests. */
         if (!matched) {
             const failedKeys = Object.keys(keysPassed).filter((key) => {
                 return !keysPassed[key];

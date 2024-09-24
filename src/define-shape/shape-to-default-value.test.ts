@@ -16,36 +16,29 @@ describe(shapeToDefaultValue.name, () => {
     itCases(shapeToDefaultValue, [
         {
             it: 'allows defining a default value for unknown',
-            inputs: [
-                unknownShape('my default value'),
-            ],
+            input: unknownShape('my default value'),
+
             expect: 'my default value',
         },
         {
             it: 'defaults unknown shape to empty object',
-            inputs: [
-                unknownShape(),
-            ],
+            input: unknownShape(),
             expect: {},
         },
         {
             it: 'defaults indexed keys shape to empty object',
-            inputs: [
-                indexedKeys({
-                    keys: exact('hi'),
-                    values: {
-                        hi: '',
-                    },
-                    required: false,
-                }),
-            ],
+            input: indexedKeys({
+                keys: exact('hi'),
+                values: {
+                    hi: '',
+                },
+                required: false,
+            }),
             expect: {},
         },
         {
             it: 'fails to call a constructor that cannot be called',
-            inputs: [
-                classShape(HTMLElement),
-            ],
+            input: classShape(HTMLElement),
             throws: {
                 matchConstructor: DefaultValueConstructionError,
             },

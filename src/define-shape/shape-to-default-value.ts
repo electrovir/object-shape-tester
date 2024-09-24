@@ -17,7 +17,6 @@ import {
 
 export function shapeToDefaultValue<Shape, IsReadonly extends boolean = false>(
     shape: Shape,
-    isReadonly: IsReadonly = false as IsReadonly,
 ): ShapeToRuntimeType<Shape, false, IsReadonly> {
     return innerShapeToDefaultValue(shape);
 }

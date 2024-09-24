@@ -2,9 +2,9 @@ import {ShapeDefinition, ShapeToRuntimeType, isShapeDefinitionKey} from './shape
 import {shapeToDefaultValue} from './shape-to-default-value.js';
 
 /**
- * Creates a {@link isShapeDefinition} from any input. This produces both a type and a default value.
- * This is the core of the `object-shape-tester` package; {@link isShapeDefinition} instances are
- * used for all of the shape checking.
+ * Creates a {@link ShapeDefinition} from any input. This produces both a type and a default value.
+ * This is the core of the `object-shape-tester` package; {@link ShapeDefinition} instances are used
+ * for all of the shape checking.
  *
  * @category Main
  * @example

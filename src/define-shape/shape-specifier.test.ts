@@ -7,6 +7,7 @@ import {
     classShape,
     enumShape,
     exact,
+    expandIndexedKeysKeys,
     getShapeSpecifier,
     indexedKeys,
     matchesShape,
@@ -263,6 +264,19 @@ describe(matchesShape.name, () => {
             expect: true,
         },
         {
+            it: 'matches unknown indexed keys',
+            inputs: [
+                {hi: 'there'},
+                indexedKeys({
+                    keys: unknownShape(),
+                    required: true,
+                    values: '',
+                }),
+                true,
+            ],
+            expect: true,
+        },
+        {
             it: 'accepts a valid indexed subject',
             inputs: [
                 {[randomString()]: randomInteger({max: 100, min: 0})},
@@ -466,4 +480,143 @@ describe(exact.name, () => {
         exact('one input is okay');
         exact('multiple', 'inputs', 'are okay');
     });
+});
+
+describe(expandIndexedKeysKeys.name, () => {
+    itCases(expandIndexedKeysKeys, [
+        {
+            it: 'handles a static string key',
+            input: indexedKeys({
+                keys: '',
+                required: false,
+                values: '',
+            }),
+            expect: [''],
+        },
+        {
+            it: 'handles an enum key',
+            input: indexedKeys({
+                keys: enumShape(TestEnum),
+                required: false,
+                values: '',
+            }),
+            expect: [
+                TestEnum.First,
+                TestEnum.Second,
+                TestEnum.Third,
+            ],
+        },
+        {
+            it: 'rejects a class key',
+            input: indexedKeys({
+                // @ts-expect-error: intentionally wrong key
+                keys: classShape(RegExp),
+                required: false,
+                values: '',
+            }),
+            expect: false,
+        },
+        {
+            it: 'rejects an and key',
+            input: indexedKeys({
+                // @ts-expect-error: intentionally wrong key
+                keys: and('', -1),
+                required: false,
+                values: '',
+            }),
+            expect: false,
+        },
+        {
+            it: 'allows an unknown key',
+            input: indexedKeys({
+                keys: unknownShape(),
+                required: false,
+                values: '',
+            }),
+            expect: true,
+        },
+        {
+            it: 'rejects an exact object',
+            input: indexedKeys({
+                // @ts-expect-error: intentionally wrong key
+                keys: exact({hi: 'there'}),
+                required: false,
+                values: '',
+            }),
+            expect: false,
+        },
+        {
+            it: 'rejects an indexedKeys key',
+            input: indexedKeys({
+                // @ts-expect-error: intentionally wrong key
+                keys: indexedKeys({
+                    keys: '',
+                    required: false,
+                    values: '',
+                }),
+                required: false,
+                values: '',
+            }),
+            expect: false,
+        },
+        {
+            it: 'rejects an object key',
+            input: indexedKeys({
+                // @ts-expect-error: intentionally wrong key
+                keys: {},
+                required: false,
+                values: '',
+            }),
+            expect: false,
+        },
+        {
+            it: 'accepts an or key key',
+            input: indexedKeys({
+                keys: or('', -1, enumShape(TestEnum)),
+                required: false,
+                values: '',
+            }),
+            expect: [
+                '',
+                -1,
+                TestEnum.First,
+                TestEnum.Second,
+                TestEnum.Third,
+            ],
+        },
+        {
+            it: 'rejects a bad nested or',
+            input: indexedKeys({
+                // @ts-expect-error: intentionally wrong key
+                keys: or('', -1, enumShape(TestEnum), {}),
+                required: false,
+                values: '',
+            }),
+            expect: false,
+        },
+        {
+            it: 'passes a nested unknown',
+            input: indexedKeys({
+                keys: or('', -1, enumShape(TestEnum), unknownShape()),
+                required: false,
+                values: '',
+            }),
+            expect: true,
+        },
+        {
+            it: 'accepts an or key',
+            input: indexedKeys({
+                keys: or('', -1, enumShape(TestEnum)),
+                required: false,
+                values: '',
+            }),
+            expect: [
+                '',
+                -1,
+                TestEnum.First,
+                TestEnum.Second,
+                TestEnum.Third,
+            ],
+        },
+    ]);
 });

@@ -703,8 +703,7 @@ export function expandIndexedKeysKeys(
             nestedPropertyKeys.forEach((nested) => {
                 if (!check.isBoolean(nested)) {
                     return;
-                }
-                if (nested && nestedBoolean == undefined) {
+                } else if (nested && nestedBoolean == undefined) {
                     nestedBoolean = true;
                 } else {
                     nestedBoolean = false;
