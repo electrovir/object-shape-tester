@@ -11,6 +11,7 @@ import {
     isExactShapeSpecifier,
     isIndexedKeysSpecifier,
     isNumericRangeShapeSpecifier,
+    isOptionalShapeSpecifier,
     isOrShapeSpecifier,
     isShapeDefinition,
     isUnknownShapeSpecifier,
@@ -26,7 +27,9 @@ function innerShapeToDefaultValue<Shape>(shape: Shape): any {
     const specifier = getShapeSpecifier(shape);
 
     if (specifier) {
-        if (isNumericRangeShapeSpecifier(specifier)) {
+        if (isOptionalShapeSpecifier(specifier)) {
+            return innerShapeToDefaultValue(specifier.parts[0]);
+        } else if (isNumericRangeShapeSpecifier(specifier)) {
             return specifier.parts[0];
         } else if (isClassShapeSpecifier(specifier)) {
             const classConstructor = specifier.parts[0];

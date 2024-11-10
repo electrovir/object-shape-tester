@@ -20,6 +20,7 @@ export const typeDocConfig: Partial<TypeDocOptions> = {
         'orSymbol',
         'unknownSymbol',
         'numericRangeSymbol',
+        'optionalSymbol',
 
         'BaseParts',
         'ExpandParts',

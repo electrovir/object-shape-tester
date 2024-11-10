@@ -9,6 +9,7 @@ import {
     exact,
     indexedKeys,
     numericRange,
+    optional,
     unknownShape,
 } from './shape-specifiers.js';
 import {shapeToDefaultValue} from './shape-to-default-value.js';
@@ -22,9 +23,13 @@ enum TestEnum {
 describe(shapeToDefaultValue.name, () => {
     itCases(shapeToDefaultValue, [
         {
+            it: 'defaults an optional property to its inputs',
+            input: optional('hi'),
+            expect: 'hi',
+        },
+        {
             it: 'allows defining a default value for unknown',
             input: unknownShape('my default value'),
-
             expect: 'my default value',
         },
         {

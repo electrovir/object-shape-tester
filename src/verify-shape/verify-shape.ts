@@ -14,6 +14,7 @@ import {
     isEnumShapeSpecifier,
     isExactShapeSpecifier,
     isIndexedKeysSpecifier,
+    isOptionalShapeSpecifier,
     isOrShapeSpecifier,
     isShapeDefinition,
     isUnknownShapeSpecifier,
@@ -145,6 +146,17 @@ function internalAssertValidShape<Shape>({
         throw new ShapeMismatchError(
             `Shape test subjects cannot be contain shape specifiers but one was found at ${keysString}.`,
         );
+    } else if (isOptionalShapeSpecifier(shape)) {
+        /**
+         * The optional specifier does not add any extra restrictions when the subject actually
+         * exists. Thus, we'll just compare the subject to the optional shape's input.
+         */
+        return internalAssertValidShape({
+            keys,
+            options,
+            shape: shape.parts[0],
+            subject,
+        });
     } else if (!matchesShape(subject, shape, !options.ignoreExtraKeys)) {
         throw new ShapeMismatchError(
             `Subject does not match shape definition at key ${keysString}`,
@@ -166,7 +178,6 @@ function internalAssertValidShape<Shape>({
 
         const errors: string[] = [];
         let matched = false;
-
         if (isOrShapeSpecifier(shape)) {
             const orErrors: string[] = [];
             matched = shape.parts.some((shapePart) => {
@@ -175,9 +186,7 @@ function internalAssertValidShape<Shape>({
                         subject,
                         shape: shapePart,
                         keys,
-                        options: {
-                            ...options,
-                        },
+                        options,
                     });
                     Object.assign(keysPassed, newKeysPassed);
                     return true;
@@ -301,7 +310,7 @@ function internalAssertValidShape<Shape>({
             Object.assign(keysPassed, newKeysPassed);
             matched = true;
         } else {
-            // if we have no specifier, pass in the whole shape itself
+            /** If we have no specifier, check the whole object. */
             const newKeysPassed = isValidRawObjectShape({
                 keys,
                 options,
@@ -374,8 +383,12 @@ function isValidRawObjectShape<Shape>({
         const subjectKeys = new Set<PropertyKey>(getObjectTypedKeys(subject));
 
         shapeKeys.forEach((shapeKey) => {
-            // try to account for non-enumerable keys
-            if (shapeKey in subject) {
+            if (
+                /** Account for non-enumerable keys. */
+                shapeKey in subject ||
+                /** Account for optional keys. */
+                isOptionalShapeSpecifier(shape[shapeKey])
+            ) {
                 subjectKeys.add(shapeKey);
             }
         });
@@ -405,6 +418,11 @@ function isValidRawObjectShape<Shape>({
         });
 
         subjectKeys.forEach((key) => {
+            /** If the key doesn't exist and it's optional, mark it as passed. */
+            if (!(key in subject) && isOptionalShapeSpecifier(shape[key])) {
+                keysPassed[key] = true;
+                return;
+            }
             const subjectChild = (subject as any)[key] as unknown;
             if (options.ignoreExtraKeys && !shapeKeys.has(key)) {
                 return;
@@ -423,7 +441,7 @@ function isValidRawObjectShape<Shape>({
         });
         /* v8 ignore next 3: edge case handling */
     } else {
-        throw new ShapeMismatchError(`shape definition at ${keysString} was not an object.`);
+        throw new ShapeMismatchError(`Shape definition at ${keysString} was not an object.`);
     }
 
     return keysPassed;

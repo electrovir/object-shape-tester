@@ -6,7 +6,13 @@ import {
     getObjectTypedValues,
     type AnyFunction,
 } from '@augment-vir/common';
-import {LiteralToPrimitive, Primitive, UnionToIntersection, WritableDeep} from 'type-fest';
+import {
+    LiteralToPrimitive,
+    Primitive,
+    UnionToIntersection,
+    WritableDeep,
+    type Simplify,
+} from 'type-fest';
 import {haveEqualTypes} from './type-equality.js';
 
 /**
@@ -66,6 +72,7 @@ const indexedKeysSymbol = Symbol('indexed-keys');
 const orSymbol = Symbol('or');
 const unknownSymbol = Symbol('unknown');
 const numericRangeSymbol = Symbol('numeric-range');
+const optionalSymbol = Symbol('optional');
 
 /**
  * Symbols used to mark the outputs of each sub-shape function (like {@link or}).
@@ -81,6 +88,7 @@ export const shapeSpecifiersTypes = [
     orSymbol,
     unknownSymbol,
     numericRangeSymbol,
+    optionalSymbol,
 ] as const;
 
 type BaseParts = AtLeastTuple<unknown, 0>;
@@ -213,6 +221,12 @@ export type ShapeNumericRange<T extends number = number> = ShapeSpecifier<
     [T, T],
     typeof numericRangeSymbol
 >;
+/**
+ * {@link ShapeSpecifier} for {@link optional}.
+ *
+ * @category Internal
+ */
+export type ShapeOptional<T = unknown> = ShapeSpecifier<[T], typeof optionalSymbol>;
 
 /**
  * ========================================
@@ -406,6 +420,25 @@ export function numericRange<T extends number = number>(
         numericRangeSymbol,
     );
 }
+/**
+ * Define a shape part that is optional. This only makes sense as a property in an object.
+ *
+ * @category Shape Part
+ * @example
+ *
+ * ```ts
+ * import {optional, defineShape} from 'object-shape-tester';
+ *
+ * const myShape = defineShape({
+ *     a: optional(-1),
+ * });
+ *
+ * // `myShape.runtimeType` is `{a?: number}`
+ * ```
+ */
+export function optional<T>(part: T): ShapeOptional<T> {
+    return specifier([part], optionalSymbol);
+}
 
 /**
  * ========================================
@@ -502,6 +535,15 @@ export function isNumericRangeShapeSpecifier(
 }
 
 /**
+ * Checks if the input is a {@link optional} shape specifier for internal type guarding purposes.
+ *
+ * @category Internal
+ */
+export function isOptionalShapeSpecifier(maybeSpecifier: unknown): maybeSpecifier is ShapeOptional {
+    return specifierHasSymbol(maybeSpecifier, optionalSymbol);
+}
+
+/**
  * ========================================
  *
  * Shape Value Run Time Type
@@ -575,7 +617,9 @@ export type SpecifierToRuntimeType<
                             : 'TypeError: indexedKeys input is invalid.'
                         : Type extends typeof unknownSymbol
                           ? unknown
-                          : 'TypeError: found not match for shape specifier type.'
+                          : Type extends typeof optionalSymbol
+                            ? Parts[0]
+                            : 'TypeError: found no match for shape specifier type.'
         : PossiblySpecifier extends Primitive
           ? IsExact extends true
               ? PossiblySpecifier
@@ -617,17 +661,40 @@ export type ShapeToRuntimeType<
             ? Shape extends ShapeSpecifier<any, typeof exactSymbol>
                 ? SpecifierToRuntimeType<Shape, true, IsReadonly>
                 : SpecifierToRuntimeType<Shape, IsExact, IsReadonly>
-            : OptionallyReadonly<
-                  IsReadonly,
-                  {
-                      [PropName in keyof Shape]: Shape[PropName] extends ShapeSpecifier<
-                          any,
-                          typeof exactSymbol
-                      >
-                          ? ShapeToRuntimeType<Shape[PropName], true, IsReadonly>
-                          : ShapeToRuntimeType<Shape[PropName], IsExact, IsReadonly>;
-                  }
-              >
+            : Shape extends Array<any>
+              ? OptionallyReadonly<
+                    IsReadonly,
+                    {
+                        [Prop in keyof Shape]: Shape[Prop] extends ShapeSpecifier<
+                            any,
+                            typeof exactSymbol
+                        >
+                            ? ShapeToRuntimeType<Shape[Prop], true, IsReadonly>
+                            : ShapeToRuntimeType<Shape[Prop], IsExact, IsReadonly>;
+                    }
+                >
+              : OptionallyReadonly<
+                    IsReadonly,
+                    Simplify<
+                        {
+                            [Prop in keyof Shape as Shape[Prop] extends ShapeOptional<any>
+                                ? never
+                                : Prop]: Shape[Prop] extends ShapeOptional<any>
+                                ? never
+                                : Shape[Prop] extends ShapeSpecifier<any, typeof exactSymbol>
+                                  ? ShapeToRuntimeType<Shape[Prop], true, IsReadonly>
+                                  : ShapeToRuntimeType<Shape[Prop], IsExact, IsReadonly>;
+                        } & {
+                            [Prop in keyof Shape as Shape[Prop] extends ShapeOptional<any>
+                                ? Prop
+                                : never]?: Shape[Prop] extends ShapeOptional<any>
+                                ? Shape[Prop] extends ShapeSpecifier<any, typeof exactSymbol>
+                                    ? ShapeToRuntimeType<Shape[Prop], true, IsReadonly>
+                                    : ShapeToRuntimeType<Shape[Prop], IsExact, IsReadonly>
+                                : never;
+                        }
+                    >
+                >
       : Shape;
 
 /**

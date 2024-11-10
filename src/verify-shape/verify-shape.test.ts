@@ -9,6 +9,8 @@ import {
     enumShape,
     exact,
     indexedKeys,
+    numericRange,
+    optional,
     or,
     unknownShape,
 } from '../define-shape/shape-specifiers.js';
@@ -80,6 +82,129 @@ const testCases: ReadonlyArray<FunctionTestCase<typeof assertValidShape>> = [
             }),
         ],
         throws: undefined,
+    },
+    {
+        it: 'matches a missing optional property',
+        inputs: [
+            {
+                a: 'hi',
+            },
+            defineShape({
+                a: '',
+                b: optional(-1),
+            }),
+        ],
+        throws: undefined,
+    },
+    {
+        it: 'matches an existing optional property',
+        inputs: [
+            {
+                a: 'hi',
+                b: 10,
+            },
+            defineShape({
+                a: '',
+                b: optional(-1),
+            }),
+        ],
+        throws: undefined,
+    },
+    {
+        it: 'rejects an invalid existing optional property',
+        inputs: [
+            {
+                a: 'hi',
+                b: 'bye',
+            },
+            defineShape({
+                a: '',
+                b: optional(-1),
+            }),
+        ],
+        throws: {
+            matchConstructor: ShapeMismatchError,
+        },
+    },
+    {
+        it: 'matches a shape inside an optional property',
+        inputs: [
+            {
+                a: 'hi',
+                b: 'bye',
+            },
+            defineShape({
+                a: '',
+                b: optional(or(-1, '')),
+            }),
+        ],
+        throws: undefined,
+    },
+    {
+        it: 'matches an object inside an optional property',
+        inputs: [
+            {
+                a: 'hi',
+                b: {
+                    hi: 'bye',
+                },
+            },
+            defineShape({
+                a: '',
+                b: optional({
+                    hi: '',
+                }),
+            }),
+        ],
+        throws: undefined,
+    },
+    {
+        it: 'rejects an invalid object inside an optional property',
+        inputs: [
+            {
+                a: 'hi',
+                b: {
+                    hi: -1,
+                },
+            },
+            defineShape({
+                a: '',
+                b: optional({
+                    hi: '',
+                }),
+            }),
+        ],
+        throws: {
+            matchConstructor: ShapeMismatchError,
+        },
+    },
+    {
+        it: 'matches valid numeric range',
+        inputs: [
+            5,
+            defineShape(numericRange(1, 10)),
+        ],
+        throws: undefined,
+    },
+    {
+        it: 'rejects non-number numeric range',
+        inputs: [
+            {hi: 'hi'},
+            defineShape(numericRange(1, 10)),
+        ],
+        throws: {
+            matchConstructor: ShapeMismatchError,
+        },
+    },
+    {
+        it: 'rejects invalid numeric range',
+        inputs: [
+            11,
+            defineShape(numericRange(1, 10)),
+        ],
+        throws: {
+            matchConstructor: ShapeMismatchError,
+        },
     },
     {
         it: 'fails if the input subject has a specifier',

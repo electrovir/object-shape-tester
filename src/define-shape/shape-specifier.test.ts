@@ -12,6 +12,7 @@ import {
     indexedKeys,
     matchesShape,
     numericRange,
+    optional,
     or,
     unknownShape,
 } from './shape-specifiers.js';
@@ -70,6 +71,12 @@ describe('ShapeToRuntimeType', () => {
                 moreNestedExact: 'why',
             }),
             myExact: exact('hello there'),
+
+            myOptionalObject: {
+                a: -1,
+                b: 'hi',
+                c: optional('hi'),
+            },
         });
 
         assert.tsType<typeof shapeDefinition.runtimeType>().slowEquals<{
@@ -105,6 +112,12 @@ describe('ShapeToRuntimeType', () => {
                 moreNestedExact: 'why';
             };
             myExact: 'hello there';
+
+            myOptionalObject: {
+                a: number;
+                b: string;
+                c?: string;
+            };
         }>();
     });
 
