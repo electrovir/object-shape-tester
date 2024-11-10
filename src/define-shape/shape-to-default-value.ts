@@ -10,6 +10,7 @@ import {
     isEnumShapeSpecifier,
     isExactShapeSpecifier,
     isIndexedKeysSpecifier,
+    isNumericRangeShapeSpecifier,
     isOrShapeSpecifier,
     isShapeDefinition,
     isUnknownShapeSpecifier,
@@ -25,7 +26,9 @@ function innerShapeToDefaultValue<Shape>(shape: Shape): any {
     const specifier = getShapeSpecifier(shape);
 
     if (specifier) {
-        if (isClassShapeSpecifier(specifier)) {
+        if (isNumericRangeShapeSpecifier(specifier)) {
+            return specifier.parts[0];
+        } else if (isClassShapeSpecifier(specifier)) {
             const classConstructor = specifier.parts[0];
             try {
                 return new classConstructor();

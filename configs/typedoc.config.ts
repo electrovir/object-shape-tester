@@ -19,10 +19,10 @@ export const typeDocConfig: Partial<TypeDocOptions> = {
         'indexedKeysSymbol',
         'orSymbol',
         'unknownSymbol',
+        'numericRangeSymbol',
 
         'BaseParts',
         'ExpandParts',
-        'MaybeRequired',
         'OptionallyReadonly',
         'ShapeSpecifierType',
     ],

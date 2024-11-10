@@ -65,6 +65,7 @@ const exactSymbol = Symbol('exact');
 const indexedKeysSymbol = Symbol('indexed-keys');
 const orSymbol = Symbol('or');
 const unknownSymbol = Symbol('unknown');
+const numericRangeSymbol = Symbol('numeric-range');
 
 /**
  * Symbols used to mark the outputs of each sub-shape function (like {@link or}).
@@ -79,6 +80,7 @@ export const shapeSpecifiersTypes = [
     classSymbol,
     orSymbol,
     unknownSymbol,
+    numericRangeSymbol,
 ] as const;
 
 type BaseParts = AtLeastTuple<unknown, 0>;
@@ -201,6 +203,15 @@ export type ShapeOr<Parts extends AtLeastTuple<unknown, 1>> = ShapeSpecifier<
 export type ShapeUnknown<Parts extends Readonly<[unknown]>> = ShapeSpecifier<
     Parts,
     typeof unknownSymbol
+>;
+/**
+ * {@link ShapeSpecifier} for {@link numericRange}.
+ *
+ * @category Internal
+ */
+export type ShapeNumericRange<T extends number = number> = ShapeSpecifier<
+    [T, T],
+    typeof numericRangeSymbol
 >;
 
 /**
@@ -355,11 +366,45 @@ export function or<Parts extends AtLeastTuple<unknown, 1>>(...parts: Parts): Sha
  *     a: unknownShape,
  * });
  *
- * // `myShape.runtimeType` is `{a: unknown`
+ * // `myShape.runtimeType` is `{a: unknown}`
  * ```
  */
 export function unknownShape(defaultValue?: unknown): ShapeUnknown<[unknown]> {
     return specifier([defaultValue], unknownSymbol);
+}
+/**
+ * Define a shape part that requires numbers to be within a specific range, inclusive.
+ *
+ * @category Shape Part
+ * @example
+ *
+ * ```ts
+ * import {numericRange, defineShape} from 'object-shape-tester';
+ *
+ * const myShape = defineShape({
+ *     // This will simply produce a type of `number` but will validate runtime values against the range.
+ *     a: numericRange(1, 10),
+ * });
+ * // `myShape.runtimeType` is just `{a: number}`
+ *
+ * const myShape2 = defineShape({
+ *     // If you want type safety, you must specify the allowed numbers manually
+ *     a: numericRange<1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10>(1, 10),
+ * });
+ * // `myShape2.runtimeType` is `{a: 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10}`
+ * ```
+ */
+export function numericRange<T extends number = number>(
+    min: NoInfer<T>,
+    max: NoInfer<T>,
+): ShapeNumericRange<T> {
+    return specifier(
+        [
+            min,
+            max,
+        ],
+        numericRangeSymbol,
+    );
 }
 
 /**
@@ -370,7 +415,7 @@ export function unknownShape(defaultValue?: unknown): ShapeUnknown<[unknown]> {
  * ========================================
  */
 /**
- * Checks if the input is an `and` shape specifier for internal type guarding purposes.
+ * Checks if the input is an {@link and} shape specifier for internal type guarding purposes.
  *
  * @category Internal
  */
@@ -380,7 +425,7 @@ export function isAndShapeSpecifier(
     return specifierHasSymbol(maybeSpecifier, andSymbol);
 }
 /**
- * Checks if the input is a `classShape` shape specifier for internal type guarding purposes.
+ * Checks if the input is a {@link classShape} shape specifier for internal type guarding purposes.
  *
  * @category Internal
  */
@@ -390,7 +435,7 @@ export function isClassShapeSpecifier(
     return specifierHasSymbol(maybeSpecifier, classSymbol);
 }
 /**
- * Checks if the input is an `enumShape` shape specifier for internal type guarding purposes.
+ * Checks if the input is an {@link enumShape} shape specifier for internal type guarding purposes.
  *
  * @category Internal
  */
@@ -401,7 +446,7 @@ export function isEnumShapeSpecifier(
 }
 
 /**
- * Checks if the input is an `exact` shape specifier for internal type guarding purposes.
+ * Checks if the input is an {@link exact} shape specifier for internal type guarding purposes.
  *
  * @category Internal
  */
@@ -412,7 +457,7 @@ export function isExactShapeSpecifier(
 }
 
 /**
- * Checks if the input is an `indexedKeys` shape specifier for internal type guarding purposes.
+ * Checks if the input is an {@link indexedKeys} shape specifier for internal type guarding purposes.
  *
  * @category Internal
  */
@@ -423,7 +468,7 @@ export function isIndexedKeysSpecifier(
 }
 
 /**
- * Checks if the input is an `or` shape specifier for internal type guarding purposes.
+ * Checks if the input is an {@link or} shape specifier for internal type guarding purposes.
  *
  * @category Internal
  */
@@ -434,7 +479,8 @@ export function isOrShapeSpecifier(
 }
 
 /**
- * Checks if the input is an `unknown` shape specifier for internal type guarding purposes.
+ * Checks if the input is an {@link unknownShape} shape specifier for internal type guarding
+ * purposes.
  *
  * @category Internal
  */
@@ -442,6 +488,17 @@ export function isUnknownShapeSpecifier(
     maybeSpecifier: unknown,
 ): maybeSpecifier is ShapeUnknown<[unknown]> {
     return specifierHasSymbol(maybeSpecifier, unknownSymbol);
+}
+
+/**
+ * Checks if the input is a {@link numericRange} shape specifier for internal type guarding purposes.
+ *
+ * @category Internal
+ */
+export function isNumericRangeShapeSpecifier(
+    maybeSpecifier: unknown,
+): maybeSpecifier is ShapeNumericRange {
+    return specifierHasSymbol(maybeSpecifier, numericRangeSymbol);
 }
 
 /**
@@ -477,42 +534,48 @@ export type SpecifierToRuntimeType<
     IsReadonly extends boolean,
 > =
     PossiblySpecifier extends ShapeSpecifier<infer Parts, infer Type>
-        ? Type extends typeof andSymbol
-            ? OptionallyReadonly<
-                  IsReadonly,
-                  UnionToIntersection<ExpandParts<Parts, IsExact, IsReadonly>>
-              >
-            : Type extends typeof classSymbol
-              ? Parts[0] extends AnyConstructor
-                  ? OptionallyReadonly<IsReadonly, InstanceType<Parts[0]>>
-                  : 'TypeError: classShape input must be a constructor.'
-              : Type extends typeof orSymbol
-                ? OptionallyReadonly<IsReadonly, ExpandParts<Parts, IsExact, IsReadonly>>
-                : Type extends typeof exactSymbol
-                  ? OptionallyReadonly<
-                        IsReadonly,
-                        WritableDeep<ExpandParts<Parts, true, IsReadonly>>
-                    >
-                  : Type extends typeof enumSymbol
-                    ? OptionallyReadonly<IsReadonly, Parts[0][keyof Parts[0]]>
-                    : Type extends typeof indexedKeysSymbol
-                      ? Parts[0] extends {keys: unknown; values: unknown; required: boolean}
-                          ? ExpandParts<[Parts[0]['keys']], IsExact, IsReadonly> extends PropertyKey
-                              ? OptionallyReadonly<
-                                    IsReadonly,
-                                    MaybeRequired<
-                                        Record<
-                                            ExpandParts<[Parts[0]['keys']], IsExact, IsReadonly>,
-                                            ExpandParts<[Parts[0]['values']], IsExact, IsReadonly>
-                                        >,
-                                        Parts[0]['required']
-                                    >
-                                >
-                              : 'TypeError: indexedKeys keys be a subset of PropertyKey.'
-                          : 'TypeError: indexedKeys input is invalid.'
-                      : Type extends typeof unknownSymbol
-                        ? unknown
-                        : 'TypeError: found not match for shape specifier type.'
+        ? Type extends typeof numericRangeSymbol
+            ? Parts[0]
+            : Type extends typeof andSymbol
+              ? OptionallyReadonly<
+                    IsReadonly,
+                    UnionToIntersection<ExpandParts<Parts, IsExact, IsReadonly>>
+                >
+              : Type extends typeof classSymbol
+                ? Parts[0] extends AnyConstructor
+                    ? OptionallyReadonly<IsReadonly, InstanceType<Parts[0]>>
+                    : 'TypeError: classShape input must be a constructor.'
+                : Type extends typeof orSymbol
+                  ? OptionallyReadonly<IsReadonly, ExpandParts<Parts, IsExact, IsReadonly>>
+                  : Type extends typeof exactSymbol
+                    ? OptionallyReadonly<
+                          IsReadonly,
+                          WritableDeep<ExpandParts<Parts, true, IsReadonly>>
+                      >
+                    : Type extends typeof enumSymbol
+                      ? OptionallyReadonly<IsReadonly, Parts[0][keyof Parts[0]]>
+                      : Type extends typeof indexedKeysSymbol
+                        ? Parts[0] extends {keys: unknown; values: unknown; required: boolean}
+                            ? ExpandParts<
+                                  [Parts[0]['keys']],
+                                  IsExact,
+                                  IsReadonly
+                              > extends PropertyKey
+                                ? OptionallyReadonly<
+                                      IsReadonly,
+                                      MaybeRequired<
+                                          Record<
+                                              ExpandParts<[Parts[0]['keys']], IsExact, IsReadonly>,
+                                              ExpandParts<[Parts[0]['values']], IsExact, IsReadonly>
+                                          >,
+                                          Parts[0]['required']
+                                      >
+                                  >
+                                : 'TypeError: indexedKeys keys be a subset of PropertyKey.'
+                            : 'TypeError: indexedKeys input is invalid.'
+                        : Type extends typeof unknownSymbol
+                          ? unknown
+                          : 'TypeError: found not match for shape specifier type.'
         : PossiblySpecifier extends Primitive
           ? IsExact extends true
               ? PossiblySpecifier
@@ -605,7 +668,12 @@ export function matchesShape(
     const specifier = getShapeSpecifier(shape);
 
     if (specifier) {
-        if (isClassShapeSpecifier(specifier)) {
+        if (isNumericRangeShapeSpecifier(specifier)) {
+            if (!check.isNumber(subject)) {
+                return false;
+            }
+            return subject >= specifier.parts[0] && subject <= specifier.parts[1];
+        } else if (isClassShapeSpecifier(specifier)) {
             return subject instanceof specifier.parts[0];
         } else if (isAndShapeSpecifier(specifier)) {
             return specifier.parts.every((part) => matchesShape(subject, part));

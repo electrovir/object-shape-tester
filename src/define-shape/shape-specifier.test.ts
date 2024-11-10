@@ -11,6 +11,7 @@ import {
     getShapeSpecifier,
     indexedKeys,
     matchesShape,
+    numericRange,
     or,
     unknownShape,
 } from './shape-specifiers.js';
@@ -30,6 +31,8 @@ describe('ShapeToRuntimeType', () => {
                 nestedMaybeNumber: or(0, undefined),
                 myNestedAnd: and('', 0),
             },
+            myGenericRange: numericRange(1, 10),
+            mySpecificRange: numericRange<1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10>(1, 10),
             myOr: or('', 0),
             myAnd: and({a: ''}, {b: 0}),
             mySimpleArray: [''],
@@ -76,6 +79,8 @@ describe('ShapeToRuntimeType', () => {
                 nestedMaybeNumber: number | undefined;
                 myNestedAnd: never;
             };
+            myGenericRange: number;
+            mySpecificRange: 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10;
             myOr: string | number;
             myAnd: {
                 a: string;
@@ -262,6 +267,30 @@ describe(matchesShape.name, () => {
                 unknownShape(),
             ],
             expect: true,
+        },
+        {
+            it: 'matches valid numeric range',
+            inputs: [
+                5,
+                numericRange(1, 10),
+            ],
+            expect: true,
+        },
+        {
+            it: 'rejects non-number numeric range',
+            inputs: [
+                {hi: 'hi'},
+                numericRange(1, 10),
+            ],
+            expect: false,
+        },
+        {
+            it: 'rejects invalid numeric range',
+            inputs: [
+                11,
+                numericRange(1, 10),
+            ],
+            expect: false,
         },
         {
             it: 'matches unknown indexed keys',

@@ -3,7 +3,14 @@ import {describe, it, itCases} from '@augment-vir/test';
 import {DefaultValueConstructionError} from '../errors/default-value-construction.error.js';
 import {assertValidShape} from '../verify-shape/verify-shape.js';
 import {defineShape} from './define-shape.js';
-import {classShape, enumShape, exact, indexedKeys, unknownShape} from './shape-specifiers.js';
+import {
+    classShape,
+    enumShape,
+    exact,
+    indexedKeys,
+    numericRange,
+    unknownShape,
+} from './shape-specifiers.js';
 import {shapeToDefaultValue} from './shape-to-default-value.js';
 
 enum TestEnum {
@@ -24,6 +31,11 @@ describe(shapeToDefaultValue.name, () => {
             it: 'defaults unknown shape to empty object',
             input: unknownShape(),
             expect: {},
+        },
+        {
+            it: 'defaults numeric range to the first number',
+            input: numericRange(1, 10),
+            expect: 1,
         },
         {
             it: 'defaults indexed keys shape to empty object',
