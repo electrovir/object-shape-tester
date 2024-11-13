@@ -6,13 +6,7 @@ import {
     getObjectTypedValues,
     type AnyFunction,
 } from '@augment-vir/common';
-import {
-    LiteralToPrimitive,
-    Primitive,
-    UnionToIntersection,
-    WritableDeep,
-    type Simplify,
-} from 'type-fest';
+import {Primitive, UnionToIntersection, WritableDeep, type Simplify} from 'type-fest';
 import {haveEqualTypes} from './type-equality.js';
 
 /**
@@ -623,7 +617,7 @@ export type SpecifierToRuntimeType<
         : PossiblySpecifier extends Primitive
           ? IsExact extends true
               ? PossiblySpecifier
-              : LiteralToPrimitive<PossiblySpecifier>
+              : PossiblySpecifier
           : PossiblySpecifier extends object
             ? PossiblySpecifier extends ShapeDefinition<any, any>
                 ? PossiblySpecifier['runtimeType']

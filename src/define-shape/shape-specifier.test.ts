@@ -42,6 +42,7 @@ describe('ShapeToRuntimeType', () => {
                 values: '',
                 required: false,
             }),
+            preservedStringType: '' as `${number}-${number}-${number}`,
             indexedRequired: indexedKeys({
                 keys: enumShape(TestEnum),
                 values: '',
@@ -93,6 +94,7 @@ describe('ShapeToRuntimeType', () => {
                 a: string;
                 b: number;
             };
+            preservedStringType: `${number}-${number}-${number}`;
             mySimpleArray: string[];
             indexedPartial: Partial<Record<TestEnum, string>>;
             indexedRequired: Record<TestEnum, string>;
