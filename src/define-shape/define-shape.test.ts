@@ -181,6 +181,18 @@ describe(defineShape.name, () => {
 
         assert.instanceOf(defaultValue.myClass, Error);
     });
+    it('can be enumerated without error', () => {
+        const shapeA = defineShape(
+            {
+                first: 'a',
+                second: 'b',
+                third: 'c' as const,
+            },
+            true,
+        );
+        /** This used to trigger an error on the `runtimeType` getter. */
+        JSON.stringify(shapeA);
+    });
 
     it('allows a shape inside of an array', () => {
         const shapeA = defineShape(
