@@ -58,32 +58,22 @@ export function isShapeDefinition(input: unknown): input is ShapeDefinition<unkn
  *
  * ========================================
  */
-const andSymbol = Symbol('and');
-const classSymbol = Symbol('instance');
-const enumSymbol = Symbol('enum');
-const exactSymbol = Symbol('exact');
-const indexedKeysSymbol = Symbol('indexed-keys');
-const orSymbol = Symbol('or');
-const unknownSymbol = Symbol('unknown');
-const numericRangeSymbol = Symbol('numeric-range');
-const optionalSymbol = Symbol('optional');
-
 /**
- * Symbols used to mark the outputs of each sub-shape function (like {@link or}).
+ * Values used to mark the outputs of each sub-shape function (like {@link or}).
  *
  * @category Internal
  */
-export const shapeSpecifiersTypes = [
-    andSymbol,
-    enumSymbol,
-    exactSymbol,
-    indexedKeysSymbol,
-    classSymbol,
-    orSymbol,
-    unknownSymbol,
-    numericRangeSymbol,
-    optionalSymbol,
-] as const;
+export enum ShapeSpecifierType {
+    And = 'and',
+    Class = 'class',
+    Enum = 'enum',
+    Exact = 'exact',
+    IndexedKeys = 'indexed-keys',
+    Or = 'or',
+    Unknown = 'unknown',
+    NumericRange = 'numeric-range',
+    Optional = 'optional',
+}
 
 type BaseParts = AtLeastTuple<unknown, 0>;
 /**
@@ -97,7 +87,6 @@ type BaseParts = AtLeastTuple<unknown, 0>;
  */
 export const isShapeSpecifierKey =
     '__vir__shape__specifier__key__do__not__use__in__actual__objects';
-type ShapeSpecifierType = ArrayElement<typeof shapeSpecifiersTypes>;
 
 /**
  * Output from the sub-shape defining functions (such as {@link or}).
@@ -147,7 +136,7 @@ export type BaseIndexedKeys = {
  */
 export type ShapeAnd<Parts extends AtLeastTuple<unknown, 1>> = ShapeSpecifier<
     Parts,
-    typeof andSymbol
+    ShapeSpecifierType.And
 >;
 /**
  * Helper type for {@link ShapeClass}.
@@ -160,7 +149,10 @@ export type AnyConstructor = new (...args: any[]) => any;
  *
  * @category Internal
  */
-export type ShapeClass<Parts extends [AnyConstructor]> = ShapeSpecifier<Parts, typeof classSymbol>;
+export type ShapeClass<Parts extends [AnyConstructor]> = ShapeSpecifier<
+    Parts,
+    ShapeSpecifierType.Class
+>;
 /**
  * {@link ShapeSpecifier} for {@link enumShape}.
  *
@@ -168,7 +160,7 @@ export type ShapeClass<Parts extends [AnyConstructor]> = ShapeSpecifier<Parts, t
  */
 export type ShapeEnum<Parts extends Readonly<[Record<string, number | string>]>> = ShapeSpecifier<
     Parts,
-    typeof enumSymbol
+    ShapeSpecifierType.Enum
 >;
 /**
  * {@link ShapeSpecifier} for {@link exact}.
@@ -177,7 +169,7 @@ export type ShapeEnum<Parts extends Readonly<[Record<string, number | string>]>>
  */
 export type ShapeExact<Parts extends Readonly<AtLeastTuple<unknown, 1>>> = ShapeSpecifier<
     Parts,
-    typeof exactSymbol
+    ShapeSpecifierType.Exact
 >;
 /**
  * {@link ShapeSpecifier} for {@link indexedKeys}.
@@ -186,7 +178,7 @@ export type ShapeExact<Parts extends Readonly<AtLeastTuple<unknown, 1>>> = Shape
  */
 export type ShapeIndexedKeys<Parts extends Readonly<[BaseIndexedKeys]>> = ShapeSpecifier<
     Parts,
-    typeof indexedKeysSymbol
+    ShapeSpecifierType.IndexedKeys
 >;
 /**
  * {@link ShapeSpecifier} for {@link or}.
@@ -195,7 +187,7 @@ export type ShapeIndexedKeys<Parts extends Readonly<[BaseIndexedKeys]>> = ShapeS
  */
 export type ShapeOr<Parts extends AtLeastTuple<unknown, 1>> = ShapeSpecifier<
     Parts,
-    typeof orSymbol
+    ShapeSpecifierType.Or
 >;
 /**
  * {@link ShapeSpecifier} for {@link unknownShape}.
@@ -204,7 +196,7 @@ export type ShapeOr<Parts extends AtLeastTuple<unknown, 1>> = ShapeSpecifier<
  */
 export type ShapeUnknown<Parts extends Readonly<[unknown]>> = ShapeSpecifier<
     Parts,
-    typeof unknownSymbol
+    ShapeSpecifierType.Unknown
 >;
 /**
  * {@link ShapeSpecifier} for {@link numericRange}.
@@ -213,14 +205,14 @@ export type ShapeUnknown<Parts extends Readonly<[unknown]>> = ShapeSpecifier<
  */
 export type ShapeNumericRange<T extends number = number> = ShapeSpecifier<
     [T, T],
-    typeof numericRangeSymbol
+    ShapeSpecifierType.NumericRange
 >;
 /**
  * {@link ShapeSpecifier} for {@link optional}.
  *
  * @category Internal
  */
-export type ShapeOptional<T = unknown> = ShapeSpecifier<[T], typeof optionalSymbol>;
+export type ShapeOptional<T = unknown> = ShapeSpecifier<[T], ShapeSpecifierType.Optional>;
 
 /**
  * ========================================
@@ -247,7 +239,7 @@ export type ShapeOptional<T = unknown> = ShapeSpecifier<[T], typeof optionalSymb
  * ```
  */
 export function and<Parts extends AtLeastTuple<unknown, 1>>(...parts: Parts): ShapeAnd<Parts> {
-    return specifier(parts, andSymbol);
+    return specifier(parts, ShapeSpecifierType.And);
 }
 /**
  * Define a shape part that requires an instance of the given constructor.
@@ -266,7 +258,7 @@ export function and<Parts extends AtLeastTuple<unknown, 1>>(...parts: Parts): Sh
  * ```
  */
 export function classShape<Parts extends [AnyConstructor]>(...parts: Parts): ShapeClass<Parts> {
-    return specifier(parts, classSymbol);
+    return specifier(parts, ShapeSpecifierType.Class);
 }
 /**
  * Define a shape part that requires an enum value.
@@ -292,7 +284,7 @@ export function classShape<Parts extends [AnyConstructor]>(...parts: Parts): Sha
 export function enumShape<const Parts extends Readonly<[Record<string, number | string>]>>(
     ...parts: Parts
 ): ShapeEnum<Parts> {
-    return specifier(parts, enumSymbol);
+    return specifier(parts, ShapeSpecifierType.Enum);
 }
 /**
  * Define a shape part that requires _exactly_ the value given.
@@ -313,7 +305,7 @@ export function enumShape<const Parts extends Readonly<[Record<string, number | 
 export function exact<const Parts extends Readonly<AtLeastTuple<unknown, 1>>>(
     ...parts: Parts
 ): ShapeExact<Parts> {
-    return specifier(parts, exactSymbol);
+    return specifier(parts, ShapeSpecifierType.Exact);
 }
 /**
  * Define a shape part that's an object with a specific set of keys and values.
@@ -340,7 +332,7 @@ export function exact<const Parts extends Readonly<AtLeastTuple<unknown, 1>>>(
 export function indexedKeys<Parts extends Readonly<[BaseIndexedKeys]>>(
     ...parts: Parts
 ): ShapeIndexedKeys<Parts> {
-    return specifier(parts, indexedKeysSymbol);
+    return specifier(parts, ShapeSpecifierType.IndexedKeys);
 }
 /**
  * Define a shape part that's a union of all its inputs.
@@ -359,7 +351,7 @@ export function indexedKeys<Parts extends Readonly<[BaseIndexedKeys]>>(
  * ```
  */
 export function or<Parts extends AtLeastTuple<unknown, 1>>(...parts: Parts): ShapeOr<Parts> {
-    return specifier(parts, orSymbol);
+    return specifier(parts, ShapeSpecifierType.Or);
 }
 /**
  * Define a shape part that resolves simply to `unknown`.
@@ -378,7 +370,7 @@ export function or<Parts extends AtLeastTuple<unknown, 1>>(...parts: Parts): Sha
  * ```
  */
 export function unknownShape(defaultValue?: unknown): ShapeUnknown<[unknown]> {
-    return specifier([defaultValue], unknownSymbol);
+    return specifier([defaultValue], ShapeSpecifierType.Unknown);
 }
 /**
  * Define a shape part that requires numbers to be within a specific range, inclusive.
@@ -411,7 +403,7 @@ export function numericRange<T extends number = number>(
             min,
             max,
         ],
-        numericRangeSymbol,
+        ShapeSpecifierType.NumericRange,
     );
 }
 /**
@@ -431,7 +423,7 @@ export function numericRange<T extends number = number>(
  * ```
  */
 export function optional<T>(part: T): ShapeOptional<T> {
-    return specifier([part], optionalSymbol);
+    return specifier([part], ShapeSpecifierType.Optional);
 }
 
 /**
@@ -449,7 +441,7 @@ export function optional<T>(part: T): ShapeOptional<T> {
 export function isAndShapeSpecifier(
     maybeSpecifier: unknown,
 ): maybeSpecifier is ShapeAnd<AtLeastTuple<unknown, 1>> {
-    return specifierHasSymbol(maybeSpecifier, andSymbol);
+    return specifierHasSymbol(maybeSpecifier, ShapeSpecifierType.And);
 }
 /**
  * Checks if the input is a {@link classShape} shape specifier for internal type guarding purposes.
@@ -459,7 +451,7 @@ export function isAndShapeSpecifier(
 export function isClassShapeSpecifier(
     maybeSpecifier: unknown,
 ): maybeSpecifier is ShapeClass<[AnyConstructor]> {
-    return specifierHasSymbol(maybeSpecifier, classSymbol);
+    return specifierHasSymbol(maybeSpecifier, ShapeSpecifierType.Class);
 }
 /**
  * Checks if the input is an {@link enumShape} shape specifier for internal type guarding purposes.
@@ -469,7 +461,7 @@ export function isClassShapeSpecifier(
 export function isEnumShapeSpecifier(
     maybeSpecifier: unknown,
 ): maybeSpecifier is ShapeEnum<[Record<string, number | string>]> {
-    return specifierHasSymbol(maybeSpecifier, enumSymbol);
+    return specifierHasSymbol(maybeSpecifier, ShapeSpecifierType.Enum);
 }
 
 /**
@@ -480,7 +472,7 @@ export function isEnumShapeSpecifier(
 export function isExactShapeSpecifier(
     maybeSpecifier: unknown,
 ): maybeSpecifier is ShapeExact<[unknown]> {
-    return specifierHasSymbol(maybeSpecifier, exactSymbol);
+    return specifierHasSymbol(maybeSpecifier, ShapeSpecifierType.Exact);
 }
 
 /**
@@ -491,7 +483,7 @@ export function isExactShapeSpecifier(
 export function isIndexedKeysSpecifier(
     maybeSpecifier: unknown,
 ): maybeSpecifier is ShapeIndexedKeys<Readonly<[BaseIndexedKeys]>> {
-    return specifierHasSymbol(maybeSpecifier, indexedKeysSymbol);
+    return specifierHasSymbol(maybeSpecifier, ShapeSpecifierType.IndexedKeys);
 }
 
 /**
@@ -502,7 +494,7 @@ export function isIndexedKeysSpecifier(
 export function isOrShapeSpecifier(
     maybeSpecifier: unknown,
 ): maybeSpecifier is ShapeOr<AtLeastTuple<unknown, 1>> {
-    return specifierHasSymbol(maybeSpecifier, orSymbol);
+    return specifierHasSymbol(maybeSpecifier, ShapeSpecifierType.Or);
 }
 
 /**
@@ -514,7 +506,7 @@ export function isOrShapeSpecifier(
 export function isUnknownShapeSpecifier(
     maybeSpecifier: unknown,
 ): maybeSpecifier is ShapeUnknown<[unknown]> {
-    return specifierHasSymbol(maybeSpecifier, unknownSymbol);
+    return specifierHasSymbol(maybeSpecifier, ShapeSpecifierType.Unknown);
 }
 
 /**
@@ -525,7 +517,7 @@ export function isUnknownShapeSpecifier(
 export function isNumericRangeShapeSpecifier(
     maybeSpecifier: unknown,
 ): maybeSpecifier is ShapeNumericRange {
-    return specifierHasSymbol(maybeSpecifier, numericRangeSymbol);
+    return specifierHasSymbol(maybeSpecifier, ShapeSpecifierType.NumericRange);
 }
 
 /**
@@ -534,7 +526,7 @@ export function isNumericRangeShapeSpecifier(
  * @category Internal
  */
 export function isOptionalShapeSpecifier(maybeSpecifier: unknown): maybeSpecifier is ShapeOptional {
-    return specifierHasSymbol(maybeSpecifier, optionalSymbol);
+    return specifierHasSymbol(maybeSpecifier, ShapeSpecifierType.Optional);
 }
 
 /**
@@ -570,27 +562,27 @@ export type SpecifierToRuntimeType<
     IsReadonly extends boolean,
 > =
     PossiblySpecifier extends ShapeSpecifier<infer Parts, infer Type>
-        ? Type extends typeof numericRangeSymbol
+        ? Type extends ShapeSpecifierType.NumericRange
             ? Parts[0]
-            : Type extends typeof andSymbol
+            : Type extends ShapeSpecifierType.And
               ? OptionallyReadonly<
                     IsReadonly,
                     UnionToIntersection<ExpandParts<Parts, IsExact, IsReadonly>>
                 >
-              : Type extends typeof classSymbol
+              : Type extends ShapeSpecifierType.Class
                 ? Parts[0] extends AnyConstructor
                     ? OptionallyReadonly<IsReadonly, InstanceType<Parts[0]>>
                     : 'TypeError: classShape input must be a constructor.'
-                : Type extends typeof orSymbol
+                : Type extends ShapeSpecifierType.Or
                   ? OptionallyReadonly<IsReadonly, ExpandParts<Parts, IsExact, IsReadonly>>
-                  : Type extends typeof exactSymbol
+                  : Type extends ShapeSpecifierType.Exact
                     ? OptionallyReadonly<
                           IsReadonly,
                           WritableDeep<ExpandParts<Parts, true, IsReadonly>>
                       >
-                    : Type extends typeof enumSymbol
+                    : Type extends ShapeSpecifierType.Enum
                       ? OptionallyReadonly<IsReadonly, Parts[0][keyof Parts[0]]>
-                      : Type extends typeof indexedKeysSymbol
+                      : Type extends ShapeSpecifierType.IndexedKeys
                         ? Parts[0] extends {keys: unknown; values: unknown; required: boolean}
                             ? ExpandParts<
                                   [Parts[0]['keys']],
@@ -609,9 +601,9 @@ export type SpecifierToRuntimeType<
                                   >
                                 : 'TypeError: indexedKeys keys be a subset of PropertyKey.'
                             : 'TypeError: indexedKeys input is invalid.'
-                        : Type extends typeof unknownSymbol
+                        : Type extends ShapeSpecifierType.Unknown
                           ? unknown
-                          : Type extends typeof optionalSymbol
+                          : Type extends ShapeSpecifierType.Optional
                             ? Parts[0]
                             : 'TypeError: found no match for shape specifier type.'
         : PossiblySpecifier extends Primitive
@@ -652,7 +644,7 @@ export type ShapeToRuntimeType<
       ? Shape extends ShapeDefinition<infer InnerShape, any>
           ? ShapeToRuntimeType<InnerShape, IsExact, IsReadonly>
           : Shape extends ShapeSpecifier<any, any>
-            ? Shape extends ShapeSpecifier<any, typeof exactSymbol>
+            ? Shape extends ShapeSpecifier<any, ShapeSpecifierType.Exact>
                 ? SpecifierToRuntimeType<Shape, true, IsReadonly>
                 : SpecifierToRuntimeType<Shape, IsExact, IsReadonly>
             : Shape extends Array<any>
@@ -661,7 +653,7 @@ export type ShapeToRuntimeType<
                     {
                         [Prop in keyof Shape]: Shape[Prop] extends ShapeSpecifier<
                             any,
-                            typeof exactSymbol
+                            ShapeSpecifierType.Exact
                         >
                             ? ShapeToRuntimeType<Shape[Prop], true, IsReadonly>
                             : ShapeToRuntimeType<Shape[Prop], IsExact, IsReadonly>;
@@ -675,14 +667,14 @@ export type ShapeToRuntimeType<
                                 ? never
                                 : Prop]: Shape[Prop] extends ShapeOptional<any>
                                 ? never
-                                : Shape[Prop] extends ShapeSpecifier<any, typeof exactSymbol>
+                                : Shape[Prop] extends ShapeSpecifier<any, ShapeSpecifierType.Exact>
                                   ? ShapeToRuntimeType<Shape[Prop], true, IsReadonly>
                                   : ShapeToRuntimeType<Shape[Prop], IsExact, IsReadonly>;
                         } & {
                             [Prop in keyof Shape as Shape[Prop] extends ShapeOptional<any>
                                 ? Prop
                                 : never]?: Shape[Prop] extends ShapeOptional<any>
-                                ? Shape[Prop] extends ShapeSpecifier<any, typeof exactSymbol>
+                                ? Shape[Prop] extends ShapeSpecifier<any, ShapeSpecifierType.Exact>
                                     ? ShapeToRuntimeType<Shape[Prop], true, IsReadonly>
                                     : ShapeToRuntimeType<Shape[Prop], IsExact, IsReadonly>
                                 : never;
@@ -884,7 +876,7 @@ export function getShapeSpecifier(
 
     if (
         !check.hasKey(input, 'specifierType') ||
-        !check.hasValue(shapeSpecifiersTypes, input.specifierType)
+        !check.isEnumValue(input.specifierType, ShapeSpecifierType)
     ) {
         throw new Error('Found a shape specifier but its specifier type is not valid.');
     }

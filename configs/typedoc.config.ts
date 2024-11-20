@@ -12,20 +12,9 @@ export const typeDocConfig: Partial<TypeDocOptions> = {
         indexTsFile,
     ],
     intentionallyNotExported: [
-        'andSymbol',
-        'classSymbol',
-        'enumSymbol',
-        'exactSymbol',
-        'indexedKeysSymbol',
-        'orSymbol',
-        'unknownSymbol',
-        'numericRangeSymbol',
-        'optionalSymbol',
-
         'BaseParts',
         'ExpandParts',
         'OptionallyReadonly',
-        'ShapeSpecifierType',
     ],
     defaultCategory: 'MISSING CATEGORY',
     categoryOrder: [
