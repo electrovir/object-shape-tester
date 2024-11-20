@@ -12,19 +12,10 @@ export const typeDocConfig: Partial<TypeDocOptions> = {
         indexTsFile,
     ],
     intentionallyNotExported: [
-        'andSymbol',
-        'classSymbol',
-        'enumSymbol',
-        'exactSymbol',
-        'indexedKeysSymbol',
-        'orSymbol',
-        'unknownSymbol',
-
         'BaseParts',
         'ExpandParts',
         'MaybeRequired',
         'OptionallyReadonly',
-        'ShapeSpecifierType',
     ],
     requiredToBeDocumented: [],
 };
