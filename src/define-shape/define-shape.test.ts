@@ -1,3 +1,4 @@
+/* eslint-disable sonarjs/no-unused-vars */
 import {assert} from '@augment-vir/assert';
 import {describe, it} from '@augment-vir/test';
 import {assertValidShape} from '../verify-shape/verify-shape.js';

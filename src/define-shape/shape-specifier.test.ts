@@ -1,3 +1,4 @@
+/* eslint-disable sonarjs/no-unused-vars */
 import {assert} from '@augment-vir/assert';
 import {randomInteger, randomString} from '@augment-vir/common';
 import {describe, it, itCases} from '@augment-vir/test';

@@ -51,11 +51,11 @@ From a single object (passed into `defineShape`), we get a type definition, a de
 
 For more complex types, this package provides type specifiers that you can use. The available type specifiers are currently the following:
 
--   `or(valueA, valueB, ...)`: for allowing multiple types. This gets converted in TypeScript to a union.
--   `and(valueA, valueB, ...)`: for creating a combined type. This gets converted in TypeScript to an intersection.
--   `exact(valueA, valueB, ...)`: requires the provided value to be exactly matched. This gets converted in TypeScript to a literal const type. (Example: instead of a value of `'empty name'` getting converted into a string type, `exact('empty name')` will _only_ allow the value `'empty name'`.)
--   `enumShape(enumA)`: use this for enum types.
--   `unknownShape()`: use this to allow any type.
+- `or(valueA, valueB, ...)`: for allowing multiple types. This gets converted in TypeScript to a union.
+- `and(valueA, valueB, ...)`: for creating a combined type. This gets converted in TypeScript to an intersection.
+- `exact(valueA, valueB, ...)`: requires the provided value to be exactly matched. This gets converted in TypeScript to a literal const type. (Example: instead of a value of `'empty name'` getting converted into a string type, `exact('empty name')` will _only_ allow the value `'empty name'`.)
+- `enumShape(enumA)`: use this for enum types.
+- `unknownShape()`: use this to allow any type.
 
 Here's a more complex user example that uses all of the above specifiers:
 
