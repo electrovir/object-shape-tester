@@ -1,6 +1,6 @@
 {
     "name": "object-shape-tester",
-    "version": "3.1.3",
+    "version": "3.1.4",
     "description": "Test object properties and value types.",
     "keywords": [
         "object",
@@ -45,17 +45,17 @@
         "test:spelling": "virmator spellcheck"
     },
     "dependencies": {
-        "@augment-vir/assert": "^31.0.0",
-        "@augment-vir/common": "^31.0.0",
+        "@augment-vir/assert": "^31.0.1",
+        "@augment-vir/common": "^31.0.1",
         "type-fest": "^4.30.0"
     },
     "devDependencies": {
-        "@augment-vir/test": "^31.0.0",
+        "@augment-vir/test": "^31.0.1",
         "@eslint/eslintrc": "^3.2.0",
         "@eslint/js": "9.16.0",
-        "@stylistic/eslint-plugin": "^2.11.0",
-        "@stylistic/eslint-plugin-ts": "^2.11.0",
-        "@typescript-eslint/eslint-plugin": "^8.17.0",
+        "@stylistic/eslint-plugin": "^2.12.0",
+        "@stylistic/eslint-plugin-ts": "^2.12.0",
+        "@typescript-eslint/eslint-plugin": "^8.18.0",
         "@web/dev-server-esbuild": "^1.0.3",
         "@web/test-runner": "^0.19.0",
         "@web/test-runner-commands": "^0.9.0",
@@ -85,9 +85,9 @@
         "prettier-plugin-packagejson": "^2.5.6",
         "prettier-plugin-sort-json": "^4.0.0",
         "prettier-plugin-toml": "^2.0.1",
-        "typedoc": "^0.27.3",
+        "typedoc": "^0.27.4",
         "typescript": "^5.7.2",
-        "typescript-eslint": "^8.17.0",
+        "typescript-eslint": "^8.18.0",
         "virmator": "^13.10.4",
         "vite": "^6.0.3",
         "vite-tsconfig-paths": "^5.1.4"
