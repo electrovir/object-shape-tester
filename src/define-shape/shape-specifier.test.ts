@@ -2,6 +2,7 @@
 import {assert} from '@augment-vir/assert';
 import {randomInteger, randomString} from '@augment-vir/common';
 import {describe, it, itCases} from '@augment-vir/test';
+import {assertValidShape} from '../verify-shape/verify-shape.js';
 import {defineShape} from './define-shape.js';
 import {
     and,
@@ -134,6 +135,16 @@ describe('ShapeToRuntimeType', () => {
         });
 
         assert.tsType(shapeTest.defaultValue.basicKeys).equals<Record<string, number>>();
+
+        assertValidShape({basicKeys: {}}, shapeTest);
+        assertValidShape(
+            {
+                basicKeys: {
+                    hi: 3,
+                },
+            },
+            shapeTest,
+        );
     });
 
     it('applies readonly', () => {
@@ -542,13 +553,24 @@ describe(exact.name, () => {
 describe(expandIndexedKeysKeys.name, () => {
     itCases(expandIndexedKeysKeys, [
         {
-            it: 'handles a static string key',
+            it: 'handles a string key',
             input: indexedKeys({
                 keys: '',
                 required: false,
                 values: '',
             }),
-            expect: [''],
+            expect: true,
+        },
+        {
+            it: 'handles an exact string key',
+            input: indexedKeys({
+                keys: exact('hi'),
+                required: false,
+                values: '',
+            }),
+            expect: [
+                'hi',
+            ],
         },
         {
             it: 'handles an enum key',
@@ -627,15 +649,13 @@ describe(expandIndexedKeysKeys.name, () => {
             expect: false,
         },
         {
-            it: 'accepts an or key key',
+            it: 'accepts an or key',
             input: indexedKeys({
                 keys: or('', -1, enumShape(TestEnum)),
                 required: false,
                 values: '',
             }),
             expect: [
-                '',
-                -1,
                 TestEnum.First,
                 TestEnum.Second,
                 TestEnum.Third,
@@ -658,18 +678,21 @@ describe(expandIndexedKeysKeys.name, () => {
                 required: false,
                 values: '',
             }),
-            expect: true,
+            expect: [
+                TestEnum.First,
+                TestEnum.Second,
+                TestEnum.Third,
+            ],
         },
         {
             it: 'accepts an or key',
             input: indexedKeys({
-                keys: or('', -1, enumShape(TestEnum)),
+                keys: or('', -1, exact('hi'), enumShape(TestEnum)),
                 required: false,
                 values: '',
             }),
             expect: [
-                '',
-                -1,
+                'hi',
                 TestEnum.First,
                 TestEnum.Second,
                 TestEnum.Third,

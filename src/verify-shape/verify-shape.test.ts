@@ -791,24 +791,20 @@ describe(assertValidShape.name, () => {
     });
 
     it('rejects missing required indexedKeys shapes', () => {
-        assert.throws(
-            () =>
-                assertValidShape(
-                    {
-                        stuff: 'hello there',
-                        /** Needs at least one key */
-                        moreStuff: {},
-                    },
-                    defineShape({
-                        stuff: '',
-                        moreStuff: indexedKeys({
-                            keys: '',
-                            values: 0,
-                            required: true,
-                        }),
-                    }),
-                ),
-            undefined,
+        assertValidShape(
+            {
+                stuff: 'hello there',
+                // does not require any keys
+                moreStuff: {},
+            },
+            defineShape({
+                stuff: '',
+                moreStuff: indexedKeys({
+                    keys: '',
+                    values: 0,
+                    required: true,
+                }),
+            }),
         );
         assert.throws(() =>
             assertValidShape(

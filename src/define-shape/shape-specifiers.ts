@@ -802,7 +802,7 @@ export function expandIndexedKeysKeys(
     const nestedSpecifier = getShapeSpecifier(keys);
 
     if (check.isPropertyKey(keys)) {
-        return [keys];
+        return true;
     } else if (nestedSpecifier) {
         if (isClassShapeSpecifier(nestedSpecifier)) {
             return false;
@@ -818,19 +818,8 @@ export function expandIndexedKeysKeys(
                 );
             });
 
-            let nestedBoolean: boolean | undefined = undefined;
-            nestedPropertyKeys.forEach((nested) => {
-                if (!check.isBoolean(nested)) {
-                    return;
-                } else if (nested && nestedBoolean == undefined) {
-                    nestedBoolean = true;
-                } else {
-                    nestedBoolean = false;
-                }
-            });
-
-            if (check.isBoolean(nestedBoolean)) {
-                return nestedBoolean;
+            if (nestedPropertyKeys.includes(false)) {
+                return false;
             }
 
             return nestedPropertyKeys.flat().filter(check.isPropertyKey);
