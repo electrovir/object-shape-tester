@@ -125,6 +125,25 @@ describe('ShapeToRuntimeType', () => {
         }>();
     });
 
+    it('unwraps optional specifiers', () => {
+        const optionalShape = defineShape({
+            a: optional('a'),
+            b: optional(or('a', -3)),
+        });
+
+        assert.tsType(optionalShape.defaultValue).equals<
+            Readonly<{
+                a?: string;
+                b?: string | number;
+            }>
+        >();
+
+        assert.tsType<(typeof optionalShape)['runtimeType']>().equals<{
+            a?: string;
+            b?: string | number;
+        }>();
+    });
+
     it('does not add required to index key objects', () => {
         const shapeTest = defineShape({
             basicKeys: indexedKeys({

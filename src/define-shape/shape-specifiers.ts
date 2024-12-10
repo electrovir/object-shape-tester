@@ -602,7 +602,7 @@ export type SpecifierToRuntimeType<
                         : Type extends ShapeSpecifierType.Unknown
                           ? unknown
                           : Type extends ShapeSpecifierType.Optional
-                            ? Parts[0]
+                            ? ExpandParts<Parts, IsExact, IsReadonly>
                             : 'TypeError: found no match for shape specifier type.'
         : PossiblySpecifier extends Primitive
           ? IsExact extends true

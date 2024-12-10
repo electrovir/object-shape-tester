@@ -10,6 +10,7 @@ import {
     indexedKeys,
     numericRange,
     optional,
+    or,
     unknownShape,
 } from './shape-specifiers.js';
 import {shapeToDefaultValue} from './shape-to-default-value.js';
@@ -52,6 +53,11 @@ describe(shapeToDefaultValue.name, () => {
                 required: false,
             }),
             expect: {},
+        },
+        {
+            it: 'unwraps optional',
+            input: optional(or([''], '')),
+            expect: [''],
         },
         {
             it: 'fails to call a constructor that cannot be called',
