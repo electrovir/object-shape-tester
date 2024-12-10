@@ -547,9 +547,7 @@ type ExpandParts<Parts extends BaseParts, IsExact extends boolean, IsReadonly ex
                 >
               | Extract<ArrayElement<Parts>, ShapeDefinition<any, any>>['runtimeType'];
 
-type MaybeRequired<T, IsPartial extends boolean> = IsPartial extends true
-    ? Required<T>
-    : Partial<T>;
+type MaybePartial<T, IsPartial extends boolean> = IsPartial extends true ? T : Partial<T>;
 
 /**
  * Converts a shape specifier to a runtime type.
@@ -591,7 +589,7 @@ export type SpecifierToRuntimeType<
                               > extends PropertyKey
                                 ? OptionallyReadonly<
                                       IsReadonly,
-                                      MaybeRequired<
+                                      MaybePartial<
                                           Record<
                                               ExpandParts<[Parts[0]['keys']], IsExact, IsReadonly>,
                                               ExpandParts<[Parts[0]['values']], IsExact, IsReadonly>

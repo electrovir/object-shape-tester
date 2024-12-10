@@ -124,6 +124,18 @@ describe('ShapeToRuntimeType', () => {
         }>();
     });
 
+    it('does not add required to index key objects', () => {
+        const shapeTest = defineShape({
+            basicKeys: indexedKeys({
+                keys: '',
+                required: true,
+                values: -1,
+            }),
+        });
+
+        assert.tsType(shapeTest.defaultValue.basicKeys).equals<Record<string, number>>();
+    });
+
     it('applies readonly', () => {
         const shapeDefinition = defineShape(
             {
