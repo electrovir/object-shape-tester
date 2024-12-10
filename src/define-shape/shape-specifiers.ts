@@ -538,9 +538,9 @@ export function isOptionalShapeSpecifier(maybeSpecifier: unknown): maybeSpecifie
  */
 type ExpandParts<Parts extends BaseParts, IsExact extends boolean, IsReadonly extends boolean> =
     Extract<ArrayElement<Parts>, ShapeDefinition<any, any>> extends never
-        ? SpecifierToRuntimeType<ArrayElement<Parts>, IsExact, IsReadonly>
+        ? ShapeToRuntimeType<ArrayElement<Parts>, IsExact, IsReadonly>
         :
-              | SpecifierToRuntimeType<
+              | ShapeToRuntimeType<
                     Exclude<ArrayElement<Parts>, ShapeDefinition<any, any>>,
                     IsExact,
                     IsReadonly

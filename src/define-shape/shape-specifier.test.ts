@@ -129,18 +129,34 @@ describe('ShapeToRuntimeType', () => {
         const optionalShape = defineShape({
             a: optional('a'),
             b: optional(or('a', -3)),
+            c: and(
+                {a: ''},
+                {
+                    b: optional(-3),
+                },
+            ),
         });
 
         assert.tsType(optionalShape.defaultValue).equals<
             Readonly<{
                 a?: string;
                 b?: string | number;
+                c: {
+                    a: string;
+                } & {
+                    b?: number;
+                };
             }>
         >();
 
         assert.tsType<(typeof optionalShape)['runtimeType']>().equals<{
             a?: string;
             b?: string | number;
+            c: {
+                a: string;
+            } & {
+                b?: number;
+            };
         }>();
     });
 
