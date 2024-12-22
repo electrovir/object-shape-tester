@@ -6,7 +6,16 @@ import {
     getObjectTypedValues,
     type AnyFunction,
 } from '@augment-vir/common';
-import {Primitive, UnionToIntersection, WritableDeep, type Simplify} from 'type-fest';
+import {
+    Primitive,
+    UnionToIntersection,
+    WritableDeep,
+    type IsEqual,
+    type IsNever,
+    type LiteralToPrimitive,
+    type Simplify,
+} from 'type-fest';
+import type {LiteralSpecifier} from './literal-specifier.js';
 import {haveEqualTypes} from './type-equality.js';
 
 /**
@@ -638,48 +647,60 @@ export type ShapeToRuntimeType<
     IsReadonly extends boolean,
 > = Shape extends AnyFunction
     ? Shape
-    : Shape extends object
-      ? Shape extends ShapeDefinition<infer InnerShape, any>
-          ? ShapeToRuntimeType<InnerShape, IsExact, IsReadonly>
-          : Shape extends ShapeSpecifier<any, any>
-            ? Shape extends ShapeSpecifier<any, ShapeSpecifierType.Exact>
-                ? SpecifierToRuntimeType<Shape, true, IsReadonly>
-                : SpecifierToRuntimeType<Shape, IsExact, IsReadonly>
-            : Shape extends Array<any>
-              ? OptionallyReadonly<
-                    IsReadonly,
-                    {
-                        [Prop in keyof Shape]: Shape[Prop] extends ShapeSpecifier<
-                            any,
-                            ShapeSpecifierType.Exact
-                        >
-                            ? ShapeToRuntimeType<Shape[Prop], true, IsReadonly>
-                            : ShapeToRuntimeType<Shape[Prop], IsExact, IsReadonly>;
-                    }
-                >
-              : OptionallyReadonly<
-                    IsReadonly,
-                    Simplify<
-                        {
-                            [Prop in keyof Shape as Shape[Prop] extends ShapeOptional<any>
-                                ? never
-                                : Prop]: Shape[Prop] extends ShapeOptional<any>
-                                ? never
-                                : Shape[Prop] extends ShapeSpecifier<any, ShapeSpecifierType.Exact>
-                                  ? ShapeToRuntimeType<Shape[Prop], true, IsReadonly>
-                                  : ShapeToRuntimeType<Shape[Prop], IsExact, IsReadonly>;
-                        } & {
-                            [Prop in keyof Shape as Shape[Prop] extends ShapeOptional<any>
-                                ? Prop
-                                : never]?: Shape[Prop] extends ShapeOptional<any>
-                                ? Shape[Prop] extends ShapeSpecifier<any, ShapeSpecifierType.Exact>
+    : Shape extends LiteralSpecifier<infer T>
+      ? T
+      : Shape extends object
+        ? Shape extends ShapeDefinition<infer InnerShape, any>
+            ? ShapeToRuntimeType<InnerShape, IsExact, IsReadonly>
+            : Shape extends ShapeSpecifier<any, any>
+              ? Shape extends ShapeSpecifier<any, ShapeSpecifierType.Exact>
+                  ? SpecifierToRuntimeType<Shape, true, IsReadonly>
+                  : SpecifierToRuntimeType<Shape, IsExact, IsReadonly>
+              : Shape extends Array<any>
+                ? OptionallyReadonly<
+                      IsReadonly,
+                      {
+                          [Prop in keyof Shape]: Shape[Prop] extends ShapeSpecifier<
+                              any,
+                              ShapeSpecifierType.Exact
+                          >
+                              ? ShapeToRuntimeType<Shape[Prop], true, IsReadonly>
+                              : ShapeToRuntimeType<Shape[Prop], IsExact, IsReadonly>;
+                      }
+                  >
+                : OptionallyReadonly<
+                      IsReadonly,
+                      Simplify<
+                          {
+                              [Prop in keyof Shape as Shape[Prop] extends ShapeOptional<any>
+                                  ? never
+                                  : Prop]: Shape[Prop] extends ShapeOptional<any>
+                                  ? never
+                                  : Shape[Prop] extends ShapeSpecifier<
+                                          any,
+                                          ShapeSpecifierType.Exact
+                                      >
                                     ? ShapeToRuntimeType<Shape[Prop], true, IsReadonly>
-                                    : ShapeToRuntimeType<Shape[Prop], IsExact, IsReadonly>
-                                : never;
-                        }
-                    >
-                >
-      : Shape;
+                                    : ShapeToRuntimeType<Shape[Prop], IsExact, IsReadonly>;
+                          } & {
+                              [Prop in keyof Shape as Shape[Prop] extends ShapeOptional<any>
+                                  ? Prop
+                                  : never]?: Shape[Prop] extends ShapeOptional<any>
+                                  ? Shape[Prop] extends ShapeSpecifier<
+                                        any,
+                                        ShapeSpecifierType.Exact
+                                    >
+                                      ? ShapeToRuntimeType<Shape[Prop], true, IsReadonly>
+                                      : ShapeToRuntimeType<Shape[Prop], IsExact, IsReadonly>
+                                  : never;
+                          }
+                      >
+                  >
+        : IsEqual<IsExact, true> extends true
+          ? Shape
+          : IsNever<LiteralToPrimitive<Shape>> extends true
+            ? Shape
+            : LiteralToPrimitive<Shape>;
 
 /**
  * ========================================

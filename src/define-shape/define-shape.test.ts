@@ -1,5 +1,6 @@
 /* eslint-disable sonarjs/no-unused-vars */
 import {assert} from '@augment-vir/assert';
+import type {Uuid} from '@augment-vir/common';
 import {describe, it} from '@augment-vir/test';
 import {assertValidShape} from '../verify-shape/verify-shape.js';
 import {defineShape} from './define-shape.js';
@@ -18,6 +19,16 @@ describe(defineShape.name, () => {
         }>();
         assert.tsType(exampleShape.shape).equals({helloThere: 'hi'});
         assert.tsType(exampleShape.shape).equals<{helloThere: string}>();
+    });
+
+    it('simplifies const literals', () => {
+        const myShape = defineShape({
+            value: 4 as const,
+            anotherValue: '' as Uuid,
+        });
+
+        assert.tsType<(typeof myShape.runtimeType)['value']>().equals<number>;
+        assert.tsType<(typeof myShape.runtimeType)['anotherValue']>().equals<string>;
     });
 
     it('converts shape specifiers', () => {
@@ -149,7 +160,7 @@ describe(defineShape.name, () => {
         };
     });
 
-    it('preserves const assignments', () => {
+    it('does not preserve const assignments', () => {
         const shapeA = defineShape({
             first: 'a',
             second: 'b',
@@ -158,7 +169,7 @@ describe(defineShape.name, () => {
         assert.tsType<typeof shapeA.runtimeType>().equals<{
             first: string;
             second: string;
-            third: 'c';
+            third: string;
         }>();
     });
 

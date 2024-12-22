@@ -1,6 +1,6 @@
 {
     "name": "object-shape-tester",
-    "version": "3.1.8",
+    "version": "4.0.0",
     "description": "Test object properties and value types.",
     "keywords": [
         "object",

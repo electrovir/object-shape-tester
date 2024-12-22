@@ -1,7 +1,8 @@
 /* eslint-disable sonarjs/no-unused-vars */
 import {assert} from '@augment-vir/assert';
-import {randomInteger, randomString} from '@augment-vir/common';
+import {randomInteger, randomString, type Uuid} from '@augment-vir/common';
 import {describe, it, itCases} from '@augment-vir/test';
+import {uuidShape} from '../literal-specifiers/uuid.js';
 import {assertValidShape} from '../verify-shape/verify-shape.js';
 import {defineShape} from './define-shape.js';
 import {
@@ -45,6 +46,7 @@ describe('ShapeToRuntimeType', () => {
                 required: false,
             }),
             preservedStringType: '' as `${number}-${number}-${number}`,
+            uuid: uuidShape,
             indexedRequired: indexedKeys({
                 keys: enumShape(TestEnum),
                 values: '',
@@ -96,7 +98,8 @@ describe('ShapeToRuntimeType', () => {
                 a: string;
                 b: number;
             };
-            preservedStringType: `${number}-${number}-${number}`;
+            preservedStringType: string;
+            uuid: Uuid;
             mySimpleArray: string[];
             indexedPartial: Partial<Record<TestEnum, string>>;
             indexedRequired: Record<TestEnum, string>;
