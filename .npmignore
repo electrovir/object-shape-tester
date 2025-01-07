@@ -2,10 +2,12 @@
 .not-committed/
 *.book.*
 *.d.ts.map
-*.example.ts
+*.example.*
+*.mock.*
 *.test.*
 *.tgz
 **/*/test/
+/configs/
 /coverage/
 /cspell.config.cjs
 /graphics/
@@ -21,5 +23,3 @@ prettier.config.mjs
 test-files/
 todo.md
 tsconfig.*
-
-*.mock.ts
