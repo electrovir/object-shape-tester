@@ -167,10 +167,9 @@ export type ShapeClass<Parts extends [AnyConstructor]> = ShapeSpecifier<
  *
  * @category Internal
  */
-export type ShapeEnum<Parts extends Readonly<[Record<string, number | string>]>> = ShapeSpecifier<
-    Parts,
-    ShapeSpecifierType.Enum
->;
+export type ShapeEnum<
+    Parts extends Readonly<[Record<string, number | string>, (number | string)?]>,
+> = ShapeSpecifier<Parts, ShapeSpecifierType.Enum>;
 /**
  * {@link ShapeSpecifier} for {@link exact}.
  *
@@ -290,9 +289,9 @@ export function classShape<Parts extends [AnyConstructor]>(...parts: Parts): Sha
  * // `myShape.runtimeType` is `{a: MyEnum}`
  * ```
  */
-export function enumShape<const Parts extends Readonly<[Record<string, number | string>]>>(
-    ...parts: Parts
-): ShapeEnum<Parts> {
+export function enumShape<
+    const Parts extends Readonly<[Record<string, number | string>, (number | string)?]>,
+>(...parts: Parts): ShapeEnum<Parts> {
     return specifier(parts, ShapeSpecifierType.Enum);
 }
 /**
@@ -469,7 +468,7 @@ export function isClassShapeSpecifier(
  */
 export function isEnumShapeSpecifier(
     maybeSpecifier: unknown,
-): maybeSpecifier is ShapeEnum<[Record<string, number | string>]> {
+): maybeSpecifier is ShapeEnum<[Record<string, number | string>, (number | string)?]> {
     return specifierHasSymbol(maybeSpecifier, ShapeSpecifierType.Enum);
 }
 

@@ -29,6 +29,16 @@ describe(shapeToDefaultValue.name, () => {
             expect: 'hi',
         },
         {
+            it: 'allows a custom enumShape default value',
+            input: enumShape(TestEnum, TestEnum.Second),
+            expect: TestEnum.Second,
+        },
+        {
+            it: 'uses a default enum value',
+            input: enumShape(TestEnum),
+            expect: TestEnum.First,
+        },
+        {
             it: 'allows defining a default value for unknown',
             input: unknownShape('my default value'),
             expect: 'my default value',

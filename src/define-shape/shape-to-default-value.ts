@@ -55,7 +55,7 @@ function innerShapeToDefaultValue<Shape>(shape: Shape): any {
                 return Object.assign(combined, innerShapeToDefaultValue(part));
             }, {});
         } else if (isEnumShapeSpecifier(specifier)) {
-            return Object.values(specifier.parts[0])[0];
+            return specifier.parts[1] || Object.values(specifier.parts[0])[0];
         } else if (isIndexedKeysSpecifier(specifier)) {
             const keys = expandIndexedKeysKeys(specifier);
 
