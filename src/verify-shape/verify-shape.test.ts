@@ -569,7 +569,7 @@ describe(assertValidShape.name, () => {
             assertValidShape,
             testCases.map((testCase): ArrayElement<typeof testCases> => {
                 return {
-                    ...testCase,
+                    it: testCase.it,
                     inputs: [
                         testCase.inputs[1].defaultValue,
                         testCase.inputs[1],
