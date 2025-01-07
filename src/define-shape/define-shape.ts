@@ -2,6 +2,8 @@ import type {AnyObject} from '@augment-vir/common';
 import {ShapeDefinition, isShapeDefinitionKey} from './shape-specifiers.js';
 import {shapeToDefaultValue} from './shape-to-default-value.js';
 
+export {shapeToDefaultValue} from './shape-to-default-value.js';
+
 /**
  * Creates a {@link ShapeDefinition} from any input. This produces both a type and a default value.
  * This is the core of the `object-shape-tester` package; {@link ShapeDefinition} instances are used

@@ -18,6 +18,11 @@ import {
     isUnknownShapeSpecifier,
 } from './shape-specifiers.js';
 
+/**
+ * Creates a default value for the given shape.
+ *
+ * @category Internal
+ */
 export function shapeToDefaultValue<Shape, IsReadonly extends boolean = false>(
     shape: Shape,
 ): ShapeToRuntimeType<Shape, false, IsReadonly> {
