@@ -5,7 +5,9 @@ import {
     ensureErrorAndPrependMessage,
     getObjectTypedKeys,
     mapObjectValues,
+    stringify,
 } from '@augment-vir/common';
+import {isCustomSpecifier} from '../define-shape/custom-specifier.js';
 import {
     ShapeDefinition,
     getShapeSpecifier,
@@ -137,6 +139,13 @@ function internalAssertValidShape<Shape>({
         return true;
     } else if (isShapeDefinition(shape)) {
         return internalAssertValidShape({subject, shape: shape.shape, keys, options});
+    } else if (isCustomSpecifier(shape)) {
+        if (!shape.checker(subject)) {
+            throw new ShapeMismatchError(
+                `Subject ${stringify(subject)} does not match ${shape.customName} shape.`,
+            );
+        }
+        return true;
     }
 
     const keysString = createKeyString(keys);

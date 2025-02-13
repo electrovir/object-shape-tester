@@ -1,8 +1,7 @@
-/* eslint-disable sonarjs/no-unused-vars */
 import {assert} from '@augment-vir/assert';
 import {randomInteger, randomString, type Uuid} from '@augment-vir/common';
 import {describe, it, itCases} from '@augment-vir/test';
-import {uuidShape} from '../literal-specifiers/uuid.js';
+import {uuidShape} from '../custom-specifiers/custom-string-shapes.js';
 import {assertValidShape} from '../verify-shape/verify-shape.js';
 import {defineShape} from './define-shape.js';
 import {

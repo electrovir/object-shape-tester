@@ -1,7 +1,7 @@
 import {check} from '@augment-vir/assert';
 import {extractErrorMessage, mapObjectValues} from '@augment-vir/common';
 import {DefaultValueConstructionError} from '../errors/default-value-construction.error.js';
-import {isLiteralSpecifier} from './literal-specifier.js';
+import {isCustomSpecifier} from './custom-specifier.js';
 import {
     ShapeToRuntimeType,
     expandIndexedKeysKeys,
@@ -32,7 +32,7 @@ export function shapeToDefaultValue<Shape, IsReadonly extends boolean = false>(
 function innerShapeToDefaultValue<Shape>(shape: Shape): any {
     const specifier = getShapeSpecifier(shape);
 
-    if (isLiteralSpecifier(shape)) {
+    if (isCustomSpecifier(shape)) {
         return shape.defaultValue;
     } else if (specifier) {
         if (isOptionalShapeSpecifier(specifier)) {

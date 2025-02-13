@@ -15,7 +15,7 @@ import {
     type LiteralToPrimitive,
     type Simplify,
 } from 'type-fest';
-import type {LiteralSpecifier} from './literal-specifier.js';
+import type {CustomSpecifier} from './custom-specifier.js';
 import {haveEqualTypes} from './type-equality.js';
 
 /**
@@ -646,7 +646,7 @@ export type ShapeToRuntimeType<
     IsReadonly extends boolean,
 > = Shape extends AnyFunction
     ? Shape
-    : Shape extends LiteralSpecifier<infer T>
+    : Shape extends CustomSpecifier<infer T>
       ? T
       : Shape extends object
         ? Shape extends ShapeDefinition<infer InnerShape, any>
