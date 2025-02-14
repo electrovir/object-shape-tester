@@ -1,4 +1,3 @@
-/* eslint-disable sonarjs/no-unused-vars */
 import {assert} from '@augment-vir/assert';
 import type {ArrayElement} from '@augment-vir/common';
 import {randomString} from '@augment-vir/common';
@@ -13,6 +12,7 @@ import {
     numericRange,
     optional,
     or,
+    tupleShape,
     unknownShape,
 } from '../define-shape/shape-specifiers.js';
 import {ShapeMismatchError} from '../errors/shape-mismatch.error.js';
@@ -33,6 +33,42 @@ const testCases: ReadonlyArray<FunctionTestCase<typeof assertValidShape>> = [
             defineShape(''),
         ],
         throws: undefined,
+    },
+    {
+        it: 'passes a tuple',
+        inputs: [
+            [
+                '',
+                'yo',
+                'hi',
+            ],
+            defineShape(tupleShape('', '', exact('hi'))),
+        ],
+        throws: undefined,
+    },
+    {
+        it: 'rejects an invalid tuple',
+        inputs: [
+            [
+                '',
+                -1,
+                'hi',
+            ],
+            defineShape(tupleShape('', '', exact('hi'))),
+        ],
+        throws: {
+            matchConstructor: ShapeMismatchError,
+        },
+    },
+    {
+        it: 'rejects a non-array tuple',
+        inputs: [
+            'hi',
+            defineShape(tupleShape('', '', exact('hi'))),
+        ],
+        throws: {
+            matchConstructor: ShapeMismatchError,
+        },
     },
     {
         it: 'passes an exact string',

@@ -19,6 +19,7 @@ import {
     isOptionalShapeSpecifier,
     isOrShapeSpecifier,
     isShapeDefinition,
+    isTupleShapeSpecifier,
     isUnknownShapeSpecifier,
     matchesShape,
 } from '../define-shape/shape-specifiers.js';
@@ -155,6 +156,25 @@ function internalAssertValidShape<Shape>({
         throw new ShapeMismatchError(
             `Shape test subjects cannot be contain shape specifiers but one was found at ${keysString}.`,
         );
+    } else if (isTupleShapeSpecifier(shape)) {
+        if (!check.isArray(subject)) {
+            throw new ShapeMismatchError(
+                `Subject is not an array and cannot match tuple definition at key ${keysString}`,
+            );
+        }
+
+        return shape.parts.every((shapeEntry, index) => {
+            const subjectValue = subject[index];
+            return internalAssertValidShape({
+                keys: [
+                    ...keys,
+                    index,
+                ],
+                options,
+                shape: shapeEntry,
+                subject: subjectValue,
+            });
+        });
     } else if (isOptionalShapeSpecifier(shape)) {
         /**
          * The optional specifier does not add any extra restrictions when the subject actually
