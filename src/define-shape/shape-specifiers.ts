@@ -82,9 +82,10 @@ export enum ShapeSpecifierType {
     Unknown = 'unknown',
     NumericRange = 'numeric-range',
     Optional = 'optional',
+    Tuple = 'tuple',
 }
-
-type BaseParts = AtLeastTuple<unknown, 0>;
+/** @category Internal */
+export type BaseParts = AtLeastTuple<unknown, 0>;
 /**
  * A special key string which is used to tag {@link ShapeSpecifier} instances so that we know they're
  * shape shape specifiers instead of part of the shape itself.
@@ -187,6 +188,15 @@ export type ShapeExact<Parts extends Readonly<AtLeastTuple<unknown, 1>>> = Shape
 export type ShapeIndexedKeys<Parts extends Readonly<[BaseIndexedKeys]>> = ShapeSpecifier<
     Parts,
     ShapeSpecifierType.IndexedKeys
+>;
+/**
+ * {@link ShapeSpecifier} for {@link tupleShape}.
+ *
+ * @category Internal
+ */
+export type ShapeTuple<Parts extends Readonly<any[]>> = ShapeSpecifier<
+    Parts,
+    ShapeSpecifierType.Tuple
 >;
 /**
  * {@link ShapeSpecifier} for {@link or}.
@@ -322,7 +332,7 @@ export function exact<const Parts extends Readonly<AtLeastTuple<unknown, 1>>>(
  * @example
  *
  * ```ts
- * import {exact, defineShape} from 'object-shape-tester';
+ * import {exact, defineShape, indexedKeys} from 'object-shape-tester';
  *
  * const myShape = defineShape({
  *     a: indexedKeys({
@@ -341,6 +351,25 @@ export function indexedKeys<Parts extends Readonly<[BaseIndexedKeys]>>(
     ...parts: Parts
 ): ShapeIndexedKeys<Parts> {
     return specifier(parts, ShapeSpecifierType.IndexedKeys);
+}
+/**
+ * Define a shape part requires a tuple.
+ *
+ * @category Shape Part
+ * @example
+ *
+ * ```ts
+ * import {exact, defineShape, tupleShape} from 'object-shape-tester';
+ *
+ * const myShape = defineShape({
+ *     a: tupleShape('a', -1, exact('hi')),
+ * });
+ *
+ * // `myShape.runtimeType` is `[string, number, 'hi']`
+ * ```
+ */
+export function tupleShape<Parts extends Readonly<any[]>>(...parts: Parts): ShapeTuple<Parts> {
+    return specifier(parts, ShapeSpecifierType.Tuple);
 }
 /**
  * Define a shape part that's a union of all its inputs.
@@ -495,6 +524,17 @@ export function isIndexedKeysSpecifier(
 }
 
 /**
+ * Checks if the input is an {@link tupleShape} shape specifier for internal type guarding purposes.
+ *
+ * @category Internal
+ */
+export function isTupleShapeSpecifier(
+    maybeSpecifier: unknown,
+): maybeSpecifier is ShapeTuple<Readonly<any[]>> {
+    return specifierHasSymbol(maybeSpecifier, ShapeSpecifierType.Tuple);
+}
+
+/**
  * Checks if the input is an {@link or} shape specifier for internal type guarding purposes.
  *
  * @category Internal
@@ -544,7 +584,12 @@ export function isOptionalShapeSpecifier(maybeSpecifier: unknown): maybeSpecifie
  *
  * ========================================
  */
-type ExpandParts<Parts extends BaseParts, IsExact extends boolean, IsReadonly extends boolean> =
+/** @category Internal */
+export type ExpandParts<
+    Parts extends BaseParts,
+    IsExact extends boolean,
+    IsReadonly extends boolean,
+> =
     Extract<ArrayElement<Parts>, ShapeDefinition<any, any>> extends never
         ? ShapeToRuntimeType<ArrayElement<Parts>, IsExact, IsReadonly>
         :
@@ -556,6 +601,15 @@ type ExpandParts<Parts extends BaseParts, IsExact extends boolean, IsReadonly ex
               | Extract<ArrayElement<Parts>, ShapeDefinition<any, any>>['runtimeType'];
 
 type MaybePartial<T, IsPartial extends boolean> = IsPartial extends true ? T : Partial<T>;
+
+/** @category Internal */
+export type TupleParts<
+    Parts extends ReadonlyArray<any>,
+    IsExact extends boolean,
+    IsReadonly extends boolean,
+> = {
+    [Index in keyof Parts]: SpecifierToRuntimeType<Parts[Index], IsExact, IsReadonly>;
+};
 
 /**
  * Converts a shape specifier to a runtime type.
@@ -607,11 +661,13 @@ export type SpecifierToRuntimeType<
                                   >
                                 : 'TypeError: indexedKeys keys be a subset of PropertyKey.'
                             : 'TypeError: indexedKeys input is invalid.'
-                        : Type extends ShapeSpecifierType.Unknown
-                          ? unknown
-                          : Type extends ShapeSpecifierType.Optional
-                            ? ExpandParts<Parts, IsExact, IsReadonly>
-                            : 'TypeError: found no match for shape specifier type.'
+                        : Type extends ShapeSpecifierType.Tuple
+                          ? TupleParts<Parts, IsExact, IsReadonly>
+                          : Type extends ShapeSpecifierType.Unknown
+                            ? unknown
+                            : Type extends ShapeSpecifierType.Optional
+                              ? ExpandParts<Parts, IsExact, IsReadonly>
+                              : 'TypeError: found no match for shape specifier type.'
         : PossiblySpecifier extends Primitive
           ? IsExact extends true
               ? PossiblySpecifier
@@ -631,7 +687,8 @@ export type SpecifierToRuntimeType<
                   >
             : PossiblySpecifier;
 
-type OptionallyReadonly<IsReadonly extends boolean, OriginalType> = IsReadonly extends true
+/** @category Internal */
+export type OptionallyReadonly<IsReadonly extends boolean, OriginalType> = IsReadonly extends true
     ? Readonly<OriginalType>
     : OriginalType;
 

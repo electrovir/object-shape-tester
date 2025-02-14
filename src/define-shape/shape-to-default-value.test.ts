@@ -11,6 +11,7 @@ import {
     numericRange,
     optional,
     or,
+    tupleShape,
     unknownShape,
 } from './shape-specifiers.js';
 import {shapeToDefaultValue} from './shape-to-default-value.js';
@@ -27,6 +28,15 @@ describe(shapeToDefaultValue.name, () => {
             it: 'defaults an optional property to its inputs',
             input: optional('hi'),
             expect: 'hi',
+        },
+        {
+            it: 'defaults a tuple to its inputs',
+            input: tupleShape('', -1, exact('hi')),
+            expect: [
+                '',
+                -1,
+                'hi',
+            ],
         },
         {
             it: 'allows a custom enumShape default value',

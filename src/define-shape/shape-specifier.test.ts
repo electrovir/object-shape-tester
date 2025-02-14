@@ -16,6 +16,7 @@ import {
     numericRange,
     optional,
     or,
+    tupleShape,
     unknownShape,
 } from './shape-specifiers.js';
 
@@ -36,6 +37,7 @@ describe('ShapeToRuntimeType', () => {
             },
             myGenericRange: numericRange(1, 10),
             mySpecificRange: numericRange<1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10>(1, 10),
+            myTuple: tupleShape('', -1, exact('hi')),
             myOr: or('', 0),
             myAnd: and({a: ''}, {b: 0}),
             mySimpleArray: [''],
@@ -92,6 +94,7 @@ describe('ShapeToRuntimeType', () => {
             };
             myGenericRange: number;
             mySpecificRange: 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10;
+            myTuple: [string, number, 'hi'];
             myOr: string | number;
             myAnd: {
                 a: string;
@@ -125,6 +128,11 @@ describe('ShapeToRuntimeType', () => {
                 c?: string;
             };
         }>();
+    });
+
+    it('works with tuples', () => {
+        const myShape = defineShape(tupleShape('', -1, exact('hi')));
+        assert.tsType<(typeof myShape)['runtimeType']>().equals<[string, number, 'hi']>();
     });
 
     it('unwraps optional specifiers', () => {

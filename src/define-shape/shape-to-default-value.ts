@@ -15,6 +15,7 @@ import {
     isOptionalShapeSpecifier,
     isOrShapeSpecifier,
     isShapeDefinition,
+    isTupleShapeSpecifier,
     isUnknownShapeSpecifier,
 } from './shape-specifiers.js';
 
@@ -35,7 +36,9 @@ function innerShapeToDefaultValue<Shape>(shape: Shape): any {
     if (isCustomSpecifier(shape)) {
         return shape.defaultValue;
     } else if (specifier) {
-        if (isOptionalShapeSpecifier(specifier)) {
+        if (isTupleShapeSpecifier(specifier)) {
+            return specifier.parts.map((part) => innerShapeToDefaultValue(part));
+        } else if (isOptionalShapeSpecifier(specifier)) {
             return innerShapeToDefaultValue(specifier.parts[0]);
         } else if (isNumericRangeShapeSpecifier(specifier)) {
             return specifier.parts[0];

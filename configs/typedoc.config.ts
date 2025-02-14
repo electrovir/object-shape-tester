@@ -11,11 +11,6 @@ export const typeDocConfig: Partial<TypeDocOptions> = {
     entryPoints: [
         indexTsFile,
     ],
-    intentionallyNotExported: [
-        'BaseParts',
-        'ExpandParts',
-        'OptionallyReadonly',
-    ],
     defaultCategory: 'MISSING CATEGORY',
     categoryOrder: [
         'Main',
