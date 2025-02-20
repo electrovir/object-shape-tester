@@ -1,4 +1,3 @@
-/* eslint-disable sonarjs/no-unused-vars */
 import {assert} from '@augment-vir/assert';
 import type {Uuid} from '@augment-vir/common';
 import {describe, it} from '@augment-vir/test';

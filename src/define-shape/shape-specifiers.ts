@@ -118,7 +118,8 @@ export type AllowedIndexKeysKeysSpecifiers =
     | ShapeEnum<Readonly<[Record<string, number | string>]>>
     | ShapeExact<Readonly<AtLeastTuple<PropertyKey, 1>>>
     | ShapeUnknown<[unknown]>
-    | PropertyKey;
+    | PropertyKey
+    | CustomSpecifier<any>;
 
 /**
  * Base type for inputs to the `indexedKeys` shape.

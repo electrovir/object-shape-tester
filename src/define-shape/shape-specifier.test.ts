@@ -1,5 +1,5 @@
 import {assert} from '@augment-vir/assert';
-import {randomInteger, randomString, type Uuid} from '@augment-vir/common';
+import {createUuidV4, randomInteger, randomString, type Uuid} from '@augment-vir/common';
 import {describe, it, itCases} from '@augment-vir/test';
 import {uuidShape} from '../custom-specifiers/custom-string-shapes.js';
 import {assertValidShape} from '../verify-shape/verify-shape.js';
@@ -186,6 +186,28 @@ describe('ShapeToRuntimeType', () => {
             {
                 basicKeys: {
                     hi: 3,
+                },
+            },
+            shapeTest,
+        );
+    });
+
+    it('allows custom specifiers for indexed keys', () => {
+        const shapeTest = defineShape({
+            basicKeys: indexedKeys({
+                keys: uuidShape,
+                values: -1,
+                required: false,
+            }),
+        });
+
+        assert.tsType(shapeTest.defaultValue.basicKeys).equals<Partial<Record<Uuid, number>>>();
+
+        assertValidShape({basicKeys: {}}, shapeTest);
+        assertValidShape(
+            {
+                basicKeys: {
+                    [createUuidV4()]: 3,
                 },
             },
             shapeTest,
