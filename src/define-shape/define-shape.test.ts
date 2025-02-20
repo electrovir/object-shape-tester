@@ -12,6 +12,16 @@ describe(defineShape.name, () => {
 
     type MyShape = typeof exampleShape.runtimeType;
 
+    it('does not double wrap a shape definition', () => {
+        const originalShape = defineShape({
+            hi: '',
+        });
+        const doubleShape = defineShape(originalShape);
+
+        assertValidShape({hi: 'hi'}, originalShape);
+        assertValidShape({hi: 'hi'}, doubleShape);
+    });
+
     it('creates a simple shape object with correct type', () => {
         assert.tsType<(typeof exampleShape)['runtimeType']>().equals<{
             helloThere: string;

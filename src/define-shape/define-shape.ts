@@ -1,5 +1,5 @@
 import type {AnyObject} from '@augment-vir/common';
-import {ShapeDefinition, isShapeDefinitionKey} from './shape-specifiers.js';
+import {ShapeDefinition, isShapeDefinition, isShapeDefinitionKey} from './shape-specifiers.js';
 import {shapeToDefaultValue} from './shape-to-default-value.js';
 
 export {shapeToDefaultValue} from './shape-to-default-value.js';
@@ -30,6 +30,10 @@ export function defineShape<Shape, IsReadonly extends boolean = false>(
     shape: Shape,
     isReadonly: IsReadonly = false as IsReadonly,
 ): ShapeDefinition<Shape, IsReadonly> {
+    if (isShapeDefinition(shape)) {
+        return shape as ShapeDefinition<Shape, IsReadonly>;
+    }
+
     const shapeDefinition = {
         shape,
         isReadonly,
