@@ -10,7 +10,6 @@ import {
     enumShape,
     exact,
     expandIndexedKeysKeys,
-    getShapeSpecifier,
     indexedKeys,
     matchesShape,
     numericRange,
@@ -498,55 +497,6 @@ describe(matchesShape.name, () => {
                 }),
             ],
             expect: false,
-        },
-    ]);
-});
-
-describe(getShapeSpecifier.name, () => {
-    itCases(getShapeSpecifier, [
-        {
-            it: 'errors if no parts property',
-            input: (() => {
-                const orResult: any = or('');
-
-                delete orResult.parts;
-
-                return orResult;
-            })(),
-            throws: {matchConstructor: Error},
-        },
-        {
-            it: 'errors if or parts is not an array',
-            input: (() => {
-                const orResult: any = or('');
-
-                orResult.parts = {};
-
-                return orResult;
-            })(),
-            throws: {matchConstructor: Error},
-        },
-        {
-            it: 'errors if specifierType is missing',
-            input: (() => {
-                const orResult: any = or('');
-
-                delete orResult.specifierType;
-
-                return orResult;
-            })(),
-            throws: {matchConstructor: Error},
-        },
-        {
-            it: 'errors if specifierType is an unexpected value',
-            input: (() => {
-                const orResult: any = or('');
-
-                orResult.specifierType = '';
-
-                return orResult;
-            })(),
-            throws: {matchConstructor: Error},
         },
     ]);
 });

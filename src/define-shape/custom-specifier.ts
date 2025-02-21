@@ -1,6 +1,7 @@
 import {check} from '@augment-vir/assert';
 import type {Overwrite} from '@augment-vir/common';
 import {LiteralToPrimitive} from 'type-fest';
+import {isShapeSpecifierKey} from './shape-keys.js';
 
 /**
  * A key used to identify custom specifier instances.
@@ -32,6 +33,7 @@ export type CustomSpecifier<T> = {
     /** The default value for this custom shape. */
     defaultValue: T;
     [customSpecifierKey]: true;
+    [isShapeSpecifierKey]: true;
 };
 
 /**
@@ -44,7 +46,7 @@ export function customShape<T>({
     defaultValue,
     checker,
 }: Overwrite<
-    Omit<CustomSpecifier<T>, typeof customSpecifierKey>,
+    Omit<CustomSpecifier<T>, typeof customSpecifierKey | typeof isShapeSpecifierKey>,
     {checker: (value: unknown) => boolean}
 >): CustomSpecifier<T> {
     return {
@@ -52,6 +54,7 @@ export function customShape<T>({
         checker: checker as (value: unknown) => value is T,
         defaultValue,
         [customSpecifierKey]: true,
+        [isShapeSpecifierKey]: true,
     };
 }
 

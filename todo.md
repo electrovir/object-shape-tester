@@ -1,0 +1,1 @@
+-   why is there a `matchesShape` function _and_ an `internalAssertValidShape` function?

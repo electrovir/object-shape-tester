@@ -2,6 +2,7 @@ import {assert} from '@augment-vir/assert';
 import type {ArrayElement} from '@augment-vir/common';
 import {randomString} from '@augment-vir/common';
 import {FunctionTestCase, describe, it, itCases} from '@augment-vir/test';
+import {uuidShape} from '../custom-specifiers/custom-string-shapes.js';
 import {defineShape} from '../define-shape/define-shape.js';
 import {
     and,
@@ -759,6 +760,77 @@ describe(assertValidShape.name, () => {
                     required: false,
                 }),
             }),
+        );
+    });
+
+    it('works with UUID indexed keys', () => {
+        assertValidShape(
+            {
+                '23f3eef2-682d-4a78-afda-129006318cdf': {
+                    roomId: '23f3eef2-682d-4a78-afda-129006318cdf',
+                    roomName: 'Room A',
+                    clientCount: 2,
+                },
+            },
+            defineShape(
+                indexedKeys({
+                    keys: uuidShape,
+                    values: defineShape({
+                        roomName: '',
+                        roomId: uuidShape,
+                        clientCount: -1,
+                    }),
+                    required: false,
+                }),
+            ),
+            {
+                allowExtraKeys: true,
+            },
+        );
+        assert.throws(() =>
+            assertValidShape(
+                {
+                    fff: {
+                        roomId: '23f3eef2-682d-4a78-afda-129006318cdf',
+                        roomName: 'Room A',
+                        clientCount: 2,
+                    },
+                },
+                defineShape(
+                    indexedKeys({
+                        keys: uuidShape,
+                        values: defineShape({
+                            roomName: '',
+                            roomId: uuidShape,
+                            clientCount: -1,
+                        }),
+                        required: false,
+                    }),
+                ),
+                {
+                    allowExtraKeys: true,
+                },
+            ),
+        );
+        assertValidShape(
+            {
+                '23f3eef2-682d-4a78-afda-129006318cdf': {
+                    roomId: '23f3eef2-682d-4a78-afda-129006318cdf',
+                    roomName: 'Room A',
+                    clientCount: 2,
+                },
+            },
+            defineShape(
+                indexedKeys({
+                    keys: uuidShape,
+                    values: defineShape({
+                        roomName: '',
+                        roomId: uuidShape,
+                        clientCount: -1,
+                    }),
+                    required: false,
+                }),
+            ),
         );
     });
 

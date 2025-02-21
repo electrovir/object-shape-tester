@@ -15,7 +15,8 @@ import {
     type LiteralToPrimitive,
     type Simplify,
 } from 'type-fest';
-import type {CustomSpecifier} from './custom-specifier.js';
+import {isCustomSpecifier, type CustomSpecifier} from './custom-specifier.js';
+import {isShapeDefinitionKey, isShapeSpecifierKey} from './shape-keys.js';
 import {haveEqualTypes} from './type-equality.js';
 
 /**
@@ -25,17 +26,6 @@ import {haveEqualTypes} from './type-equality.js';
  *
  * ========================================
  */
-/**
- * A special key string which is used to tag {@link ShapeDefinition} instances so that we know
- * they're shape definitions instead of part of the shape itself.
- *
- * This should be a symbol, but TypeScript errors out about "using names that cannot be named" in
- * that case.
- *
- * @category Internal
- */
-export const isShapeDefinitionKey =
-    '__vir__shape__definition__key__do__not__use__in__actual__objects';
 
 /**
  * The output of `defineShape`. This is a shape definition which includes the shape itself (used for
@@ -86,17 +76,6 @@ export enum ShapeSpecifierType {
 }
 /** @category Internal */
 export type BaseParts = AtLeastTuple<unknown, 0>;
-/**
- * A special key string which is used to tag {@link ShapeSpecifier} instances so that we know they're
- * shape shape specifiers instead of part of the shape itself.
- *
- * This should be a symbol, but TypeScript errors out about "using names that cannot be named" in
- * that case.
- *
- * @category Internal
- */
-export const isShapeSpecifierKey =
-    '__vir__shape__specifier__key__do__not__use__in__actual__objects';
 
 /**
  * Output from the sub-shape defining functions (such as {@link or}).
@@ -797,7 +776,9 @@ export function matchesShape(
     const specifier = getShapeSpecifier(shape);
 
     if (specifier) {
-        if (isNumericRangeShapeSpecifier(specifier)) {
+        if (isCustomSpecifier(specifier)) {
+            return specifier.checker(subject);
+        } else if (isNumericRangeShapeSpecifier(specifier)) {
             if (!check.isNumber(subject)) {
                 return false;
             }
@@ -820,13 +801,16 @@ export function matchesShape(
             if (!check.isObject(subject)) {
                 return false;
             }
-
-            return (
-                matchesIndexedKeysSpecifierKeys(subject, specifier, !!allowExtraKeys) &&
-                getObjectTypedValues(subject).every((subjectValue) =>
-                    matchesShape(subjectValue, specifier.parts[0].values),
-                )
+            const matchesKeys = matchesIndexedKeysSpecifierKeys(
+                subject,
+                specifier,
+                !!allowExtraKeys,
             );
+            const matchesValues = getObjectTypedValues(subject).every((subjectValue) =>
+                matchesShape(subjectValue, specifier.parts[0].values),
+            );
+
+            return matchesKeys && matchesValues;
         } else if (isUnknownShapeSpecifier(specifier)) {
             return true;
         }
@@ -846,24 +830,33 @@ function matchesIndexedKeysSpecifierKeys(
     const required = specifier.parts[0].required;
     const keys = specifier.parts[0].keys;
 
-    if (!allowExtraKeys) {
-        return getObjectTypedKeys(subject).every((subjectKey) => matchesShape(subjectKey, keys));
-    } else if (required) {
-        const allRequiredKeys = expandIndexedKeysKeys(specifier);
+    const allRequiredKeys = expandIndexedKeysKeys(specifier);
 
-        if (check.isBoolean(allRequiredKeys)) {
-            return allRequiredKeys;
-        }
-
-        return allRequiredKeys.every((requiredKey) => {
-            return getObjectTypedKeys(subject).some((subjectKey) =>
-                matchesShape(subjectKey, requiredKey, false, true),
-            );
+    if (check.isBoolean(allRequiredKeys)) {
+        return getObjectTypedKeys(subject).every((subjectKey) => {
+            return matchesShape(subjectKey, keys);
         });
-    } else {
-        /** No checks necessary in this case. */
-        return true;
     }
+
+    const matchesRequiredKeys: boolean = required
+        ? allRequiredKeys.every((requiredKey) => {
+              return getObjectTypedKeys(subject).some((subjectKey) =>
+                  matchesShape(subjectKey, requiredKey, false, true),
+              );
+          })
+        : true;
+
+    const matchesExistingKeys: boolean = getObjectTypedKeys(subject).every((subjectKey) => {
+        const isExpectedKey = allRequiredKeys.includes(subjectKey);
+
+        if (isExpectedKey) {
+            return matchesShape(subjectKey, keys);
+        } else {
+            return allowExtraKeys;
+        }
+    });
+
+    return matchesExistingKeys && matchesRequiredKeys;
 }
 
 /**
@@ -871,6 +864,7 @@ function matchesIndexedKeysSpecifierKeys(
  *
  * @category Internal
  * @returns `true` if any keys are allowed. `false` if a bounded set of keys cannot be determined.
+ *   `PropertyKey[]` if there's a specific set of keys that can be extracted.
  */
 export function expandIndexedKeysKeys(
     specifier: ShapeIndexedKeys<Readonly<[BaseIndexedKeys]>>,
@@ -928,22 +922,8 @@ export function expandIndexedKeysKeys(
 export function getShapeSpecifier(
     input: unknown,
 ): ShapeSpecifier<BaseParts, ShapeSpecifierType> | undefined {
-    if (!check.isObject(input)) {
+    if (!check.isObject(input) || !check.hasKey(input, isShapeSpecifierKey)) {
         return undefined;
-    }
-    if (!check.hasKey(input, isShapeSpecifierKey)) {
-        return undefined;
-    }
-
-    if (!check.hasKey(input, 'parts') || !check.isArray(input.parts)) {
-        throw new Error('Found a shape specifier but its parts are not valid.');
-    }
-
-    if (
-        !check.hasKey(input, 'specifierType') ||
-        !check.isEnumValue(input.specifierType, ShapeSpecifierType)
-    ) {
-        throw new Error('Found a shape specifier but its specifier type is not valid.');
     }
 
     return input as ShapeSpecifier<BaseParts, ShapeSpecifierType>;

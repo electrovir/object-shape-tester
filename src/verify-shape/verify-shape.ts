@@ -186,7 +186,7 @@ function internalAssertValidShape<Shape>({
             shape: shape.parts[0],
             subject,
         });
-    } else if (!matchesShape(subject, shape, !options.ignoreExtraKeys)) {
+    } else if (!matchesShape(subject, shape, options.ignoreExtraKeys)) {
         throw new ShapeMismatchError(
             `Subject does not match shape definition at key ${keysString}`,
         );
