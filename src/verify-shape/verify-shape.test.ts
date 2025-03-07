@@ -1,6 +1,6 @@
 import {assert} from '@augment-vir/assert';
 import type {ArrayElement} from '@augment-vir/common';
-import {randomString} from '@augment-vir/common';
+import {randomInteger, randomString} from '@augment-vir/common';
 import {FunctionTestCase, describe, it, itCases} from '@augment-vir/test';
 import {uuidShape} from '../custom-specifiers/custom-string-shapes.js';
 import {defineShape} from '../define-shape/define-shape.js';
@@ -17,7 +17,12 @@ import {
     unknownShape,
 } from '../define-shape/shape-specifiers.js';
 import {ShapeMismatchError} from '../errors/shape-mismatch.error.js';
-import {assertValidShape, isValidShape} from './verify-shape.js';
+import {
+    assertValidShape,
+    expandIndexedKeysKeys,
+    isValidShape,
+    matchesShape,
+} from './verify-shape.js';
 
 const sharedRegExp = /shared/;
 
@@ -494,6 +499,19 @@ const testCases: ReadonlyArray<FunctionTestCase<typeof assertValidShape>> = [
                 b: or('', 0),
                 c: and({a: 0}, {b: ''}),
             }),
+        ],
+        throws: {
+            matchConstructor: ShapeMismatchError,
+        },
+    },
+    {
+        it: 'fails an object with mismatched specifiers',
+        inputs: [
+            {
+                a: 'what',
+                b: '',
+            },
+            defineShape(and({a: ''}, {c: -1})),
         ],
         throws: {
             matchConstructor: ShapeMismatchError,
@@ -1196,4 +1214,324 @@ describe(isValidShape.name, () => {
             return newTestCase;
         });
     itCases(isValidShape, testCasesForIsValidCheck);
+});
+
+describe(matchesShape.name, () => {
+    itCases(matchesShape, [
+        {
+            it: 'always true for unknown specifier',
+            inputs: [
+                Math.random() > 0.5 ? '' : 4,
+                unknownShape(),
+                [],
+                {exactValues: false, ignoreExtraKeys: false},
+            ],
+            expect: true,
+        },
+        {
+            it: 'matches valid numeric range',
+            inputs: [
+                5,
+                numericRange(1, 10),
+                [],
+                {exactValues: false, ignoreExtraKeys: false},
+            ],
+            expect: true,
+        },
+        {
+            it: 'rejects non-number numeric range',
+            inputs: [
+                {hi: 'hi'},
+                numericRange(1, 10),
+                [],
+                {exactValues: false, ignoreExtraKeys: false},
+            ],
+            expect: false,
+        },
+        {
+            it: 'rejects invalid numeric range',
+            inputs: [
+                11,
+                numericRange(1, 10),
+                [],
+                {exactValues: false, ignoreExtraKeys: false},
+            ],
+            expect: false,
+        },
+        {
+            it: 'matches unknown indexed keys',
+            inputs: [
+                {hi: 'there'},
+                indexedKeys({
+                    keys: unknownShape(),
+                    required: true,
+                    values: '',
+                }),
+                [],
+                {exactValues: false, ignoreExtraKeys: true},
+            ],
+            expect: true,
+        },
+        {
+            it: 'accepts a valid indexed subject',
+            inputs: [
+                {[randomString()]: randomInteger({max: 100, min: 0})},
+                indexedKeys({
+                    keys: '',
+                    values: 0,
+                    required: false,
+                }),
+                [],
+                {exactValues: false, ignoreExtraKeys: false},
+            ],
+            expect: true,
+        },
+        {
+            it: 'rejects indexedKeys subject that is not an object',
+            inputs: [
+                5,
+                indexedKeys({
+                    keys: '',
+                    values: 0,
+                    required: false,
+                }),
+                [],
+                {exactValues: false, ignoreExtraKeys: false},
+            ],
+            expect: false,
+        },
+        {
+            it: 'accepts string/number indexedKeys subject keys mismatch because number keys are casted to strings anyway',
+            inputs: [
+                {0: 0},
+                indexedKeys({
+                    keys: '',
+                    values: 0,
+                    required: false,
+                }),
+                [],
+                {exactValues: false, ignoreExtraKeys: false},
+            ],
+            expect: true,
+        },
+        {
+            it: 'rejects mismatched exact indexedKeys keys',
+            inputs: [
+                {no: 0},
+                indexedKeys({
+                    keys: exact('hi'),
+                    values: 0,
+                    required: false,
+                }),
+                [],
+                {exactValues: false, ignoreExtraKeys: false},
+            ],
+            expect: false,
+        },
+        {
+            it: 'accepts valid exact indexedKeys keys',
+            inputs: [
+                {hi: 0},
+                indexedKeys({
+                    keys: exact('hi'),
+                    values: 0,
+                    required: false,
+                }),
+                [],
+                {exactValues: false, ignoreExtraKeys: false},
+            ],
+            expect: true,
+        },
+        {
+            it: 'accepts a class instance',
+            inputs: [
+                new Error(),
+                classShape(Error),
+                [],
+                {exactValues: false, ignoreExtraKeys: false},
+            ],
+            expect: true,
+        },
+        {
+            it: 'rejects the wrong class instance',
+            inputs: [
+                new Error(),
+                classShape(HTMLElement),
+                [],
+                {exactValues: false, ignoreExtraKeys: false},
+            ],
+            expect: false,
+        },
+        {
+            it: 'rejects invalid indexedKeys subject values',
+            inputs: [
+                {hi: 'hi'},
+                indexedKeys({
+                    keys: '',
+                    values: 0,
+                    required: false,
+                }),
+                [],
+                {exactValues: false, ignoreExtraKeys: false},
+            ],
+            expect: false,
+        },
+    ]);
+});
+
+enum TestEnum {
+    First = 'first',
+    Second = 'second',
+    Third = 'third',
+}
+
+describe(expandIndexedKeysKeys.name, () => {
+    itCases(expandIndexedKeysKeys, [
+        {
+            it: 'handles a string key',
+            input: indexedKeys({
+                keys: '',
+                required: false,
+                values: '',
+            }),
+            expect: true,
+        },
+        {
+            it: 'handles an exact string key',
+            input: indexedKeys({
+                keys: exact('hi'),
+                required: false,
+                values: '',
+            }),
+            expect: [
+                'hi',
+            ],
+        },
+        {
+            it: 'handles an enum key',
+            input: indexedKeys({
+                keys: enumShape(TestEnum),
+                required: false,
+                values: '',
+            }),
+            expect: [
+                TestEnum.First,
+                TestEnum.Second,
+                TestEnum.Third,
+            ],
+        },
+        {
+            it: 'rejects a class key',
+            input: indexedKeys({
+                // @ts-expect-error: intentionally wrong key
+                keys: classShape(RegExp),
+                required: false,
+                values: '',
+            }),
+            expect: false,
+        },
+        {
+            it: 'rejects an and key',
+            input: indexedKeys({
+                // @ts-expect-error: intentionally wrong key
+                keys: and('', -1),
+                required: false,
+                values: '',
+            }),
+            expect: false,
+        },
+        {
+            it: 'allows an unknown key',
+            input: indexedKeys({
+                keys: unknownShape(),
+                required: false,
+                values: '',
+            }),
+            expect: true,
+        },
+        {
+            it: 'rejects an exact object',
+            input: indexedKeys({
+                // @ts-expect-error: intentionally wrong key
+                keys: exact({hi: 'there'}),
+                required: false,
+                values: '',
+            }),
+            expect: false,
+        },
+        {
+            it: 'rejects an indexedKeys key',
+            input: indexedKeys({
+                // @ts-expect-error: intentionally wrong key
+                keys: indexedKeys({
+                    keys: '',
+                    required: false,
+                    values: '',
+                }),
+                required: false,
+                values: '',
+            }),
+            expect: false,
+        },
+        {
+            it: 'rejects an object key',
+            input: indexedKeys({
+                // @ts-expect-error: intentionally wrong key
+                keys: {},
+                required: false,
+                values: '',
+            }),
+            expect: false,
+        },
+        {
+            it: 'accepts an or key',
+            input: indexedKeys({
+                keys: or('', -1, enumShape(TestEnum)),
+                required: false,
+                values: '',
+            }),
+            expect: [
+                TestEnum.First,
+                TestEnum.Second,
+                TestEnum.Third,
+            ],
+        },
+        {
+            it: 'rejects a bad nested or',
+            input: indexedKeys({
+                // @ts-expect-error: intentionally wrong key
+                keys: or('', -1, enumShape(TestEnum), {}),
+                required: false,
+                values: '',
+            }),
+            expect: false,
+        },
+        {
+            it: 'passes a nested unknown',
+            input: indexedKeys({
+                keys: or('', -1, enumShape(TestEnum), unknownShape()),
+                required: false,
+                values: '',
+            }),
+            expect: [
+                TestEnum.First,
+                TestEnum.Second,
+                TestEnum.Third,
+            ],
+        },
+        {
+            it: 'accepts an or key',
+            input: indexedKeys({
+                keys: or('', -1, exact('hi'), enumShape(TestEnum)),
+                required: false,
+                values: '',
+            }),
+            expect: [
+                'hi',
+                TestEnum.First,
+                TestEnum.Second,
+                TestEnum.Third,
+            ],
+        },
+    ]);
 });

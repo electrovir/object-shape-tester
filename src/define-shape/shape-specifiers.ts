@@ -1,11 +1,5 @@
 import {check} from '@augment-vir/assert';
-import {
-    ArrayElement,
-    AtLeastTuple,
-    getObjectTypedKeys,
-    getObjectTypedValues,
-    type AnyFunction,
-} from '@augment-vir/common';
+import {ArrayElement, AtLeastTuple, type AnyFunction} from '@augment-vir/common';
 import {
     Primitive,
     UnionToIntersection,
@@ -15,9 +9,8 @@ import {
     type LiteralToPrimitive,
     type Simplify,
 } from 'type-fest';
-import {isCustomSpecifier, type CustomSpecifier} from './custom-specifier.js';
+import {type CustomSpecifier} from './custom-specifier.js';
 import {isShapeDefinitionKey, isShapeSpecifierKey} from './shape-keys.js';
-import {haveEqualTypes} from './type-equality.js';
 
 /**
  * ========================================
@@ -760,157 +753,6 @@ function specifier<Parts extends BaseParts, Type extends ShapeSpecifierType>(
         specifierType,
         parts,
     };
-}
-
-/**
- * Checks if the given `subject` matches the given `shape`.
- *
- * @category Internal
- */
-export function matchesShape(
-    subject: unknown,
-    shape: unknown,
-    allowExtraKeys?: boolean | undefined,
-    checkValues?: boolean | undefined,
-): boolean {
-    const specifier = getShapeSpecifier(shape);
-
-    if (specifier) {
-        if (isCustomSpecifier(specifier)) {
-            return specifier.checker(subject);
-        } else if (isNumericRangeShapeSpecifier(specifier)) {
-            if (!check.isNumber(subject)) {
-                return false;
-            }
-            return subject >= specifier.parts[0] && subject <= specifier.parts[1];
-        } else if (isClassShapeSpecifier(specifier)) {
-            return subject instanceof specifier.parts[0];
-        } else if (isAndShapeSpecifier(specifier)) {
-            return specifier.parts.every((part) => matchesShape(subject, part));
-        } else if (isOrShapeSpecifier(specifier)) {
-            return specifier.parts.some((part) => matchesShape(subject, part));
-        } else if (isExactShapeSpecifier(specifier)) {
-            if (check.isObject(subject)) {
-                return matchesShape(subject, specifier.parts[0]);
-            } else {
-                return subject === specifier.parts[0];
-            }
-        } else if (isEnumShapeSpecifier(specifier)) {
-            return check.hasValue(Object.values(specifier.parts[0]), subject);
-        } else if (isIndexedKeysSpecifier(specifier)) {
-            if (!check.isObject(subject)) {
-                return false;
-            }
-            const matchesKeys = matchesIndexedKeysSpecifierKeys(
-                subject,
-                specifier,
-                !!allowExtraKeys,
-            );
-            const matchesValues = getObjectTypedValues(subject).every((subjectValue) =>
-                matchesShape(subjectValue, specifier.parts[0].values),
-            );
-
-            return matchesKeys && matchesValues;
-        } else if (isUnknownShapeSpecifier(specifier)) {
-            return true;
-        }
-    }
-    if (checkValues) {
-        return shape === subject;
-    } else {
-        return haveEqualTypes(subject, shape);
-    }
-}
-
-function matchesIndexedKeysSpecifierKeys(
-    subject: object,
-    specifier: ShapeIndexedKeys<Readonly<[BaseIndexedKeys]>>,
-    allowExtraKeys: boolean,
-): boolean {
-    const required = specifier.parts[0].required;
-    const keys = specifier.parts[0].keys;
-
-    const allRequiredKeys = expandIndexedKeysKeys(specifier);
-
-    if (check.isBoolean(allRequiredKeys)) {
-        return getObjectTypedKeys(subject).every((subjectKey) => {
-            return matchesShape(subjectKey, keys);
-        });
-    }
-
-    const matchesRequiredKeys: boolean = required
-        ? allRequiredKeys.every((requiredKey) => {
-              return getObjectTypedKeys(subject).some((subjectKey) =>
-                  matchesShape(subjectKey, requiredKey, false, true),
-              );
-          })
-        : true;
-
-    const matchesExistingKeys: boolean = getObjectTypedKeys(subject).every((subjectKey) => {
-        const isExpectedKey = allRequiredKeys.includes(subjectKey);
-
-        if (isExpectedKey) {
-            return matchesShape(subjectKey, keys);
-        } else {
-            return allowExtraKeys;
-        }
-    });
-
-    return matchesExistingKeys && matchesRequiredKeys;
-}
-
-/**
- * Expands an {@link indexedKeys} shape part into an array of its valid keys.
- *
- * @category Internal
- * @returns `true` if any keys are allowed. `false` if a bounded set of keys cannot be determined.
- *   `PropertyKey[]` if there's a specific set of keys that can be extracted.
- */
-export function expandIndexedKeysKeys(
-    specifier: ShapeIndexedKeys<Readonly<[BaseIndexedKeys]>>,
-): PropertyKey[] | boolean {
-    const keys = specifier.parts[0].keys;
-
-    const nestedSpecifier = getShapeSpecifier(keys);
-
-    if (check.isPropertyKey(keys)) {
-        return true;
-    } else if (nestedSpecifier) {
-        if (isClassShapeSpecifier(nestedSpecifier)) {
-            return false;
-        } else if (isAndShapeSpecifier(nestedSpecifier)) {
-            return false;
-        } else if (isOrShapeSpecifier(nestedSpecifier)) {
-            const nestedPropertyKeys = nestedSpecifier.parts.map((part) => {
-                return expandIndexedKeysKeys(
-                    indexedKeys({
-                        ...specifier.parts[0],
-                        keys: part as any,
-                    }),
-                );
-            });
-
-            if (nestedPropertyKeys.includes(false)) {
-                return false;
-            }
-
-            return nestedPropertyKeys.flat().filter(check.isPropertyKey);
-        } else if (isExactShapeSpecifier(nestedSpecifier)) {
-            const propertyKeyParts = nestedSpecifier.parts.filter(check.isPropertyKey);
-            if (propertyKeyParts.length !== nestedSpecifier.parts.length) {
-                return false;
-            }
-            return propertyKeyParts;
-        } else if (isEnumShapeSpecifier(nestedSpecifier)) {
-            return Object.values(nestedSpecifier.parts[0]);
-        } else if (isIndexedKeysSpecifier(nestedSpecifier)) {
-            return false;
-        } else if (isUnknownShapeSpecifier(nestedSpecifier)) {
-            return true;
-        }
-    }
-
-    return false;
 }
 
 /**

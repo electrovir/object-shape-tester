@@ -1,9 +1,10 @@
 import {assert} from '@augment-vir/assert';
-import type {Uuid} from '@augment-vir/common';
+import {createUuidV4, type Uuid} from '@augment-vir/common';
 import {describe, it, itCases} from '@augment-vir/test';
 import type {ExtractCustomSpecifierType} from '../define-shape/custom-specifier.js';
 import {defineShape} from '../define-shape/define-shape.js';
-import {assertValidShape} from '../verify-shape/verify-shape.js';
+import {or} from '../define-shape/shape-specifiers.js';
+import {assertValidShape, isValidShape} from '../verify-shape/verify-shape.js';
 import {nonEmptyStringShape, uuidShape} from './custom-string-shapes.js';
 
 describe(uuidShape.customName, () => {
@@ -89,6 +90,31 @@ describe(nonEmptyStringShape.customName, () => {
             nonEmptyStringShape.defaultValue,
         );
         assert.strictEquals(nonEmptyStringShapeWrapper.defaultValue.value, ' ');
+    });
+
+    it('accepts a nested value', () => {
+        assert.isTrue(
+            isValidShape(
+                {
+                    id: createUuidV4(),
+                },
+                defineShape({
+                    id: defineShape(uuidShape),
+                }),
+            ),
+        );
+    });
+    it('accepts an or nested value', () => {
+        assert.isTrue(
+            isValidShape(
+                {
+                    id: createUuidV4(),
+                },
+                defineShape({
+                    id: or(undefined, null, defineShape(uuidShape)),
+                }),
+            ),
+        );
     });
 
     itCases(assertValidShape, [

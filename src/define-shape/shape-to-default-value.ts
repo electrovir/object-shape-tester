@@ -1,10 +1,10 @@
 import {check} from '@augment-vir/assert';
 import {extractErrorMessage, mapObjectValues} from '@augment-vir/common';
 import {DefaultValueConstructionError} from '../errors/default-value-construction.error.js';
+import {expandIndexedKeysKeys} from '../verify-shape/verify-shape.js';
 import {isCustomSpecifier} from './custom-specifier.js';
 import {
     ShapeToRuntimeType,
-    expandIndexedKeysKeys,
     getShapeSpecifier,
     isAndShapeSpecifier,
     isClassShapeSpecifier,

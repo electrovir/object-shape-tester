@@ -4,25 +4,30 @@ import {
     combineErrorMessages,
     ensureErrorAndPrependMessage,
     getObjectTypedKeys,
+    getObjectTypedValues,
     mapObjectValues,
     stringify,
 } from '@augment-vir/common';
 import {isCustomSpecifier} from '../define-shape/custom-specifier.js';
 import {
+    BaseIndexedKeys,
     ShapeDefinition,
+    ShapeIndexedKeys,
     getShapeSpecifier,
+    indexedKeys,
     isAndShapeSpecifier,
     isClassShapeSpecifier,
     isEnumShapeSpecifier,
     isExactShapeSpecifier,
     isIndexedKeysSpecifier,
+    isNumericRangeShapeSpecifier,
     isOptionalShapeSpecifier,
     isOrShapeSpecifier,
     isShapeDefinition,
     isTupleShapeSpecifier,
     isUnknownShapeSpecifier,
-    matchesShape,
 } from '../define-shape/shape-specifiers.js';
+import {haveEqualTypes} from '../define-shape/type-equality.js';
 import {ShapeMismatchError} from '../errors/shape-mismatch.error.js';
 
 /**
@@ -119,7 +124,12 @@ function createKeyString(keys: ReadonlyArray<PropertyKey>): string {
     ].join(' -> ');
 }
 
-type InternalIsValidShapeOptions = {
+/**
+ * Options for shape validation.
+ *
+ * @category Internal
+ */
+export type InternalIsValidShapeOptions = {
     ignoreExtraKeys: boolean;
     exactValues: boolean;
 };
@@ -186,7 +196,7 @@ function internalAssertValidShape<Shape>({
             shape: shape.parts[0],
             subject,
         });
-    } else if (!matchesShape(subject, shape, options.ignoreExtraKeys)) {
+    } else if (!matchesShape(subject, shape, keys, options)) {
         throw new ShapeMismatchError(
             `Subject does not match shape definition at key ${keysString}`,
         );
@@ -219,12 +229,12 @@ function internalAssertValidShape<Shape>({
                     });
                     Object.assign(keysPassed, newKeysPassed);
                     return true;
+                    /* node:coverage ignore next 14 */
+                    /** Cover the edge case of errors. */
                 } catch (error) {
                     if (error instanceof ShapeMismatchError) {
                         orErrors.push(error.message);
                         return false;
-                        /* node:coverage ignore next 4 */
-                        /** Cover the edge case of unexpected errors. */
                     } else {
                         throw error;
                     }
@@ -248,12 +258,12 @@ function internalAssertValidShape<Shape>({
                     });
                     Object.assign(keysPassed, newPassedKeys);
                     return true;
+                    /* node:coverage ignore next 9 */
+                    /** Cover the edge case of errors. */
                 } catch (error) {
                     if (error instanceof ShapeMismatchError) {
                         errors.push(error.message);
                         return false;
-                        /* node:coverage ignore next 4 */
-                        /** Cover the edge case of unexpected errors. */
                     } else {
                         throw error;
                     }
@@ -474,4 +484,206 @@ function isValidRawObjectShape<Shape>({
     }
 
     return keysPassed;
+}
+
+/**
+ * Checks if the given `subject` matches the given `shape`.
+ *
+ * @category Internal
+ */
+export function matchesShape(
+    subject: unknown,
+    shape: unknown,
+    keys: ReadonlyArray<PropertyKey>,
+    options: InternalIsValidShapeOptions,
+    checkValues?: boolean | undefined,
+): boolean {
+    const specifier = getShapeSpecifier(shape);
+
+    if (specifier) {
+        if (isCustomSpecifier(specifier)) {
+            return specifier.checker(subject);
+        } else if (isNumericRangeShapeSpecifier(specifier)) {
+            if (!check.isNumber(subject)) {
+                return false;
+            }
+            return subject >= specifier.parts[0] && subject <= specifier.parts[1];
+        } else if (isClassShapeSpecifier(specifier)) {
+            return subject instanceof specifier.parts[0];
+        } else if (isAndShapeSpecifier(specifier)) {
+            return specifier.parts.every((part) => {
+                try {
+                    internalAssertValidShape({
+                        subject,
+                        shape: part,
+                        keys,
+                        options: {
+                            ...options,
+                            ignoreExtraKeys: true,
+                        },
+                    });
+                    return true;
+                } catch {
+                    return false;
+                }
+            });
+        } else if (isOrShapeSpecifier(specifier)) {
+            return specifier.parts.some((part) => {
+                try {
+                    internalAssertValidShape({subject, shape: part, keys, options});
+                    return true;
+                } catch {
+                    return false;
+                }
+            });
+        } else if (isExactShapeSpecifier(specifier)) {
+            if (check.isObject(subject)) {
+                internalAssertValidShape({
+                    subject,
+                    shape: specifier.parts[0],
+                    keys,
+                    options: {
+                        ...options,
+                        exactValues: true,
+                    },
+                });
+                return true;
+            } else {
+                return subject === specifier.parts[0];
+            }
+        } else if (isEnumShapeSpecifier(specifier)) {
+            return check.hasValue(Object.values(specifier.parts[0]), subject);
+        } else if (isIndexedKeysSpecifier(specifier)) {
+            if (!check.isObject(subject)) {
+                return false;
+            }
+            const matchesKeys = matchesIndexedKeysSpecifierKeys(
+                subject,
+                specifier,
+                !!options.ignoreExtraKeys,
+            );
+            const matchesValues = getObjectTypedValues(subject).every((subjectValue) => {
+                try {
+                    internalAssertValidShape({
+                        subject: subjectValue,
+                        shape: specifier.parts[0].values,
+                        keys,
+                        options,
+                    });
+                    return true;
+                } catch {
+                    return false;
+                }
+            });
+
+            return matchesKeys && matchesValues;
+        } else if (isUnknownShapeSpecifier(specifier)) {
+            return true;
+        }
+    }
+    if (checkValues) {
+        return shape === subject;
+    } else {
+        return haveEqualTypes(subject, shape);
+    }
+}
+
+function matchesIndexedKeysSpecifierKeys(
+    subject: object,
+    specifier: ShapeIndexedKeys<Readonly<[BaseIndexedKeys]>>,
+    ignoreExtraKeys: boolean,
+): boolean {
+    const required = specifier.parts[0].required;
+    const keys = specifier.parts[0].keys;
+
+    const allRequiredKeys = expandIndexedKeysKeys(specifier);
+
+    if (check.isBoolean(allRequiredKeys)) {
+        return getObjectTypedKeys(subject).every((subjectKey) => {
+            return matchesShape(subjectKey, keys, [], {exactValues: false, ignoreExtraKeys});
+        });
+    }
+
+    const matchesRequiredKeys: boolean = required
+        ? allRequiredKeys.every((requiredKey) => {
+              return getObjectTypedKeys(subject).some((subjectKey) =>
+                  matchesShape(
+                      subjectKey,
+                      requiredKey,
+                      [],
+                      {
+                          exactValues: false,
+                          ignoreExtraKeys: false,
+                      },
+                      true,
+                  ),
+              );
+          })
+        : true;
+
+    const matchesExistingKeys: boolean = getObjectTypedKeys(subject).every((subjectKey) => {
+        const isExpectedKey = allRequiredKeys.includes(subjectKey);
+
+        if (isExpectedKey) {
+            return matchesShape(subjectKey, keys, [], {exactValues: false, ignoreExtraKeys: false});
+        } else {
+            return ignoreExtraKeys;
+        }
+    });
+
+    return matchesExistingKeys && matchesRequiredKeys;
+}
+
+/**
+ * Expands an {@link indexedKeys} shape part into an array of its valid keys.
+ *
+ * @category Internal
+ * @returns `true` if any keys are allowed. `false` if a bounded set of keys cannot be determined.
+ *   `PropertyKey[]` if there's a specific set of keys that can be extracted.
+ */
+export function expandIndexedKeysKeys(
+    specifier: ShapeIndexedKeys<Readonly<[BaseIndexedKeys]>>,
+): PropertyKey[] | boolean {
+    const keys = specifier.parts[0].keys;
+
+    const nestedSpecifier = getShapeSpecifier(keys);
+
+    if (check.isPropertyKey(keys)) {
+        return true;
+    } else if (nestedSpecifier) {
+        if (isClassShapeSpecifier(nestedSpecifier)) {
+            return false;
+        } else if (isAndShapeSpecifier(nestedSpecifier)) {
+            return false;
+        } else if (isOrShapeSpecifier(nestedSpecifier)) {
+            const nestedPropertyKeys = nestedSpecifier.parts.map((part) => {
+                return expandIndexedKeysKeys(
+                    indexedKeys({
+                        ...specifier.parts[0],
+                        keys: part as any,
+                    }),
+                );
+            });
+
+            if (nestedPropertyKeys.includes(false)) {
+                return false;
+            }
+
+            return nestedPropertyKeys.flat().filter(check.isPropertyKey);
+        } else if (isExactShapeSpecifier(nestedSpecifier)) {
+            const propertyKeyParts = nestedSpecifier.parts.filter(check.isPropertyKey);
+            if (propertyKeyParts.length !== nestedSpecifier.parts.length) {
+                return false;
+            }
+            return propertyKeyParts;
+        } else if (isEnumShapeSpecifier(nestedSpecifier)) {
+            return Object.values(nestedSpecifier.parts[0]);
+        } else if (isIndexedKeysSpecifier(nestedSpecifier)) {
+            return false;
+        } else if (isUnknownShapeSpecifier(nestedSpecifier)) {
+            return true;
+        }
+    }
+
+    return false;
 }
