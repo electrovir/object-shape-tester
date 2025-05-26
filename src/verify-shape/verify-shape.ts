@@ -584,7 +584,7 @@ export function matchesShape(
     if (checkValues) {
         return shape === subject;
     } else {
-        return haveEqualTypes(subject, shape);
+        return haveEqualTypes({subject, shape});
     }
 }
 
