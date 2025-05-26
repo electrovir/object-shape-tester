@@ -1,6 +1,6 @@
 import {check} from '@augment-vir/assert';
-import type {Overwrite} from '@augment-vir/common';
-import {LiteralToPrimitive} from 'type-fest';
+import {type Overwrite} from '@augment-vir/common';
+import {type LiteralToPrimitive} from 'type-fest';
 import {isShapeSpecifierKey} from './shape-keys.js';
 
 /**

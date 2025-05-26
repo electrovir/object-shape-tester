@@ -1,13 +1,13 @@
 import {check} from '@augment-vir/assert';
-import {ArrayElement, AtLeastTuple, type AnyFunction} from '@augment-vir/common';
+import {type AnyFunction, type ArrayElement, type AtLeastTuple} from '@augment-vir/common';
 import {
-    Primitive,
-    UnionToIntersection,
-    WritableDeep,
     type IsEqual,
     type IsNever,
     type LiteralToPrimitive,
+    type Primitive,
     type Simplify,
+    type UnionToIntersection,
+    type WritableDeep,
 } from 'type-fest';
 import {type CustomSpecifier} from './custom-specifier.js';
 import {isShapeDefinitionKey, isShapeSpecifierKey} from './shape-keys.js';

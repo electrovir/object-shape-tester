@@ -1,7 +1,6 @@
 import {assert} from '@augment-vir/assert';
-import type {ArrayElement} from '@augment-vir/common';
-import {randomInteger, randomString} from '@augment-vir/common';
-import {FunctionTestCase, describe, it, itCases} from '@augment-vir/test';
+import {type ArrayElement, randomInteger, randomString} from '@augment-vir/common';
+import {type FunctionTestCase, describe, it, itCases} from '@augment-vir/test';
 import {uuidShape} from '../custom-specifiers/custom-string-shapes.js';
 import {defineShape} from '../define-shape/define-shape.js';
 import {

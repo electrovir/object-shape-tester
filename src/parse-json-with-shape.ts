@@ -1,4 +1,4 @@
-import type {ShapeDefinition} from './define-shape/shape-specifiers.js';
+import {type ShapeDefinition} from './define-shape/shape-specifiers.js';
 import {assertValidShape} from './verify-shape/verify-shape.js';
 
 /**

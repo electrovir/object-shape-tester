@@ -4,7 +4,7 @@ import {DefaultValueConstructionError} from '../errors/default-value-constructio
 import {expandIndexedKeysKeys} from '../verify-shape/verify-shape.js';
 import {isCustomSpecifier} from './custom-specifier.js';
 import {
-    ShapeToRuntimeType,
+    type ShapeToRuntimeType,
     getShapeSpecifier,
     isAndShapeSpecifier,
     isClassShapeSpecifier,

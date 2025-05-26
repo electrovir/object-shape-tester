@@ -1,6 +1,6 @@
-import type {AnyObject} from '@augment-vir/common';
+import {type AnyObject} from '@augment-vir/common';
 import {isShapeDefinitionKey} from './shape-keys.js';
-import {ShapeDefinition, isShapeDefinition} from './shape-specifiers.js';
+import {type ShapeDefinition, isShapeDefinition} from './shape-specifiers.js';
 import {shapeToDefaultValue} from './shape-to-default-value.js';
 
 export {shapeToDefaultValue} from './shape-to-default-value.js';

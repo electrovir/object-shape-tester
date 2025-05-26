@@ -1,6 +1,6 @@
 import {check} from '@augment-vir/assert';
 import {
-    PartialWithUndefined,
+    type PartialWithUndefined,
     combineErrorMessages,
     ensureErrorAndPrependMessage,
     getObjectTypedKeys,
@@ -10,9 +10,9 @@ import {
 } from '@augment-vir/common';
 import {isCustomSpecifier} from '../define-shape/custom-specifier.js';
 import {
-    BaseIndexedKeys,
-    ShapeDefinition,
-    ShapeIndexedKeys,
+    type BaseIndexedKeys,
+    type ShapeDefinition,
+    type ShapeIndexedKeys,
     getShapeSpecifier,
     indexedKeys,
     isAndShapeSpecifier,
