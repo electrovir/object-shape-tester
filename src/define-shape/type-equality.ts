@@ -20,5 +20,5 @@ function isNullObjectComparison({
     shapeConstructor: unknown;
     subject: unknown;
 }): boolean {
-    return (subject as any)?.constructor == undefined && shapeConstructor === Object;
+    return !!subject && Object.getPrototypeOf(subject) === null && shapeConstructor === Object;
 }

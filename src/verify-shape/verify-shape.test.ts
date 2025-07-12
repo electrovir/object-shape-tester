@@ -1,5 +1,10 @@
 import {assert} from '@augment-vir/assert';
-import {type ArrayElement, randomInteger, randomString} from '@augment-vir/common';
+import {
+    type AnyFunction,
+    type ArrayElement,
+    randomInteger,
+    randomString,
+} from '@augment-vir/common';
 import {type FunctionTestCase, describe, it, itCases} from '@augment-vir/test';
 import {uuidShape} from '../custom-specifiers/custom-string-shapes.js';
 import {defineShape} from '../define-shape/define-shape.js';
@@ -354,6 +359,38 @@ const testCases: ReadonlyArray<FunctionTestCase<typeof assertValidShape>> = [
                 a: undefined,
                 b: or('', undefined),
                 c: null,
+            }),
+        ],
+        throws: undefined,
+    },
+    {
+        it: 'does not allow null for objects',
+        inputs: [
+            null,
+            /** `observableBaseShape` from the package `observavir`. */
+            defineShape({
+                listen(fireImmediately: boolean, callback: AnyFunction): any {
+                    return () => false;
+                },
+                destroy() {},
+                removeListener(listener: AnyFunction): boolean {
+                    return false;
+                },
+                value: unknownShape(),
+            }),
+        ],
+        throws: {
+            matchConstructor: ShapeMismatchError,
+        },
+    },
+    {
+        it: 'allows null prototype objects',
+        inputs: [
+            Object.assign(Object.create(null), {
+                a: 'hello',
+            }),
+            defineShape({
+                a: '',
             }),
         ],
         throws: undefined,
