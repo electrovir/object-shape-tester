@@ -52,9 +52,9 @@ export type CheckShapeValidityOptions = {
  *     a: '',
  * });
  *
- * isValidShape(myShape, {a: 'hi'}); // `true`
- * isValidShape(myShape, {a: 3}); // `false`
- * isValidShape(myShape, {a: 'hi', b: 'bye'}, {allowExtraKeys: true}); // `true`
+ * isValidShape({a: 'hi'}, myShape); // `true`
+ * isValidShape({a: 3}, myShape); // `false`
+ * isValidShape({a: 'hi', b: 'bye'}, {allowExtraKeys: true}, myShape); // `true`
  * ```
  *
  * @returns `true` or `false`
@@ -76,6 +76,75 @@ export function isValidShape<
 }
 
 /**
+ * Check if a variable matches the given shape. Returns the variable if it matches, otherwise
+ * returns `undefined`
+ *
+ * @category Main
+ * @example
+ *
+ * ```ts
+ * import {defineShape, checkWrapValidShape} from 'object-shape-tester';
+ *
+ * const myShape = defineShape({
+ *     a: '',
+ * });
+ *
+ * checkWrapValidShape({a: 'hi'}, myShape); // returns `{a: 'hi'}`
+ * checkWrapValidShape({a: 3}, myShape); // returns `undefined`
+ * checkWrapValidShape({a: 'hi', b: 'bye'}, {allowExtraKeys: true}, myShape); // returns `{a: 'hi', b: 'bye'}`
+ * ```
+ *
+ * @returns `true` or `false`
+ */
+export function checkWrapValidShape<
+    Shape extends ShapeDefinition<any, IsReadonly>,
+    IsReadonly extends boolean,
+>(
+    subject: unknown,
+    shapeDefinition: Shape,
+    options: PartialWithUndefined<CheckShapeValidityOptions> = {},
+): Shape['runtimeType'] | undefined {
+    if (isValidShape(subject, shapeDefinition, options)) {
+        return subject;
+    } else {
+        return undefined;
+    }
+}
+
+/**
+ * Assets that a variable matches the given shape and then returns the variable.
+ *
+ * @category Main
+ * @example
+ *
+ * ```ts
+ * import {defineShape, assertWrapValidShape} from 'object-shape-tester';
+ *
+ * const myShape = defineShape({
+ *     a: '',
+ * });
+ *
+ * assertValidShape({a: 'hi'}, myShape); // returns `{a: 'hi'}`
+ * assertValidShape({a: 'hi', b: 'bye'}, myShape, {allowExtraKeys: true}); // returns `{a: 'hi', b: 'bye'}`
+ * assertValidShape({a: 3, myShape}); // throws an error
+ * ```
+ *
+ * @throws {@link ShapeMismatchError} If there is a mismatch
+ */
+export function assertWrapValidShape<
+    Shape extends ShapeDefinition<any, IsReadonly>,
+    IsReadonly extends boolean,
+>(
+    subject: unknown,
+    shapeDefinition: Shape,
+    options: PartialWithUndefined<CheckShapeValidityOptions> = {},
+    failureMessage = '',
+): Shape['runtimeType'] {
+    assertValidShape(subject, shapeDefinition, options, failureMessage);
+    return subject;
+}
+
+/**
  * Assets that a variable matches the given shape.
  *
  * @category Main
@@ -88,9 +157,9 @@ export function isValidShape<
  *     a: '',
  * });
  *
- * assertValidShape(myShape, {a: 'hi'}); // succeeds
- * assertValidShape(myShape, {a: 'hi', b: 'bye'}, {allowExtraKeys: true}); // succeeds
- * assertValidShape(myShape, {a: 3}); // fails
+ * assertValidShape({a: 'hi'}, myShape); // succeeds
+ * assertValidShape({a: 'hi', b: 'bye'}, myShape, {allowExtraKeys: true}); // succeeds
+ * assertValidShape({a: 3, myShape}); // fails
  * ```
  *
  * @throws {@link ShapeMismatchError} If there is a mismatch

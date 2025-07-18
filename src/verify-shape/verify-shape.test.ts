@@ -23,6 +23,8 @@ import {
 import {ShapeMismatchError} from '../errors/shape-mismatch.error.js';
 import {
     assertValidShape,
+    assertWrapValidShape,
+    checkWrapValidShape,
     expandIndexedKeysKeys,
     isValidShape,
     matchesShape,
@@ -1568,6 +1570,50 @@ describe(expandIndexedKeysKeys.name, () => {
                 TestEnum.Second,
                 TestEnum.Third,
             ],
+        },
+    ]);
+});
+
+describe(checkWrapValidShape.name, () => {
+    itCases(checkWrapValidShape, [
+        {
+            it: 'passes',
+            inputs: [
+                {a: 'hi'},
+                defineShape({a: ''}),
+            ],
+            expect: {a: 'hi'},
+        },
+        {
+            it: 'rejects',
+            inputs: [
+                {a: 3},
+                defineShape({a: ''}),
+            ],
+            expect: undefined,
+        },
+    ]);
+});
+
+describe(assertWrapValidShape.name, () => {
+    itCases(assertWrapValidShape, [
+        {
+            it: 'passes',
+            inputs: [
+                {a: 'hi'},
+                defineShape({a: ''}),
+            ],
+            expect: {a: 'hi'},
+        },
+        {
+            it: 'rejects',
+            inputs: [
+                {a: 3},
+                defineShape({a: ''}),
+            ],
+            throws: {
+                matchConstructor: ShapeMismatchError,
+            },
         },
     ]);
 });
