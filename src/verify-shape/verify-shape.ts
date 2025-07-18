@@ -59,11 +59,14 @@ export type CheckShapeValidityOptions = {
  *
  * @returns `true` or `false`
  */
-export function isValidShape<Shape, IsReadonly extends boolean>(
+export function isValidShape<
+    Shape extends ShapeDefinition<any, IsReadonly>,
+    IsReadonly extends boolean,
+>(
     subject: unknown,
-    shapeDefinition: ShapeDefinition<Shape, IsReadonly>,
+    shapeDefinition: Shape,
     options: PartialWithUndefined<CheckShapeValidityOptions> = {},
-): subject is ShapeDefinition<Shape, IsReadonly>['runtimeType'] {
+): subject is Shape['runtimeType'] {
     try {
         assertValidShape(subject, shapeDefinition, options);
         return true;
@@ -92,12 +95,15 @@ export function isValidShape<Shape, IsReadonly extends boolean>(
  *
  * @throws {@link ShapeMismatchError} If there is a mismatch
  */
-export function assertValidShape<Shape, IsReadonly extends boolean>(
+export function assertValidShape<
+    Shape extends ShapeDefinition<any, IsReadonly>,
+    IsReadonly extends boolean,
+>(
     subject: unknown,
-    shapeDefinition: ShapeDefinition<Shape, IsReadonly>,
+    shapeDefinition: Shape,
     options: PartialWithUndefined<CheckShapeValidityOptions> = {},
     failureMessage = '',
-): asserts subject is ShapeDefinition<Shape, IsReadonly>['runtimeType'] {
+): asserts subject is Shape['runtimeType'] {
     try {
         internalAssertValidShape({
             subject,
