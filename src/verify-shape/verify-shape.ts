@@ -632,9 +632,11 @@ export function matchesShape(
                         },
                     });
                     return true;
-                } catch {
+                } catch (error) {
                     if (options.throw) {
-                        throw new ShapeMismatchError(`Failed on and at ${index}`);
+                        throw new ShapeMismatchError(
+                            `Failed on 'and' at ${index}: ${extractErrorMessage(error)}`,
+                        );
                     } else {
                         return false;
                     }
@@ -731,7 +733,13 @@ export function matchesShape(
                 }
             });
 
-            return matchesKeys && matchesValues;
+            if (matchesKeys && matchesValues) {
+                return true;
+            } else if (options.throw) {
+                throw new ShapeMismatchError('Failed indexed keys.');
+            } else {
+                return false;
+            }
         } else if (isUnknownShapeSpecifier(specifier)) {
             return true;
         }

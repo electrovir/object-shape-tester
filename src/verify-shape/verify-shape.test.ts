@@ -1206,7 +1206,7 @@ describe(assertValidShape.name, () => {
             },
             {
                 matchMessage:
-                    "Subject does not match shape definition at key top level -> 'top' -> 'second' -> 'third' -> 'hi' -> '1'",
+                    "Shape mismatch at top level -> 'top' -> 'second' -> 'third' -> 'hi' -> '1': -1 does not have the same type as  ''",
             },
         );
     });
