@@ -1,12 +1,15 @@
 import {check} from '@augment-vir/assert';
 import {
     type PartialWithUndefined,
-    combineErrorMessages,
+    combineErrors,
+    ensureError,
     ensureErrorAndPrependMessage,
+    extractErrorMessage,
     getObjectTypedKeys,
     getObjectTypedValues,
     mapObjectValues,
     stringify,
+    wrapInTry,
 } from '@augment-vir/common';
 import {isCustomSpecifier} from '../define-shape/custom-specifier.js';
 import {
@@ -271,11 +274,17 @@ function internalAssertValidShape<Shape>({
             shape: shape.parts[0],
             subject,
         });
-    } else if (!matchesShape(subject, shape, keys, options)) {
+    }
+    const error = wrapInTry(() => {
+        matchesShape(subject, shape, keys, {...options, throw: true});
+    });
+
+    if (error) {
         throw new ShapeMismatchError(
-            `Subject does not match shape definition at key ${keysString}`,
+            `Shape mismatch at ${keysString}: ${extractErrorMessage(error)}`,
         );
-    } else if (check.isFunction(shape)) {
+    }
+    if (check.isFunction(shape)) {
         return check.isFunction(subject);
     } else if (isClassShapeSpecifier(shape)) {
         return subject instanceof shape.parts[0];
@@ -290,10 +299,10 @@ function internalAssertValidShape<Shape>({
                   ]),
               );
 
-        const errors: string[] = [];
+        const errors: Error[] = [];
         let matched = false;
         if (isOrShapeSpecifier(shape)) {
-            const orErrors: string[] = [];
+            const orErrors: Error[] = [];
             matched = shape.parts.some((shapePart) => {
                 try {
                     const newKeysPassed = internalAssertValidShape({
@@ -308,7 +317,7 @@ function internalAssertValidShape<Shape>({
                     /** Cover the edge case of errors. */
                 } catch (error) {
                     if (error instanceof ShapeMismatchError) {
-                        orErrors.push(error.message);
+                        orErrors.push(error);
                         return false;
                     } else {
                         throw error;
@@ -337,7 +346,7 @@ function internalAssertValidShape<Shape>({
                     /** Cover the edge case of errors. */
                 } catch (error) {
                     if (error instanceof ShapeMismatchError) {
-                        errors.push(error.message);
+                        errors.push(error);
                         return false;
                     } else {
                         throw error;
@@ -382,7 +391,7 @@ function internalAssertValidShape<Shape>({
                         return true;
                     } catch (error) {
                         if (error instanceof ShapeMismatchError) {
-                            errors.push(error.message);
+                            errors.push(error);
                             return false;
                             /* v8 ignore next 3: edge case catch for internal errors*/
                         } else {
@@ -436,7 +445,9 @@ function internalAssertValidShape<Shape>({
         }
 
         if (errors.length) {
-            throw new ShapeMismatchError(combineErrorMessages(errors));
+            throw new ShapeMismatchError(extractErrorMessage(combineErrors(errors)), {
+                cause: errors[0],
+            });
         }
 
         /* node:coverage ignore next 15 */
@@ -570,23 +581,46 @@ export function matchesShape(
     subject: unknown,
     shape: unknown,
     keys: ReadonlyArray<PropertyKey>,
-    options: InternalIsValidShapeOptions,
+    options: InternalIsValidShapeOptions & {throw?: boolean | undefined},
     checkValues?: boolean | undefined,
 ): boolean {
     const specifier = getShapeSpecifier(shape);
 
     if (specifier) {
         if (isCustomSpecifier(specifier)) {
-            return specifier.checker(subject);
-        } else if (isNumericRangeShapeSpecifier(specifier)) {
-            if (!check.isNumber(subject)) {
+            if (specifier.checker(subject)) {
+                return true;
+            } else if (options.throw) {
+                throw new ShapeMismatchError(`Failed to match '${specifier.customName}'`);
+            } else {
                 return false;
             }
-            return subject >= specifier.parts[0] && subject <= specifier.parts[1];
+        } else if (isNumericRangeShapeSpecifier(specifier)) {
+            if (!check.isNumber(subject)) {
+                if (options.throw) {
+                    throw new ShapeMismatchError('Invalid number');
+                }
+                return false;
+            }
+            if (subject >= specifier.parts[0] && subject <= specifier.parts[1]) {
+                return true;
+            } else if (options.throw) {
+                throw new ShapeMismatchError(
+                    `${subject} is not in range of '${stringify(specifier.parts)}'`,
+                );
+            } else {
+                return false;
+            }
         } else if (isClassShapeSpecifier(specifier)) {
-            return subject instanceof specifier.parts[0];
+            if (subject instanceof specifier.parts[0]) {
+                return true;
+            } else if (options.throw) {
+                throw new ShapeMismatchError(`not an instance of '${specifier.parts[0].name}'`);
+            } else {
+                return false;
+            }
         } else if (isAndShapeSpecifier(specifier)) {
-            return specifier.parts.every((part) => {
+            return specifier.parts.every((part, index) => {
                 try {
                     internalAssertValidShape({
                         subject,
@@ -599,38 +633,80 @@ export function matchesShape(
                     });
                     return true;
                 } catch {
-                    return false;
+                    if (options.throw) {
+                        throw new ShapeMismatchError(`Failed on and at ${index}`);
+                    } else {
+                        return false;
+                    }
                 }
             });
         } else if (isOrShapeSpecifier(specifier)) {
-            return specifier.parts.some((part) => {
-                try {
-                    internalAssertValidShape({subject, shape: part, keys, options});
-                    return true;
-                } catch {
-                    return false;
-                }
-            });
+            const orErrors: Error[] = [];
+            if (
+                specifier.parts.some((part) => {
+                    try {
+                        internalAssertValidShape({subject, shape: part, keys, options});
+                        return true;
+                    } catch (error) {
+                        orErrors.push(ensureError(error));
+                        return false;
+                    }
+                })
+            ) {
+                return true;
+            } else if (options.throw) {
+                throw new ShapeMismatchError(
+                    `Failed all ors: ${extractErrorMessage(combineErrors(orErrors))}`,
+                );
+            } else {
+                return false;
+            }
         } else if (isExactShapeSpecifier(specifier)) {
             if (check.isObject(subject)) {
-                internalAssertValidShape({
-                    subject,
-                    shape: specifier.parts[0],
-                    keys,
-                    options: {
-                        ...options,
-                        exactValues: true,
-                    },
-                });
+                try {
+                    internalAssertValidShape({
+                        subject,
+                        shape: specifier.parts[0],
+                        keys,
+                        options: {
+                            ...options,
+                            exactValues: true,
+                        },
+                    });
+                    return true;
+                } catch (error) {
+                    if (options.throw) {
+                        throw error;
+                    } else {
+                        return false;
+                    }
+                }
+            } else if (subject === specifier.parts[0]) {
                 return true;
+            } else if (options.throw) {
+                throw new ShapeMismatchError(
+                    `Does not exactly match '${stringify(specifier.parts[0])}'`,
+                );
             } else {
-                return subject === specifier.parts[0];
+                return false;
             }
         } else if (isEnumShapeSpecifier(specifier)) {
-            return check.hasValue(Object.values(specifier.parts[0]), subject);
+            if (check.hasValue(Object.values(specifier.parts[0]), subject)) {
+                return true;
+            } else if (options.throw) {
+                throw new ShapeMismatchError(
+                    `Failed to match any enum values in ${Object.values(specifier.parts[0]).join(',')}`,
+                );
+            } else {
+                return true;
+            }
         } else if (isIndexedKeysSpecifier(specifier)) {
             if (!check.isObject(subject)) {
-                return false;
+                if (options.throw) {
+                    throw new ShapeMismatchError('Not an object.');
+                } else {
+                    return false;
+                }
             }
             const matchesKeys = matchesIndexedKeysSpecifierKeys(
                 subject,
@@ -646,8 +722,12 @@ export function matchesShape(
                         options,
                     });
                     return true;
-                } catch {
-                    return false;
+                } catch (error) {
+                    if (options.throw) {
+                        throw error;
+                    } else {
+                        return false;
+                    }
                 }
             });
 
@@ -657,9 +737,23 @@ export function matchesShape(
         }
     }
     if (checkValues) {
-        return shape === subject;
+        if (shape === subject) {
+            return true;
+        } else if (options.throw) {
+            throw new ShapeMismatchError(
+                `${stringify(subject)} does not equal ${stringify(shape)}`,
+            );
+        } else {
+            return false;
+        }
+    } else if (haveEqualTypes({subject, shape})) {
+        return true;
+    } else if (options.throw) {
+        throw new ShapeMismatchError(
+            `${stringify(subject)} does not have the same type as  ${stringify(shape)}`,
+        );
     } else {
-        return haveEqualTypes({subject, shape});
+        return false;
     }
 }
 
