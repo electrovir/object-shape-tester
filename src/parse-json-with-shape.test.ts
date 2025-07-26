@@ -29,5 +29,18 @@ describe(parseJsonWithShape.name, () => {
                 matchConstructor: ShapeMismatchError,
             },
         },
+        {
+            it: 'allows extra keys',
+            inputs: [
+                JSON.stringify({a: 'hi', b: 3}),
+                defineShape({
+                    a: '',
+                }),
+                {
+                    allowExtraKeys: true,
+                },
+            ],
+            expect: {a: 'hi', b: 3},
+        },
     ]);
 });
