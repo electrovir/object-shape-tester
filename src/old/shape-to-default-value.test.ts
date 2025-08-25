@@ -1,7 +1,7 @@
 import {assert} from '@augment-vir/assert';
 import {describe, it, itCases} from '@augment-vir/test';
 import {DefaultValueConstructionError} from '../errors/default-value-construction.error.js';
-import {assertValidShape} from '../verify-shape/verify-shape.js';
+import {assertValidShape} from '../old/verify-shape.js';
 import {defineShape} from './define-shape.js';
 import {
     classShape,

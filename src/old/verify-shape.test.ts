@@ -6,6 +6,8 @@ import {
     randomString,
 } from '@augment-vir/common';
 import {type FunctionTestCase, describe, it, itCases} from '@augment-vir/test';
+import {FormatRegistry, Type} from '@sinclair/typebox';
+import {TypeCompiler} from '@sinclair/typebox/compiler';
 import {uuidShape} from '../custom-specifiers/custom-string-shapes.js';
 import {defineShape} from '../define-shape/define-shape.js';
 import {
@@ -1616,4 +1618,865 @@ describe(assertWrapValidShape.name, () => {
             },
         },
     ]);
+});
+
+// ========================================
+// TypeBox equivalent tests
+// ========================================
+
+class TypeBoxValidationError extends Error {
+    constructor(message: string) {
+        super(message);
+        this.name = 'TypeBoxValidationError';
+    }
+}
+
+function assertValidTypeBox(data: unknown, schema: any): void {
+    const validator = TypeCompiler.Compile(schema);
+    if (!validator.Check(data)) {
+        const errors = Array.from(validator.Errors(data));
+        throw new TypeBoxValidationError(
+            JSON.stringify(errors.map(({path, message}) => ({path, message}))),
+        );
+    }
+}
+
+// TypeBox equivalent of SharedEnum
+enum TypeBoxSharedEnum {
+    First = 'first with long value',
+    Second = 'second with long value',
+}
+
+const typeBoxTestCases: ReadonlyArray<FunctionTestCase<typeof assertValidTypeBox>> = [
+    {
+        it: 'passes a primitive string',
+        inputs: [
+            'hello there',
+            Type.String(),
+        ],
+        throws: undefined,
+    },
+    {
+        it: 'passes a tuple',
+        inputs: [
+            [
+                '',
+                'yo',
+                'hi',
+            ],
+            Type.Tuple([
+                Type.String(),
+                Type.String(),
+                Type.Literal('hi'),
+            ]),
+        ],
+        throws: undefined,
+    },
+    {
+        it: 'rejects an invalid tuple',
+        inputs: [
+            [
+                '',
+                -1,
+                'hi',
+            ],
+            Type.Tuple([
+                Type.String(),
+                Type.String(),
+                Type.Literal('hi'),
+            ]),
+        ],
+        throws: {
+            matchConstructor: TypeBoxValidationError,
+        },
+    },
+    {
+        it: 'rejects a non-array tuple',
+        inputs: [
+            'hi',
+            Type.Tuple([
+                Type.String(),
+                Type.String(),
+                Type.Literal('hi'),
+            ]),
+        ],
+        throws: {
+            matchConstructor: TypeBoxValidationError,
+        },
+    },
+    {
+        it: 'passes an exact string',
+        inputs: [
+            'hello there',
+            Type.Literal('hello there'),
+        ],
+        throws: undefined,
+    },
+    {
+        it: 'fails an exact string mismatch',
+        inputs: [
+            'yo',
+            Type.Literal('hello there'),
+        ],
+        throws: {
+            matchConstructor: TypeBoxValidationError,
+        },
+    },
+    {
+        it: 'passes a bare object',
+        inputs: [
+            {
+                a: 'what',
+                b: 4,
+                c: /this is a regexp/,
+            },
+            Type.Object({
+                a: Type.String(),
+                b: Type.Number(),
+                c: Type.Any(), // RegExp
+            }),
+        ],
+        throws: undefined,
+    },
+    {
+        it: 'succeeds with a valid exact RegExp test',
+        inputs: [
+            {
+                a: 'what',
+                b: 4,
+                c: sharedRegExp,
+            },
+            Type.Object({
+                a: Type.String(),
+                b: Type.Number(),
+                c: Type.Any(), // For exact RegExp match, we'd need custom validation
+            }),
+        ],
+        throws: undefined,
+    },
+    {
+        it: 'matches a missing optional property',
+        inputs: [
+            {
+                a: 'hi',
+            },
+            Type.Object({
+                a: Type.String(),
+                b: Type.Optional(Type.Number()),
+            }),
+        ],
+        throws: undefined,
+    },
+    {
+        it: 'matches an existing optional property',
+        inputs: [
+            {
+                a: 'hi',
+                b: 10,
+            },
+            Type.Object({
+                a: Type.String(),
+                b: Type.Optional(Type.Number()),
+            }),
+        ],
+        throws: undefined,
+    },
+    {
+        it: 'rejects an invalid existing optional property',
+        inputs: [
+            {
+                a: 'hi',
+                b: 'bye',
+            },
+            Type.Object({
+                a: Type.String(),
+                b: Type.Optional(Type.Number()),
+            }),
+        ],
+        throws: {
+            matchConstructor: TypeBoxValidationError,
+        },
+    },
+    {
+        it: 'matches a shape inside an optional property',
+        inputs: [
+            {
+                a: 'hi',
+                b: 'bye',
+            },
+            Type.Object({
+                a: Type.String(),
+                b: Type.Optional(
+                    Type.Union([
+                        Type.Number(),
+                        Type.String(),
+                    ]),
+                ),
+            }),
+        ],
+        throws: undefined,
+    },
+    {
+        it: 'matches an object inside an optional property',
+        inputs: [
+            {
+                a: 'hi',
+                b: {
+                    hi: 'bye',
+                },
+            },
+            Type.Object({
+                a: Type.String(),
+                b: Type.Optional(
+                    Type.Object({
+                        hi: Type.String(),
+                    }),
+                ),
+            }),
+        ],
+        throws: undefined,
+    },
+    {
+        it: 'rejects an invalid object inside an optional property',
+        inputs: [
+            {
+                a: 'hi',
+                b: {
+                    hi: -1,
+                },
+            },
+            Type.Object({
+                a: Type.String(),
+                b: Type.Optional(
+                    Type.Object({
+                        hi: Type.String(),
+                    }),
+                ),
+            }),
+        ],
+        throws: {
+            matchConstructor: TypeBoxValidationError,
+        },
+    },
+    {
+        it: 'matches valid numeric range',
+        inputs: [
+            5,
+            Type.Number({minimum: 1, maximum: 10}),
+        ],
+        throws: undefined,
+    },
+    {
+        it: 'rejects non-number numeric range',
+        inputs: [
+            {hi: 'hi'},
+            Type.Number({minimum: 1, maximum: 10}),
+        ],
+        throws: {
+            matchConstructor: TypeBoxValidationError,
+        },
+    },
+    {
+        it: 'rejects invalid numeric range',
+        inputs: [
+            11,
+            Type.Number({minimum: 1, maximum: 10}),
+        ],
+        throws: {
+            matchConstructor: TypeBoxValidationError,
+        },
+    },
+    {
+        it: 'passes an object with union types',
+        inputs: [
+            {
+                a: 'what',
+                b: '',
+                c: {a: 0, b: ''},
+            },
+            Type.Object({
+                a: Type.String(),
+                b: Type.Union([
+                    Type.String(),
+                    Type.Number(),
+                ]),
+                c: Type.Intersect([
+                    Type.Object({a: Type.Number()}),
+                    Type.Object({b: Type.String()}),
+                ]),
+            }),
+        ],
+        throws: undefined,
+    },
+    {
+        it: 'passes with a nested array',
+        inputs: [
+            {
+                a: 'what',
+                b: [
+                    'a',
+                    'b',
+                    'c',
+                ],
+                c: {a: 0, b: ''},
+            },
+            Type.Object({
+                a: Type.String(),
+                b: Type.Array(Type.String()),
+                c: Type.Intersect([
+                    Type.Object({a: Type.Number()}),
+                    Type.Object({b: Type.String()}),
+                ]),
+            }),
+        ],
+        throws: undefined,
+    },
+    {
+        it: 'works with enum shapes',
+        inputs: [
+            {
+                a: 'big key',
+                b: 42,
+                c: TypeBoxSharedEnum.First,
+            },
+            Type.Object({
+                a: Type.String(),
+                b: Type.Number(),
+                c: Type.Enum(TypeBoxSharedEnum),
+            }),
+        ],
+        throws: undefined,
+    },
+    {
+        it: 'accepts anything for unknown type',
+        inputs: [
+            {
+                a: 'big key',
+                b: 42,
+                c: TypeBoxSharedEnum.First,
+            },
+            Type.Object({
+                a: Type.Unknown(),
+                b: Type.Unknown(),
+                c: Type.Unknown(),
+            }),
+        ],
+        throws: undefined,
+    },
+    {
+        it: 'accepts missing keys with undefined union',
+        inputs: [
+            {
+                c: null,
+            },
+            Type.Object({
+                a: Type.Optional(Type.Undefined()),
+                b: Type.Optional(
+                    Type.Union([
+                        Type.String(),
+                        Type.Undefined(),
+                    ]),
+                ),
+                c: Type.Null(),
+            }),
+        ],
+        throws: undefined,
+    },
+    {
+        it: 'does not allow null for objects',
+        inputs: [
+            null,
+            Type.Object({
+                listen: Type.Function([], Type.Any()),
+                destroy: Type.Function([], Type.Void()),
+                removeListener: Type.Function([Type.Any()], Type.Boolean()),
+                value: Type.Unknown(),
+            }),
+        ],
+        throws: {
+            matchConstructor: TypeBoxValidationError,
+        },
+    },
+    {
+        it: 'works with nested exact values',
+        inputs: [
+            {
+                a: {what: 'who'},
+                b: 'hello there',
+                c: 4321,
+            },
+            Type.Object({
+                a: Type.Object({what: Type.Literal('who')}),
+                b: Type.Union([
+                    Type.Number(),
+                    Type.Literal('hello there'),
+                ]),
+                c: Type.Union([
+                    Type.Number(),
+                    Type.Literal('hello there'),
+                ]),
+            }),
+        ],
+        throws: undefined,
+    },
+    {
+        it: 'fails on invalid union strings',
+        inputs: [
+            {b: false},
+            Type.Object({
+                b: Type.Union([
+                    Type.String(),
+                    Type.Number(),
+                ]),
+            }),
+        ],
+        throws: {
+            matchConstructor: TypeBoxValidationError,
+        },
+    },
+    {
+        it: 'accepts anything for unknown at the top level',
+        inputs: [
+            {
+                a: 'big key',
+                b: 42,
+                c: TypeBoxSharedEnum.First,
+            },
+            Type.Unknown(),
+        ],
+        throws: undefined,
+    },
+    {
+        it: 'fails when comparing an enum with an object',
+        inputs: [
+            {
+                a: 'big key',
+                b: 42,
+                c: {
+                    a: 'five',
+                },
+            },
+            Type.Object({
+                a: Type.String(),
+                b: Type.Number(),
+                c: Type.Enum(TypeBoxSharedEnum),
+            }),
+        ],
+        throws: {
+            matchConstructor: TypeBoxValidationError,
+        },
+    },
+    {
+        it: 'fails with an invalid array',
+        inputs: [
+            [
+                0,
+                'five',
+            ],
+            Type.Array(Type.String()),
+        ],
+        throws: {
+            matchConstructor: TypeBoxValidationError,
+        },
+    },
+    {
+        it: 'passes with a top-level array',
+        inputs: [
+            [
+                'hi',
+                'five',
+            ],
+            Type.Array(Type.String()),
+        ],
+        throws: undefined,
+    },
+    {
+        it: 'accepts a valid class instance (using Any type)',
+        inputs: [
+            {
+                a: new Error(),
+                b: '',
+            },
+            Type.Object({
+                a: Type.Any(), // TypeBox doesn't have direct class validation like classShape
+                b: Type.Union([
+                    Type.String(),
+                    Type.Number(),
+                ]),
+            }),
+        ],
+        throws: undefined,
+    },
+    {
+        it: 'accepts methods (functions)',
+        inputs: [
+            {
+                myData: 'some string',
+                myMethod: () => {},
+            },
+            Type.Object({
+                myData: Type.String(),
+                myMethod: Type.Function([], Type.Any()),
+            }),
+        ],
+        throws: undefined,
+    },
+    {
+        it: 'rejects an object assigned to a method',
+        inputs: [
+            {
+                myData: 'some string',
+                myMethod: {},
+            },
+            Type.Object({
+                myData: Type.String(),
+                myMethod: Type.Function([], Type.Any()),
+            }),
+        ],
+        throws: {
+            matchConstructor: TypeBoxValidationError,
+        },
+    },
+    {
+        it: 'rejects a number assigned to a method',
+        inputs: [
+            {
+                myData: 'some string',
+                myMethod: 5,
+            },
+            Type.Object({
+                myData: Type.String(),
+                myMethod: Type.Function([], Type.Any()),
+            }),
+        ],
+        throws: {
+            matchConstructor: TypeBoxValidationError,
+        },
+    },
+];
+
+describe('TypeBox validation tests', () => {
+    itCases(assertValidTypeBox, typeBoxTestCases);
+
+    it('supports nested schemas', () => {
+        const lowerLevelShape = Type.Object({
+            example: Type.Object({
+                first: Type.String(),
+                second: Type.Number(),
+            }),
+        });
+
+        const shapeWithNested = Type.Object({
+            stringProp: Type.String(),
+            andProp: Type.Intersect([
+                Type.Object({hi: Type.String()}),
+                Type.Object({bye: Type.String()}),
+            ]),
+            nestedShape: lowerLevelShape,
+            exactProp: Type.Literal('derp'),
+        });
+
+        const exampleInstance = {
+            stringProp: 'yo',
+            andProp: {hi: 'hello', bye: 'good bye'},
+            nestedShape: {
+                example: {
+                    first: 'a string',
+                    second: 0,
+                },
+            },
+            exactProp: 'derp' as const,
+        };
+
+        assertValidTypeBox(exampleInstance, shapeWithNested);
+    });
+
+    it('works with partial record-like shapes', () => {
+        assertValidTypeBox(
+            {
+                stuff: 'hello there',
+                moreStuff: {
+                    derp: 0,
+                },
+            },
+            Type.Object({
+                stuff: Type.String(),
+                moreStuff: Type.Record(Type.String(), Type.Number()),
+            }),
+        );
+
+        assert.throws(() =>
+            assertValidTypeBox(
+                {
+                    stuff: 'hello there',
+                    moreStuff: {
+                        derp: 0,
+                    },
+                },
+                Type.Object({
+                    stuff: Type.String(),
+                    moreStuff: Type.Record(Type.Literal('hi'), Type.Number()),
+                }),
+            ),
+        );
+
+        assertValidTypeBox(
+            {
+                stuff: 'hello there',
+                moreStuff: {
+                    hi: 0,
+                },
+            },
+            Type.Object({
+                stuff: Type.String(),
+                moreStuff: Type.Record(Type.Literal('hi'), Type.Number()),
+            }),
+        );
+    });
+
+    it('works with UUID-like patterns', () => {
+        const Uuid = /^(?:urn:uuid:)?[0-9a-f]{8}-(?:[0-9a-f]{4}-){3}[0-9a-f]{12}$/i;
+
+        /**
+         * `[ajv-formats]` A Universally Unique Identifier as defined by [RFC
+         * 4122](https://datatracker.ietf.org/doc/html/rfc4122).
+         *
+         * @example `9aa8a673-8590-4db2-9830-01755844f7c1`
+         */
+        function IsUuid(value: string): boolean {
+            return Uuid.test(value);
+        }
+        FormatRegistry.Set('uuid', (value) => IsUuid(value));
+
+        assertValidTypeBox(
+            {
+                '23f3eef2-682d-4a78-afda-129006318cdf': {
+                    roomId: '23f3eef2-682d-4a78-afda-129006318cdf',
+                    roomName: 'Room A',
+                    clientCount: 2,
+                },
+            },
+            Type.Record(
+                Type.String({format: 'uuid'}),
+                Type.Object({
+                    roomName: Type.String(),
+                    roomId: Type.String({format: 'uuid'}),
+                    clientCount: Type.Number(),
+                }),
+            ),
+        );
+
+        assert.throws(() => {
+            assertValidTypeBox('fffff', Type.String({format: 'uuid'}));
+        });
+
+        assert.throws(() =>
+            assertValidTypeBox(
+                {
+                    fff: {
+                        roomId: '23f3eef2-682d-4a78-afda-129006318cdf',
+                        roomName: 'Room A',
+                        clientCount: 2,
+                    },
+                },
+                Type.Record(
+                    Type.String({format: 'uuid'}),
+                    Type.Object({
+                        roomName: Type.String(),
+                        roomId: Type.String({format: 'uuid'}),
+                        clientCount: Type.Number(),
+                    }),
+                ),
+            ),
+        );
+    });
+
+    it('allows extra properties with additionalProperties', () => {
+        assertValidTypeBox(
+            new RegExp('stuff'),
+            Type.Object(
+                {
+                    flags: Type.String(),
+                    source: Type.String(),
+                },
+                {additionalProperties: true},
+            ),
+        );
+    });
+
+    it('allows optional properties', () => {
+        const myShape = Type.Union([
+            Type.Object({
+                prop1: Type.String(),
+                prop2: Type.Number(),
+            }),
+            Type.Object({
+                prop1: Type.String(),
+                prop2: Type.Number(),
+                prop3: Type.Optional(Type.String()),
+            }),
+        ]);
+
+        const instance = {
+            prop1: 'hi',
+            prop2: 3,
+        };
+        assertValidTypeBox(instance, myShape);
+    });
+
+    it('works with complex union', () => {
+        enum VerificationStateEnum {
+            Deliverable = 'deliverable',
+            Undeliverable = 'undeliverable',
+            Risky = 'risky',
+            Unknown = 'unknown',
+        }
+
+        enum EmailBatchVerificationStatusMessageEnum {
+            Completed = 'Batch verification completed.',
+            InProgress = 'Your batch is being processed.',
+        }
+
+        const verificationResultInProgressShape = Type.Object({
+            message: Type.Literal(EmailBatchVerificationStatusMessageEnum.InProgress),
+        });
+
+        const verificationResultCompletedShape = Type.Object({
+            message: Type.Literal(EmailBatchVerificationStatusMessageEnum.Completed),
+            emails: Type.Array(
+                Type.Object({
+                    email: Type.String(),
+                    state: Type.Enum(VerificationStateEnum),
+                }),
+            ),
+        });
+
+        const VerificationResultShape = Type.Union([
+            verificationResultInProgressShape,
+            verificationResultCompletedShape,
+        ]);
+
+        const result = {
+            id: randomString(),
+            message: 'Batch verification completed.',
+            reason_counts: {
+                rejected_email: 1,
+                accepted_email: 4,
+                invalid_domain: 0,
+                invalid_email: 0,
+                invalid_smtp: 0,
+                low_deliverability: 0,
+                low_quality: 0,
+                no_connect: 0,
+                timeout: 0,
+                unavailable_smtp: 0,
+                unexpected_error: 0,
+            },
+            total_counts: {
+                deliverable: 4,
+                undeliverable: 1,
+                duplicate: 0,
+                processed: 5,
+                imported: 0,
+                total: 5,
+                risky: 0,
+                unknown: 0,
+            },
+            emails: [
+                {
+                    email: randomString(),
+                    state: 'deliverable',
+                },
+                {
+                    email: randomString(),
+                    state: 'deliverable',
+                },
+                {
+                    email: randomString(),
+                    state: 'deliverable',
+                },
+                {
+                    email: randomString(),
+                    state: 'deliverable',
+                },
+                {
+                    email: randomString(),
+                    state: 'undeliverable',
+                },
+            ],
+        };
+
+        // Test with additional properties allowed
+        const VerificationResultShapeWithExtras = Type.Intersect([
+            VerificationResultShape,
+            Type.Object({}, {additionalProperties: true}),
+        ]);
+
+        assertValidTypeBox(result, VerificationResultShapeWithExtras);
+    });
+
+    it('error message includes validation details', () => {
+        assert.throws(
+            () => {
+                assertValidTypeBox(
+                    {
+                        top: {
+                            second: {
+                                third: {
+                                    hi: [
+                                        'valid',
+                                        -1,
+                                    ],
+                                },
+                            },
+                        },
+                    },
+                    Type.Object({
+                        top: Type.Object({
+                            second: Type.Object({
+                                third: Type.Object({
+                                    hi: Type.Array(Type.String()),
+                                }),
+                            }),
+                        }),
+                    }),
+                );
+            },
+            {
+                matchConstructor: TypeBoxValidationError,
+            },
+        );
+    });
+
+    it('errors on array validation', () => {
+        assert.throws(
+            () => {
+                assertValidTypeBox(
+                    {
+                        top: [
+                            {
+                                nested: 'hi',
+                            },
+                            {
+                                nested: 'bye',
+                            },
+                            {
+                                notNested: 'invalid',
+                            },
+                        ],
+                    },
+                    Type.Object({
+                        top: Type.Array(
+                            Type.Object({
+                                nested: Type.String(),
+                            }),
+                        ),
+                    }),
+                );
+            },
+            {
+                matchConstructor: TypeBoxValidationError,
+            },
+        );
+    });
 });

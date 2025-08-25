@@ -2,7 +2,7 @@ import {assert} from '@augment-vir/assert';
 import {createUuidV4, type Uuid} from '@augment-vir/common';
 import {describe, it} from '@augment-vir/test';
 import {uuidShape} from '../custom-specifiers/custom-string-shapes.js';
-import {assertValidShape} from '../verify-shape/verify-shape.js';
+import {assertValidShape} from '../old/verify-shape.js';
 import {defineShape} from './define-shape.js';
 import {
     and,

@@ -1,7 +1,7 @@
 import {assert} from '@augment-vir/assert';
 import {measureExecutionDuration} from '@augment-vir/common';
 import {describe, it} from '@augment-vir/test';
-import {assertValidShape} from '../verify-shape/verify-shape.js';
+import {assertValidShape} from '../old/verify-shape.js';
 import {mockBigObject} from './big-object.mock.js';
 import {mockBigShape} from './big-shape.mock.js';
 

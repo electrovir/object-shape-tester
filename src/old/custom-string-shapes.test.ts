@@ -4,7 +4,7 @@ import {describe, it, itCases} from '@augment-vir/test';
 import {type ExtractCustomSpecifierType} from '../define-shape/custom-specifier.js';
 import {defineShape} from '../define-shape/define-shape.js';
 import {or} from '../define-shape/shape-specifiers.js';
-import {assertValidShape, isValidShape} from '../verify-shape/verify-shape.js';
+import {assertValidShape, isValidShape} from '../old/verify-shape.js';
 import {nonEmptyStringShape, uuidShape} from './custom-string-shapes.js';
 
 describe(uuidShape.customName, () => {

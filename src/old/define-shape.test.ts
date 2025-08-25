@@ -1,7 +1,7 @@
 import {assert} from '@augment-vir/assert';
 import {type Uuid} from '@augment-vir/common';
 import {describe, it} from '@augment-vir/test';
-import {assertValidShape} from '../verify-shape/verify-shape.js';
+import {assertValidShape} from '../old/verify-shape.js';
 import {defineShape} from './define-shape.js';
 import {and, classShape, exact, or, unknownShape} from './shape-specifiers.js';
 

@@ -1,6 +1,6 @@
 import {type PartialWithUndefined} from '@augment-vir/common';
 import {type ShapeDefinition} from './define-shape/shape-specifiers.js';
-import {assertValidShape, type CheckShapeValidityOptions} from './verify-shape/verify-shape.js';
+import {assertValidShape, type CheckShapeValidityOptions} from './old/verify-shape.js';
 
 /**
  * Parse a JSON string and verify it against the given shape definition.
