@@ -1,34 +1,34 @@
-import {assert} from '@augment-vir/assert';
+import {assert, type ErrorMatchOptions} from '@augment-vir/assert';
 import {
+    omitObjectKeys,
+    randomString,
     type AnyFunction,
     type ArrayElement,
-    randomInteger,
-    randomString,
 } from '@augment-vir/common';
-import {type FunctionTestCase, describe, it, itCases} from '@augment-vir/test';
-import {uuidShape} from '../custom-specifiers/custom-string-shapes.js';
-import {defineShape} from '../define-shape/define-shape.js';
-import {
-    and,
-    classShape,
-    enumShape,
-    exact,
-    indexedKeys,
-    numericRange,
-    optional,
-    or,
-    tupleShape,
-    unknownShape,
-} from '../define-shape/shape-specifiers.js';
+import {describe, it, itCases, type FunctionTestCase} from '@augment-vir/test';
+import {Type} from '@sinclair/typebox';
+import {classShape} from '../custom-shapes/class.shape.js';
+import {enumShape} from '../custom-shapes/enum.shape.js';
+import {exactShape} from '../custom-shapes/exact.shape.js';
+import {intersectShape} from '../custom-shapes/intersect.shape.js';
+import {optionalShape} from '../custom-shapes/optional.shape.js';
+import {rangeShape} from '../custom-shapes/range.shape.js';
+import {recordShape} from '../custom-shapes/record.shape.js';
+import {tupleShape} from '../custom-shapes/tuple.shape.js';
+import {unionShape} from '../custom-shapes/union.shape.js';
+import {unknownShape} from '../custom-shapes/unknown.shape.js';
+import {uuidShape} from '../custom-shapes/uuid.shape.js';
 import {ShapeMismatchError} from '../errors/shape-mismatch.error.js';
+import {defineShape, type Shape} from '../shape/shape.js';
 import {
     assertValidShape,
     assertWrapValidShape,
+    checkValidShape,
     checkWrapValidShape,
-    expandIndexedKeysKeys,
-    isValidShape,
-    matchesShape,
-} from './verify-shape.js';
+    type CheckShapeOptions,
+} from './check-shape.js';
+
+const mockSymbol = Symbol('mock symbol');
 
 const sharedRegExp = /shared/;
 
@@ -37,7 +37,14 @@ enum SharedEnum {
     Second = 'second with long value',
 }
 
-const testCases: ReadonlyArray<FunctionTestCase<typeof assertValidShape>> = [
+const testCases: ReadonlyArray<
+    Readonly<{
+        it: string;
+        only?: true;
+        inputs: [unknown, Shape, CheckShapeOptions?];
+        throws: ErrorMatchOptions | undefined;
+    }>
+> = [
     {
         it: 'passes a primitive string',
         inputs: [
@@ -54,7 +61,7 @@ const testCases: ReadonlyArray<FunctionTestCase<typeof assertValidShape>> = [
                 'yo',
                 'hi',
             ],
-            defineShape(tupleShape('', '', exact('hi'))),
+            defineShape(tupleShape('', '', exactShape('hi'))),
         ],
         throws: undefined,
     },
@@ -66,7 +73,7 @@ const testCases: ReadonlyArray<FunctionTestCase<typeof assertValidShape>> = [
                 -1,
                 'hi',
             ],
-            defineShape(tupleShape('', '', exact('hi'))),
+            defineShape(tupleShape('', '', exactShape('hi'))),
         ],
         throws: {
             matchConstructor: ShapeMismatchError,
@@ -76,7 +83,7 @@ const testCases: ReadonlyArray<FunctionTestCase<typeof assertValidShape>> = [
         it: 'rejects a non-array tuple',
         inputs: [
             'hi',
-            defineShape(tupleShape('', '', exact('hi'))),
+            defineShape(tupleShape('', '', exactShape('hi'))),
         ],
         throws: {
             matchConstructor: ShapeMismatchError,
@@ -86,7 +93,7 @@ const testCases: ReadonlyArray<FunctionTestCase<typeof assertValidShape>> = [
         it: 'passes an exact string',
         inputs: [
             'hello there',
-            defineShape(exact('hello there')),
+            defineShape(exactShape('hello there')),
         ],
         throws: undefined,
     },
@@ -94,7 +101,7 @@ const testCases: ReadonlyArray<FunctionTestCase<typeof assertValidShape>> = [
         it: 'fails an exact string mismatch',
         inputs: [
             'yo',
-            defineShape(exact('hello there')),
+            defineShape(exactShape('hello there')),
         ],
         throws: {
             matchConstructor: ShapeMismatchError,
@@ -127,7 +134,7 @@ const testCases: ReadonlyArray<FunctionTestCase<typeof assertValidShape>> = [
             defineShape({
                 a: '',
                 b: 0,
-                c: exact(sharedRegExp),
+                c: exactShape(sharedRegExp),
             }),
         ],
         throws: undefined,
@@ -140,7 +147,7 @@ const testCases: ReadonlyArray<FunctionTestCase<typeof assertValidShape>> = [
             },
             defineShape({
                 a: '',
-                b: optional(-1),
+                b: optionalShape(-1),
             }),
         ],
         throws: undefined,
@@ -154,7 +161,7 @@ const testCases: ReadonlyArray<FunctionTestCase<typeof assertValidShape>> = [
             },
             defineShape({
                 a: '',
-                b: optional(-1),
+                b: optionalShape(-1),
             }),
         ],
         throws: undefined,
@@ -168,7 +175,7 @@ const testCases: ReadonlyArray<FunctionTestCase<typeof assertValidShape>> = [
             },
             defineShape({
                 a: '',
-                b: optional(-1),
+                b: optionalShape(-1),
             }),
         ],
         throws: {
@@ -184,7 +191,7 @@ const testCases: ReadonlyArray<FunctionTestCase<typeof assertValidShape>> = [
             },
             defineShape({
                 a: '',
-                b: optional(or(-1, '')),
+                b: optionalShape(unionShape(-1, '')),
             }),
         ],
         throws: undefined,
@@ -200,7 +207,7 @@ const testCases: ReadonlyArray<FunctionTestCase<typeof assertValidShape>> = [
             },
             defineShape({
                 a: '',
-                b: optional({
+                b: optionalShape({
                     hi: '',
                 }),
             }),
@@ -218,7 +225,7 @@ const testCases: ReadonlyArray<FunctionTestCase<typeof assertValidShape>> = [
             },
             defineShape({
                 a: '',
-                b: optional({
+                b: optionalShape({
                     hi: '',
                 }),
             }),
@@ -231,7 +238,7 @@ const testCases: ReadonlyArray<FunctionTestCase<typeof assertValidShape>> = [
         it: 'matches valid numeric range',
         inputs: [
             5,
-            defineShape(numericRange(1, 10)),
+            defineShape(rangeShape({min: 1, max: 10})),
         ],
         throws: undefined,
     },
@@ -239,7 +246,7 @@ const testCases: ReadonlyArray<FunctionTestCase<typeof assertValidShape>> = [
         it: 'rejects non-number numeric range',
         inputs: [
             {hi: 'hi'},
-            defineShape(numericRange(1, 10)),
+            defineShape(rangeShape({min: 1, max: 10})),
         ],
         throws: {
             matchConstructor: ShapeMismatchError,
@@ -249,7 +256,7 @@ const testCases: ReadonlyArray<FunctionTestCase<typeof assertValidShape>> = [
         it: 'rejects invalid numeric range',
         inputs: [
             11,
-            defineShape(numericRange(1, 10)),
+            defineShape(rangeShape({min: 1, max: 10})),
         ],
         throws: {
             matchConstructor: ShapeMismatchError,
@@ -259,10 +266,10 @@ const testCases: ReadonlyArray<FunctionTestCase<typeof assertValidShape>> = [
         it: 'fails if the input subject has a specifier',
         inputs: [
             {
-                a: exact('what'),
+                a: exactShape('what'),
             },
             defineShape({
-                a: exact('what'),
+                a: exactShape('what'),
             }),
         ],
         throws: {
@@ -279,8 +286,8 @@ const testCases: ReadonlyArray<FunctionTestCase<typeof assertValidShape>> = [
             },
             defineShape({
                 a: 'what',
-                b: or('', 0),
-                c: and({a: 0}, {b: ''}),
+                b: unionShape('', 0),
+                c: intersectShape({a: 0}, {b: ''}),
             }),
         ],
         throws: undefined,
@@ -300,7 +307,7 @@ const testCases: ReadonlyArray<FunctionTestCase<typeof assertValidShape>> = [
             defineShape({
                 a: 'what',
                 b: [''],
-                c: and({a: 0}, {b: ''}),
+                c: intersectShape({a: 0}, {b: ''}),
             }),
         ],
         throws: undefined,
@@ -313,7 +320,10 @@ const testCases: ReadonlyArray<FunctionTestCase<typeof assertValidShape>> = [
                 b: '',
                 c: '',
             },
-            defineShape(and({a: 0}, {b: ''})),
+            defineShape(intersectShape({a: 0}, {b: ''})),
+            {
+                allowExtraKeys: false,
+            },
         ],
         throws: {
             matchConstructor: ShapeMismatchError,
@@ -352,14 +362,30 @@ const testCases: ReadonlyArray<FunctionTestCase<typeof assertValidShape>> = [
         throws: undefined,
     },
     {
-        it: 'accepts missing keys if their shape is undefined',
+        it: 'rejects missing keys even if their value shapes are undefined',
         inputs: [
             {
                 c: null,
             },
             defineShape({
                 a: undefined,
-                b: or('', undefined),
+                b: unionShape('', undefined),
+                c: null,
+            }),
+        ],
+        throws: {
+            matchMessage: 'expected required property',
+        },
+    },
+    {
+        it: 'allows missing optional keys',
+        inputs: [
+            {
+                c: null,
+            },
+            defineShape({
+                a: optionalShape(undefined),
+                b: optionalShape(unionShape('', undefined)),
                 c: null,
             }),
         ],
@@ -406,11 +432,11 @@ const testCases: ReadonlyArray<FunctionTestCase<typeof assertValidShape>> = [
                 c: 4321,
             },
             defineShape({
-                a: exact({
+                a: exactShape({
                     what: 'who',
                 }),
-                b: or(0, exact('hello there')),
-                c: or(0, exact('hello there')),
+                b: unionShape(0, exactShape('hello there')),
+                c: unionShape(0, exactShape('hello there')),
             }),
         ],
         throws: undefined,
@@ -421,7 +447,7 @@ const testCases: ReadonlyArray<FunctionTestCase<typeof assertValidShape>> = [
             {},
             defineShape({
                 a: undefined,
-                b: or('', undefined),
+                b: unionShape('', undefined),
                 c: null,
             }),
         ],
@@ -430,15 +456,14 @@ const testCases: ReadonlyArray<FunctionTestCase<typeof assertValidShape>> = [
         },
     },
     {
-        it: 'allows extra keys when set in options',
+        it: 'allows extra keys by default',
         inputs: [
             {a: undefined, b: '', c: null, d: 'lol extra stuff'},
             defineShape({
                 a: undefined,
-                b: or('', undefined),
+                b: unionShape('', undefined),
                 c: null,
             }),
-            {allowExtraKeys: true},
         ],
         throws: undefined,
     },
@@ -447,7 +472,7 @@ const testCases: ReadonlyArray<FunctionTestCase<typeof assertValidShape>> = [
         inputs: [
             {b: false},
             defineShape({
-                b: or('', 4),
+                b: unionShape('', 4),
             }),
         ],
         throws: {
@@ -494,7 +519,10 @@ const testCases: ReadonlyArray<FunctionTestCase<typeof assertValidShape>> = [
                 b: '',
                 c: '',
             },
-            defineShape(or({a: 0}, {b: ''})),
+            defineShape(unionShape({a: 0}, {b: ''})),
+            {
+                allowExtraKeys: false,
+            },
         ],
         throws: {
             matchConstructor: ShapeMismatchError,
@@ -534,8 +562,8 @@ const testCases: ReadonlyArray<FunctionTestCase<typeof assertValidShape>> = [
             },
             defineShape({
                 a: 'what',
-                b: or('', 0),
-                c: and({a: 0}, {b: ''}),
+                b: unionShape('', 0),
+                c: intersectShape({a: 0}, {b: ''}),
             }),
         ],
         throws: {
@@ -549,7 +577,7 @@ const testCases: ReadonlyArray<FunctionTestCase<typeof assertValidShape>> = [
                 a: 'what',
                 b: '',
             },
-            defineShape(and({a: ''}, {c: -1})),
+            defineShape(intersectShape({a: ''}, {c: -1})),
         ],
         throws: {
             matchConstructor: ShapeMismatchError,
@@ -565,8 +593,8 @@ const testCases: ReadonlyArray<FunctionTestCase<typeof assertValidShape>> = [
             },
             defineShape({
                 a: 'what',
-                b: or('', 0),
-                c: and({a: 0}, {b: ''}),
+                b: unionShape('', 0),
+                c: intersectShape({a: 0}, {b: ''}),
             }),
         ],
         throws: {
@@ -582,7 +610,7 @@ const testCases: ReadonlyArray<FunctionTestCase<typeof assertValidShape>> = [
             },
             defineShape({
                 a: classShape(Error),
-                b: or('', 0),
+                b: unionShape('', 0),
             }),
         ],
         throws: undefined,
@@ -652,7 +680,7 @@ const testCases: ReadonlyArray<FunctionTestCase<typeof assertValidShape>> = [
             matchConstructor: ShapeMismatchError,
         },
     },
-];
+] satisfies ReadonlyArray<FunctionTestCase<typeof assertValidShape>>;
 
 describe(assertValidShape.name, () => {
     itCases(assertValidShape, testCases);
@@ -664,7 +692,7 @@ describe(assertValidShape.name, () => {
                 return {
                     it: testCase.it,
                     inputs: [
-                        testCase.inputs[1].defaultValue,
+                        testCase.inputs[1].default as unknown,
                         testCase.inputs[1],
                     ],
                     throws: undefined,
@@ -685,7 +713,9 @@ describe(assertValidShape.name, () => {
                         {},
                         'oh no this failed',
                     ),
-                {matchMessage: 'oh no this failed'},
+                {
+                    matchMessage: 'oh no this failed',
+                },
             );
         });
 
@@ -706,12 +736,12 @@ describe(assertValidShape.name, () => {
             });
 
             const fullDateShape = defineShape(
-                and(dateOnlyUnitsShape, timeOnlyUnitsShape, {
+                intersectShape(dateOnlyUnitsShape, timeOnlyUnitsShape, {
                     timezone: timezoneShape,
                 }),
             );
 
-            assertValidShape(fullDateShape.defaultValue, fullDateShape);
+            assertValidShape(fullDateShape.default, fullDateShape);
         });
     });
 
@@ -725,9 +755,9 @@ describe(assertValidShape.name, () => {
 
         const shapeWithNested = defineShape({
             stringProp: '',
-            andProp: and({hi: ''}, {bye: ''}),
-            nestedShape: or(lowerLevelShape),
-            exactProp: exact('derp'),
+            andProp: intersectShape({hi: ''}, {bye: ''}),
+            nestedShape: unionShape(lowerLevelShape),
+            exactProp: exactShape('derp'),
         });
 
         assert.tsType<(typeof shapeWithNested)['runtimeType']>().equals<{
@@ -763,7 +793,7 @@ describe(assertValidShape.name, () => {
         const assignmentAfterAssert: typeof shapeWithNested.runtimeType = exampleInstance;
 
         const assignmentWithIsValidShape: typeof shapeWithNested.runtimeType | undefined =
-            isValidShape(exampleInstance, shapeWithNested) ? exampleInstance : undefined;
+            checkValidShape(exampleInstance, shapeWithNested) ? exampleInstance : undefined;
     });
 
     it('works with partial indexedKeys shapes', () => {
@@ -776,10 +806,10 @@ describe(assertValidShape.name, () => {
             },
             defineShape({
                 stuff: '',
-                moreStuff: indexedKeys({
+                moreStuff: recordShape({
                     keys: '',
                     values: 0,
-                    required: false,
+                    partial: true,
                 }),
             }),
         );
@@ -793,10 +823,10 @@ describe(assertValidShape.name, () => {
                 },
                 defineShape({
                     stuff: '',
-                    moreStuff: indexedKeys({
-                        keys: exact('hi'),
+                    moreStuff: recordShape({
+                        keys: exactShape('hi'),
                         values: 0,
-                        required: false,
+                        partial: true,
                     }),
                 }),
             ),
@@ -810,10 +840,10 @@ describe(assertValidShape.name, () => {
             },
             defineShape({
                 stuff: '',
-                moreStuff: indexedKeys({
-                    keys: exact('hi'),
+                moreStuff: recordShape({
+                    keys: exactShape('hi'),
                     values: 0,
-                    required: false,
+                    partial: true,
                 }),
             }),
         );
@@ -829,19 +859,16 @@ describe(assertValidShape.name, () => {
                 },
             },
             defineShape(
-                indexedKeys({
-                    keys: uuidShape,
+                recordShape({
+                    keys: uuidShape(),
                     values: defineShape({
                         roomName: '',
-                        roomId: uuidShape,
+                        roomId: uuidShape(),
                         clientCount: -1,
                     }),
-                    required: false,
+                    partial: true,
                 }),
             ),
-            {
-                allowExtraKeys: true,
-            },
         );
         assert.throws(() =>
             assertValidShape(
@@ -853,19 +880,16 @@ describe(assertValidShape.name, () => {
                     },
                 },
                 defineShape(
-                    indexedKeys({
-                        keys: uuidShape,
+                    recordShape({
+                        keys: uuidShape(),
                         values: defineShape({
                             roomName: '',
-                            roomId: uuidShape,
+                            roomId: uuidShape(),
                             clientCount: -1,
                         }),
-                        required: false,
+                        partial: true,
                     }),
                 ),
-                {
-                    allowExtraKeys: true,
-                },
             ),
         );
         assertValidShape(
@@ -877,14 +901,14 @@ describe(assertValidShape.name, () => {
                 },
             },
             defineShape(
-                indexedKeys({
-                    keys: uuidShape,
+                recordShape({
+                    keys: uuidShape(),
                     values: defineShape({
                         roomName: '',
-                        roomId: uuidShape,
+                        roomId: uuidShape(),
                         clientCount: -1,
                     }),
-                    required: false,
+                    partial: true,
                 }),
             ),
         );
@@ -900,10 +924,9 @@ describe(assertValidShape.name, () => {
             },
             defineShape({
                 stuff: '',
-                moreStuff: indexedKeys({
-                    keys: exact('hi'),
+                moreStuff: recordShape({
+                    keys: exactShape('hi'),
                     values: 0,
-                    required: true,
                 }),
             }),
         );
@@ -917,10 +940,9 @@ describe(assertValidShape.name, () => {
             },
             defineShape({
                 stuff: '',
-                moreStuff: indexedKeys({
+                moreStuff: recordShape({
                     keys: enumShape(SharedEnum),
                     values: 0,
-                    required: true,
                 }),
             }),
         );
@@ -934,10 +956,9 @@ describe(assertValidShape.name, () => {
             },
             defineShape({
                 stuff: '',
-                moreStuff: indexedKeys({
-                    keys: or(exact('hi'), exact('bye')),
+                moreStuff: recordShape({
+                    keys: unionShape(exactShape('hi'), exactShape('bye')),
                     values: 0,
-                    required: true,
                 }),
             }),
         );
@@ -950,7 +971,6 @@ describe(assertValidShape.name, () => {
                 flags: '',
                 source: '',
             }),
-            {allowExtraKeys: true},
         );
     });
 
@@ -963,10 +983,9 @@ describe(assertValidShape.name, () => {
             },
             defineShape({
                 stuff: '',
-                moreStuff: indexedKeys({
+                moreStuff: recordShape({
                     keys: '',
                     values: 0,
-                    required: true,
                 }),
             }),
         );
@@ -981,10 +1000,9 @@ describe(assertValidShape.name, () => {
                 },
                 defineShape({
                     stuff: '',
-                    moreStuff: indexedKeys({
-                        keys: exact('hi'),
+                    moreStuff: recordShape({
+                        keys: exactShape('hi'),
                         values: 0,
-                        required: true,
                     }),
                 }),
             ),
@@ -1000,10 +1018,9 @@ describe(assertValidShape.name, () => {
                 },
                 defineShape({
                     stuff: '',
-                    moreStuff: indexedKeys({
+                    moreStuff: recordShape({
                         keys: enumShape(SharedEnum),
                         values: 0,
-                        required: true,
                     }),
                 }),
             ),
@@ -1018,10 +1035,9 @@ describe(assertValidShape.name, () => {
                 },
                 defineShape({
                     stuff: '',
-                    moreStuff: indexedKeys({
-                        keys: or(exact('hi'), exact('bye')),
+                    moreStuff: recordShape({
+                        keys: unionShape(exactShape('hi'), exactShape('bye')),
                         values: 0,
-                        required: true,
                     }),
                 }),
             ),
@@ -1030,19 +1046,21 @@ describe(assertValidShape.name, () => {
 
     it('has proper types for a nested exact', () => {
         const myShape = defineShape({
-            message: exact('hello'),
+            message: exactShape('hello'),
         });
 
         type MyType = typeof myShape.runtimeType;
 
         const instance = {} as any;
 
-        const result: MyType | undefined = isValidShape(instance, myShape) ? instance : undefined;
+        const result: MyType | undefined = checkValidShape(instance, myShape)
+            ? instance
+            : undefined;
     });
 
     it('allows optional properties', () => {
         const myShape = defineShape(
-            or(
+            unionShape(
                 {
                     prop1: '',
                     prop2: 2,
@@ -1050,7 +1068,7 @@ describe(assertValidShape.name, () => {
                 {
                     prop1: '',
                     prop2: 2,
-                    prop3: or(undefined, ''),
+                    prop3: unionShape(undefined, ''),
                 },
             ),
         );
@@ -1060,31 +1078,6 @@ describe(assertValidShape.name, () => {
             prop1: 'hi',
             prop2: 3,
         };
-        assertValidShape(instance, myShape);
-    });
-
-    it('allows readonly shapes', () => {
-        const myShape = defineShape(
-            or(
-                {
-                    prop1: '',
-                    prop2: 2,
-                },
-                {
-                    prop1: '',
-                    prop2: 2,
-                    prop3: or(undefined, ''),
-                },
-            ),
-            true,
-        );
-        type MyShape = typeof myShape.runtimeType;
-
-        const instance: MyShape = {
-            prop1: 'hi',
-            prop2: 3,
-        };
-
         assertValidShape(instance, myShape);
     });
 
@@ -1152,11 +1145,11 @@ describe(assertValidShape.name, () => {
         }
 
         const verificationResultInProgressShape = defineShape({
-            message: exact(EmailBatchVerificationStatusMessageEnum.InProgress),
+            message: exactShape(EmailBatchVerificationStatusMessageEnum.InProgress),
         });
 
         const verificationResultCompletedShape = defineShape({
-            message: exact(EmailBatchVerificationStatusMessageEnum.Completed),
+            message: exactShape(EmailBatchVerificationStatusMessageEnum.Completed),
             emails: [
                 {
                     email: '',
@@ -1166,14 +1159,14 @@ describe(assertValidShape.name, () => {
         });
 
         const VerificationResultShape = defineShape(
-            or(verificationResultInProgressShape, verificationResultCompletedShape),
+            unionShape(verificationResultInProgressShape, verificationResultCompletedShape),
         );
 
-        assertValidShape(result, VerificationResultShape, {allowExtraKeys: true});
+        assertValidShape(result, VerificationResultShape);
 
         assert.deepEquals(
-            VerificationResultShape.defaultValue,
-            verificationResultInProgressShape.defaultValue,
+            VerificationResultShape.default,
+            verificationResultInProgressShape.default,
         );
     });
 
@@ -1205,8 +1198,7 @@ describe(assertValidShape.name, () => {
                 );
             },
             {
-                matchMessage:
-                    "Shape mismatch at top level -> 'top' -> 'second' -> 'third' -> 'hi' -> '1': -1 does not have the same type as  ''",
+                matchMessage: '/top/second/third/hi/1: Expected string',
             },
         );
     });
@@ -1238,343 +1230,333 @@ describe(assertValidShape.name, () => {
                 );
             },
             {
-                matchMessage: "Subject has extra key 'notNested' in top level -> 'top' -> '2'",
+                matchMessage: '/top/2/nested: Expected required property',
             },
         );
     });
+
+    itCases(assertValidShape, [
+        {
+            it: 'allows extra keys by shape',
+            inputs: [
+                {
+                    a: '',
+                    b: '',
+                },
+                defineShape({
+                    a: '',
+                }),
+                {
+                    allowExtraKeys: undefined,
+                },
+            ],
+            throws: undefined,
+        },
+        {
+            it: 'accepts extra keys in items',
+            inputs: [
+                [
+                    'a',
+                    'b',
+                    {
+                        a: 'hi',
+                        b: 'bye',
+                    },
+                ],
+                Type.Tuple([
+                    Type.String(),
+                    Type.String(),
+                    Type.Object({
+                        a: Type.String(),
+                    }),
+                ]),
+            ],
+            throws: undefined,
+        },
+        {
+            it: 'blocks extra keys in items',
+            inputs: [
+                [
+                    'a',
+                    'b',
+                    {
+                        a: 'hi',
+                        b: 'bye',
+                    },
+                ],
+                Type.Tuple([
+                    Type.String(),
+                    Type.String(),
+                    Type.Object({
+                        a: Type.String(),
+                    }),
+                ]),
+                {
+                    allowExtraKeys: false,
+                },
+            ],
+            throws: {
+                matchMessage: '/2/b: Unexpected property',
+            },
+        },
+        {
+            it: 'accepts extra keys in items schema',
+            inputs: [
+                [
+                    {
+                        a: 'hi',
+                        b: 'bye',
+                    },
+                ],
+                Type.Array(
+                    Type.Object({
+                        a: Type.String(),
+                    }),
+                ),
+            ],
+            throws: undefined,
+        },
+        {
+            it: 'blocks extra keys in items schema',
+            inputs: [
+                [
+                    {
+                        a: 'hi',
+                        b: 'bye',
+                    },
+                ],
+                Type.Array(
+                    Type.Object({
+                        a: Type.String(),
+                    }),
+                ),
+                {
+                    allowExtraKeys: false,
+                },
+            ],
+            throws: {
+                matchMessage: '/0/b: Unexpected property',
+            },
+        },
+        {
+            it: 'accepts extra keys in intersections',
+            inputs: [
+                {
+                    a: 'hi',
+                    b: 'bye',
+                    c: 'see',
+                },
+                Type.Intersect([
+                    Type.Object({
+                        a: Type.String(),
+                    }),
+                    Type.Object({
+                        b: Type.String(),
+                    }),
+                ]),
+            ],
+            throws: undefined,
+        },
+        {
+            it: 'blocks extra keys in intersections',
+            inputs: [
+                {
+                    a: 'hi',
+                    b: 'bye',
+                    c: 'see',
+                },
+                Type.Intersect([
+                    Type.Object({
+                        a: Type.String(),
+                    }),
+                    Type.Object({
+                        b: Type.String(),
+                    }),
+                ]),
+                {
+                    allowExtraKeys: false,
+                },
+            ],
+            throws: {
+                matchMessage: '/b: Unexpected property',
+            },
+        },
+        {
+            it: 'blocks extra keys by schema',
+            inputs: [
+                {
+                    a: '',
+                    b: '',
+                },
+                recordShape({
+                    keys: exactShape('a'),
+                    values: '',
+                }),
+                {
+                    allowExtraKeys: undefined,
+                },
+            ],
+            throws: {
+                matchMessage: 'Failure at keys: b',
+            },
+        },
+        {
+            it: 'force blocks extra keys',
+            inputs: [
+                {
+                    a: '',
+                    b: '',
+                },
+                defineShape({
+                    a: '',
+                }),
+                {
+                    allowExtraKeys: false,
+                },
+            ],
+            throws: {
+                matchMessage: '/b: Unexpected property',
+            },
+        },
+        {
+            it: 'force allows extra keys',
+            inputs: [
+                {
+                    a: '',
+                    b: '',
+                },
+                recordShape({
+                    keys: 'a',
+                    values: '',
+                }),
+                {
+                    allowExtraKeys: true,
+                },
+            ],
+            throws: undefined,
+        },
+        {
+            it: 'accepts bigints',
+            inputs: [
+                123n,
+                defineShape(1n),
+            ],
+            throws: undefined,
+        },
+        {
+            it: 'accepts strings',
+            inputs: [
+                'hi',
+                defineShape(''),
+            ],
+            throws: undefined,
+        },
+        {
+            it: 'accepts numbers',
+            inputs: [
+                42,
+                defineShape(-1),
+            ],
+            throws: undefined,
+        },
+        {
+            it: 'accepts objects',
+            inputs: [
+                {
+                    a: 'hi',
+                    b: 'bye',
+                },
+                defineShape({
+                    a: '',
+                    b: '',
+                }),
+            ],
+            throws: undefined,
+        },
+        {
+            it: 'allows an object to have extra keys',
+            inputs: [
+                {
+                    a: 'hi',
+                    b: 'bye',
+                    c: 'ya',
+                },
+                defineShape({
+                    a: '',
+                    b: '',
+                }),
+            ],
+            throws: undefined,
+        },
+        {
+            it: 'allows non-exact symbols',
+            inputs: [
+                {
+                    a: Symbol('new'),
+                    b: mockSymbol,
+                },
+                defineShape({
+                    a: mockSymbol,
+                    b: exactShape(mockSymbol),
+                }),
+            ],
+            throws: undefined,
+        },
+        {
+            it: 'fails on exact symbols',
+            inputs: [
+                Symbol('new'),
+                exactShape(mockSymbol),
+            ],
+            throws: {
+                matchMessage: "Expected symbol 'mock symbol",
+            },
+        },
+        {
+            it: 'prevents extra keys',
+            inputs: [
+                {
+                    a: 'hi',
+                    b: 'bye',
+                    c: 'ya',
+                },
+                defineShape({
+                    a: '',
+                    b: '',
+                }),
+                {
+                    allowExtraKeys: false,
+                },
+            ],
+            throws: {
+                matchMessage: '/c: Unexpected property',
+            },
+        },
+    ]);
 });
 
-describe(isValidShape.name, () => {
-    const testCasesForIsValidCheck: ReadonlyArray<FunctionTestCase<typeof isValidShape>> =
-        testCases.map((testCase: any): FunctionTestCase<typeof isValidShape> => {
+describe(checkValidShape.name, () => {
+    const testCasesForIsValidCheck: ReadonlyArray<FunctionTestCase<typeof checkValidShape>> =
+        testCases.map((testCase: any): FunctionTestCase<typeof checkValidShape> => {
             const newTestCase = {...testCase, expect: testCase.throws ? false : true};
             delete newTestCase.throws;
             return newTestCase;
         });
-    itCases(isValidShape, testCasesForIsValidCheck);
-});
-
-describe(matchesShape.name, () => {
-    itCases(matchesShape, [
-        {
-            it: 'always true for unknown specifier',
-            inputs: [
-                Math.random() > 0.5 ? '' : 4,
-                unknownShape(),
-                [],
-                {exactValues: false, ignoreExtraKeys: false},
-            ],
-            expect: true,
-        },
-        {
-            it: 'matches valid numeric range',
-            inputs: [
-                5,
-                numericRange(1, 10),
-                [],
-                {exactValues: false, ignoreExtraKeys: false},
-            ],
-            expect: true,
-        },
-        {
-            it: 'rejects non-number numeric range',
-            inputs: [
-                {hi: 'hi'},
-                numericRange(1, 10),
-                [],
-                {exactValues: false, ignoreExtraKeys: false},
-            ],
-            expect: false,
-        },
-        {
-            it: 'rejects invalid numeric range',
-            inputs: [
-                11,
-                numericRange(1, 10),
-                [],
-                {exactValues: false, ignoreExtraKeys: false},
-            ],
-            expect: false,
-        },
-        {
-            it: 'matches unknown indexed keys',
-            inputs: [
-                {hi: 'there'},
-                indexedKeys({
-                    keys: unknownShape(),
-                    required: true,
-                    values: '',
-                }),
-                [],
-                {exactValues: false, ignoreExtraKeys: true},
-            ],
-            expect: true,
-        },
-        {
-            it: 'accepts a valid indexed subject',
-            inputs: [
-                {[randomString()]: randomInteger({max: 100, min: 0})},
-                indexedKeys({
-                    keys: '',
-                    values: 0,
-                    required: false,
-                }),
-                [],
-                {exactValues: false, ignoreExtraKeys: false},
-            ],
-            expect: true,
-        },
-        {
-            it: 'rejects indexedKeys subject that is not an object',
-            inputs: [
-                5,
-                indexedKeys({
-                    keys: '',
-                    values: 0,
-                    required: false,
-                }),
-                [],
-                {exactValues: false, ignoreExtraKeys: false},
-            ],
-            expect: false,
-        },
-        {
-            it: 'accepts string/number indexedKeys subject keys mismatch because number keys are casted to strings anyway',
-            inputs: [
-                {0: 0},
-                indexedKeys({
-                    keys: '',
-                    values: 0,
-                    required: false,
-                }),
-                [],
-                {exactValues: false, ignoreExtraKeys: false},
-            ],
-            expect: true,
-        },
-        {
-            it: 'rejects mismatched exact indexedKeys keys',
-            inputs: [
-                {no: 0},
-                indexedKeys({
-                    keys: exact('hi'),
-                    values: 0,
-                    required: false,
-                }),
-                [],
-                {exactValues: false, ignoreExtraKeys: false},
-            ],
-            expect: false,
-        },
-        {
-            it: 'accepts valid exact indexedKeys keys',
-            inputs: [
-                {hi: 0},
-                indexedKeys({
-                    keys: exact('hi'),
-                    values: 0,
-                    required: false,
-                }),
-                [],
-                {exactValues: false, ignoreExtraKeys: false},
-            ],
-            expect: true,
-        },
-        {
-            it: 'accepts a class instance',
-            inputs: [
-                new Error(),
-                classShape(Error),
-                [],
-                {exactValues: false, ignoreExtraKeys: false},
-            ],
-            expect: true,
-        },
-        {
-            it: 'rejects the wrong class instance',
-            inputs: [
-                new Error(),
-                classShape(HTMLElement),
-                [],
-                {exactValues: false, ignoreExtraKeys: false},
-            ],
-            expect: false,
-        },
-        {
-            it: 'rejects invalid indexedKeys subject values',
-            inputs: [
-                {hi: 'hi'},
-                indexedKeys({
-                    keys: '',
-                    values: 0,
-                    required: false,
-                }),
-                [],
-                {exactValues: false, ignoreExtraKeys: false},
-            ],
-            expect: false,
-        },
-    ]);
-});
-
-enum TestEnum {
-    First = 'first',
-    Second = 'second',
-    Third = 'third',
-}
-
-describe(expandIndexedKeysKeys.name, () => {
-    itCases(expandIndexedKeysKeys, [
-        {
-            it: 'handles a string key',
-            input: indexedKeys({
-                keys: '',
-                required: false,
-                values: '',
-            }),
-            expect: true,
-        },
-        {
-            it: 'handles an exact string key',
-            input: indexedKeys({
-                keys: exact('hi'),
-                required: false,
-                values: '',
-            }),
-            expect: [
-                'hi',
-            ],
-        },
-        {
-            it: 'handles an enum key',
-            input: indexedKeys({
-                keys: enumShape(TestEnum),
-                required: false,
-                values: '',
-            }),
-            expect: [
-                TestEnum.First,
-                TestEnum.Second,
-                TestEnum.Third,
-            ],
-        },
-        {
-            it: 'rejects a class key',
-            input: indexedKeys({
-                // @ts-expect-error: intentionally wrong key
-                keys: classShape(RegExp),
-                required: false,
-                values: '',
-            }),
-            expect: false,
-        },
-        {
-            it: 'rejects an and key',
-            input: indexedKeys({
-                // @ts-expect-error: intentionally wrong key
-                keys: and('', -1),
-                required: false,
-                values: '',
-            }),
-            expect: false,
-        },
-        {
-            it: 'allows an unknown key',
-            input: indexedKeys({
-                keys: unknownShape(),
-                required: false,
-                values: '',
-            }),
-            expect: true,
-        },
-        {
-            it: 'rejects an exact object',
-            input: indexedKeys({
-                // @ts-expect-error: intentionally wrong key
-                keys: exact({hi: 'there'}),
-                required: false,
-                values: '',
-            }),
-            expect: false,
-        },
-        {
-            it: 'rejects an indexedKeys key',
-            input: indexedKeys({
-                // @ts-expect-error: intentionally wrong key
-                keys: indexedKeys({
-                    keys: '',
-                    required: false,
-                    values: '',
-                }),
-                required: false,
-                values: '',
-            }),
-            expect: false,
-        },
-        {
-            it: 'rejects an object key',
-            input: indexedKeys({
-                // @ts-expect-error: intentionally wrong key
-                keys: {},
-                required: false,
-                values: '',
-            }),
-            expect: false,
-        },
-        {
-            it: 'accepts an or key',
-            input: indexedKeys({
-                keys: or('', -1, enumShape(TestEnum)),
-                required: false,
-                values: '',
-            }),
-            expect: [
-                TestEnum.First,
-                TestEnum.Second,
-                TestEnum.Third,
-            ],
-        },
-        {
-            it: 'rejects a bad nested or',
-            input: indexedKeys({
-                // @ts-expect-error: intentionally wrong key
-                keys: or('', -1, enumShape(TestEnum), {}),
-                required: false,
-                values: '',
-            }),
-            expect: false,
-        },
-        {
-            it: 'passes a nested unknown',
-            input: indexedKeys({
-                keys: or('', -1, enumShape(TestEnum), unknownShape()),
-                required: false,
-                values: '',
-            }),
-            expect: [
-                TestEnum.First,
-                TestEnum.Second,
-                TestEnum.Third,
-            ],
-        },
-        {
-            it: 'accepts an or key',
-            input: indexedKeys({
-                keys: or('', -1, exact('hi'), enumShape(TestEnum)),
-                required: false,
-                values: '',
-            }),
-            expect: [
-                'hi',
-                TestEnum.First,
-                TestEnum.Second,
-                TestEnum.Third,
-            ],
-        },
-    ]);
+    itCases(checkValidShape, testCasesForIsValidCheck);
 });
 
 describe(checkWrapValidShape.name, () => {
+    const testCasesForCheckWrapValidShape: ReadonlyArray<
+        FunctionTestCase<typeof checkWrapValidShape>
+    > = testCases.map((testCase): FunctionTestCase<typeof checkWrapValidShape> => {
+        const newTestCase = {
+            ...omitObjectKeys(testCase, ['throws']),
+            expect: testCase.throws ? undefined : testCase.inputs[0],
+        };
+        return newTestCase as FunctionTestCase<typeof checkWrapValidShape>;
+    });
+    itCases(checkWrapValidShape, testCasesForCheckWrapValidShape);
+
     itCases(checkWrapValidShape, [
         {
             it: 'passes',
@@ -1596,6 +1578,23 @@ describe(checkWrapValidShape.name, () => {
 });
 
 describe(assertWrapValidShape.name, () => {
+    const testCasesForAssertWrapValidShape: ReadonlyArray<
+        FunctionTestCase<typeof assertWrapValidShape>
+    > = testCases.map((testCase): FunctionTestCase<typeof assertWrapValidShape> => {
+        const newTestCase = {
+            ...omitObjectKeys(testCase, ['throws']),
+            ...(testCase.throws
+                ? {
+                      throws: testCase.throws,
+                  }
+                : {
+                      expect: testCase.inputs[0],
+                  }),
+        };
+        return newTestCase as FunctionTestCase<typeof assertWrapValidShape>;
+    });
+    itCases(assertWrapValidShape, testCasesForAssertWrapValidShape);
+
     itCases(assertWrapValidShape, [
         {
             it: 'passes',

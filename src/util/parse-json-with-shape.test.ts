@@ -1,6 +1,6 @@
 import {describe, itCases} from '@augment-vir/test';
-import {defineShape} from './define-shape/define-shape.js';
-import {ShapeMismatchError} from './errors/shape-mismatch.error.js';
+import {ShapeMismatchError} from '../errors/shape-mismatch.error.js';
+import {defineShape} from '../shape/shape.js';
 import {parseJsonWithShape} from './parse-json-with-shape.js';
 
 describe(parseJsonWithShape.name, () => {
@@ -36,9 +36,6 @@ describe(parseJsonWithShape.name, () => {
                 defineShape({
                     a: '',
                 }),
-                {
-                    allowExtraKeys: true,
-                },
             ],
             expect: {a: 'hi', b: 3},
         },

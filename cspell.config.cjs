@@ -4,9 +4,9 @@ module.exports = {
     ...baseConfig,
     ignorePaths: [
         ...baseConfig.ignorePaths,
-        'src/performance/big-object.mock.ts',
     ],
     words: [
         ...baseConfig.words,
+        'typebox',
     ],
 };

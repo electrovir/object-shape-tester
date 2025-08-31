@@ -1,51 +1,55 @@
 # object-shape-tester
 
-Create types, run-time type requirements, and run-time default values with a single definition.
+Create types, runtime type requirements, and runtime default values all at once.
 
-Can be used in tests and at run-time (it does not depend on any testing libraries).
+Can be used in tests and at runtime (it does not depend on any testing libraries).
 
 Full API docs: https://electrovir.github.io/object-shape-tester
 
-# Installation
+## Installation
 
 ```sh
 npm i object-shape-tester
 ```
 
-# Usage
-
-This package allows you to define an object's shape in a manner which can be used for testing objects at run time to make sure they conform to your defined shapes. Because it also generates TS types from your defined shape _and_ a default run-time value from your defined shape, **you will have one single source of truth** for all types, defaults, and shape tests.
-
 ## Simple example
 
-See this simple example for defining a simple user type:
+See this simple example for defining a shape:
 
 <!-- example-link: src/readme-examples/simple-user-shape.example.ts -->
 
 ```TypeScript
-import {defineShape, isValidShape} from 'object-shape-tester';
+import {assertValidShape, defineShape} from 'object-shape-tester';
 
-const userShapeDefinition = defineShape({
+const userShape = defineShape({
+    /**
+     * This value is simplified to just a `string` required type, with `'empty name'` as the default
+     * value.
+     */
     name: 'empty name',
+    /** This value is simplified to just a `number` required type, with `0` as the default value. */
     id: 0,
 });
 
-export type User = typeof userShapeDefinition.runtimeType;
+/** Access the TypeScript type with `.runtimeType`. */
+export type User = typeof userShape.runtimeType;
 
-export const emptyUser = userShapeDefinition.defaultValue;
-
-export function isUser(input: unknown): input is User {
-    // you don't NEED to wrap isValidShape in a type guard as it is already a type guard itself
-    return isValidShape(input, userShapeDefinition);
-}
+/**
+ * Access the default value with `.default`. For this shape, the default value is:
+ *
+ * `{name: 'empty name', id: 0}`
+ */
+export const emptyUser = userShape.default;
 
 const myUser: User = {
     name: 'my name',
     id: 1000,
 };
+
+assertValidShape(myUser, userShape);
 ```
 
-From a single object (passed into `defineShape`), we get a type definition, a default value, and an object which can be used for run-time object shape testing.
+From a single object (passed into `defineShape`), we get a type definition, a default value, and an object which can be used for runtime object shape testing.
 
 ## Complex example
 
@@ -62,34 +66,37 @@ Here's a more complex user example that uses all of the above specifiers:
 <!-- example-link: src/readme-examples/complex-user-shape.example.ts -->
 
 ```TypeScript
-import {and, defineShape, enumShape, exact, isValidShape, or, unknownShape} from 'object-shape-tester';
+import {
+    assertValidShape,
+    defineShape,
+    enumShape,
+    exactShape,
+    intersectShape,
+    unionShape,
+    unknownShape,
+} from 'object-shape-tester';
 
 enum AuthLevel {
     Basic = 'basic',
     Admin = 'admin',
 }
 
-const complexUserShapeDefinition = defineShape({
+const userShape = defineShape({
     firstName: 'first',
-    middleInitial: or('M', undefined),
+    middleInitial: unionShape('M', undefined),
     lastName: 'last',
     id: 0,
-    tags: and({userTags: ['']}, {creatorTags: ['']}),
-    primaryColor: exact('red', 'green', 'blue'),
+    tags: intersectShape({userTags: ['']}, {creatorTags: ['']}),
+    primaryColor: unionShape(exactShape('red'), exactShape('green'), exactShape('blue')),
     authLevel: enumShape(AuthLevel),
     extraDetails: unknownShape(),
 });
 
-export type ComplexUser = typeof complexUserShapeDefinition.runtimeType;
+export type ComplexUser = typeof userShape.runtimeType;
 
-export const emptyComplexUser = complexUserShapeDefinition.defaultValue;
+export const emptyComplexUser = userShape.default;
 
-export function isComplexUser(input: unknown): input is ComplexUser {
-    // you don't NEED to wrap isValidShape in a type guard as it is already a type guard itself
-    return isValidShape(input, complexUserShapeDefinition);
-}
-
-const myComplexUser: ComplexUser = {
+const myUser: ComplexUser = {
     firstName: 'my first',
     middleInitial: undefined,
     lastName: 'last name',
@@ -104,4 +111,12 @@ const myComplexUser: ComplexUser = {
         whatever: 'you want',
     },
 };
+
+assertValidShape(myUser, userShape);
 ```
+
+## Additional shapes
+
+There are many built-in shapes documented under `Shapes`: https://electrovir.github.io/object-shape-tester.
+
+You can also use any schema from the [@sinclair/typebox](https://www.npmjs.com/package/@sinclair/typebox) package as an input for `defineShape()`.

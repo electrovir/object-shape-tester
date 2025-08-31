@@ -15,8 +15,9 @@ export const typeDocConfig: Partial<TypeDocOptions> = {
     intentionallyNotExported: [],
     defaultCategory: 'MISSING CATEGORY',
     categoryOrder: [
-        'Main',
-        'Shape Part',
+        'Define',
+        'Shape',
+        'Check',
         'Util',
         'Internal',
     ],

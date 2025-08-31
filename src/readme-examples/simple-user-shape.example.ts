@@ -1,20 +1,28 @@
-import {defineShape, isValidShape} from '../index.js';
+import {assertValidShape, defineShape} from '../index.js';
 
-const userShapeDefinition = defineShape({
+const userShape = defineShape({
+    /**
+     * This value is simplified to just a `string` required type, with `'empty name'` as the default
+     * value.
+     */
     name: 'empty name',
+    /** This value is simplified to just a `number` required type, with `0` as the default value. */
     id: 0,
 });
 
-export type User = typeof userShapeDefinition.runtimeType;
+/** Access the TypeScript type with `.runtimeType`. */
+export type User = typeof userShape.runtimeType;
 
-export const emptyUser = userShapeDefinition.defaultValue;
-
-export function isUser(input: unknown): input is User {
-    // you don't NEED to wrap isValidShape in a type guard as it is already a type guard itself
-    return isValidShape(input, userShapeDefinition);
-}
+/**
+ * Access the default value with `.default`. For this shape, the default value is:
+ *
+ * `{name: 'empty name', id: 0}`
+ */
+export const emptyUser = userShape.default;
 
 const myUser: User = {
     name: 'my name',
     id: 1000,
 };
+
+assertValidShape(myUser, userShape);

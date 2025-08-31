@@ -1,31 +1,34 @@
-import {and, defineShape, enumShape, exact, isValidShape, or, unknownShape} from '../index.js';
+import {
+    assertValidShape,
+    defineShape,
+    enumShape,
+    exactShape,
+    intersectShape,
+    unionShape,
+    unknownShape,
+} from '../index.js';
 
 enum AuthLevel {
     Basic = 'basic',
     Admin = 'admin',
 }
 
-const complexUserShapeDefinition = defineShape({
+const userShape = defineShape({
     firstName: 'first',
-    middleInitial: or('M', undefined),
+    middleInitial: unionShape('M', undefined),
     lastName: 'last',
     id: 0,
-    tags: and({userTags: ['']}, {creatorTags: ['']}),
-    primaryColor: exact('red', 'green', 'blue'),
+    tags: intersectShape({userTags: ['']}, {creatorTags: ['']}),
+    primaryColor: unionShape(exactShape('red'), exactShape('green'), exactShape('blue')),
     authLevel: enumShape(AuthLevel),
     extraDetails: unknownShape(),
 });
 
-export type ComplexUser = typeof complexUserShapeDefinition.runtimeType;
+export type ComplexUser = typeof userShape.runtimeType;
 
-export const emptyComplexUser = complexUserShapeDefinition.defaultValue;
+export const emptyComplexUser = userShape.default;
 
-export function isComplexUser(input: unknown): input is ComplexUser {
-    // you don't NEED to wrap isValidShape in a type guard as it is already a type guard itself
-    return isValidShape(input, complexUserShapeDefinition);
-}
-
-const myComplexUser: ComplexUser = {
+const myUser: ComplexUser = {
     firstName: 'my first',
     middleInitial: undefined,
     lastName: 'last name',
@@ -40,3 +43,5 @@ const myComplexUser: ComplexUser = {
         whatever: 'you want',
     },
 };
+
+assertValidShape(myUser, userShape);
