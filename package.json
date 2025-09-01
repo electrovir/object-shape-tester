@@ -1,6 +1,6 @@
 {
     "name": "object-shape-tester",
-    "version": "6.0.0",
+    "version": "6.1.0",
     "description": "Test object properties and value types.",
     "keywords": [
         "object",
@@ -64,6 +64,7 @@
         "@web/test-runner-playwright": "^0.11.1",
         "@web/test-runner-visual-regression": "^0.10.0",
         "cspell": "^9.2.1",
+        "date-vir": "^7.4.1",
         "dependency-cruiser": "^17.0.1",
         "esbuild": "^0.25.9",
         "eslint": "^9.34.0",

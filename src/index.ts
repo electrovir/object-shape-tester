@@ -1,4 +1,5 @@
 export * from './custom-shapes/class.shape.js';
+export * from './custom-shapes/custom-shape.js';
 export * from './custom-shapes/enum.shape.js';
 export * from './custom-shapes/exact.shape.js';
 export * from './custom-shapes/intersect.shape.js';
