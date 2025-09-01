@@ -102,7 +102,9 @@ describe(recordShape.name, () => {
                     {
                         keys: [],
                         values: -1,
-                        additionalProperties: true,
+                    },
+                    {
+                        allowExtraKeys: true,
                     },
                 ],
                 throws: undefined,
@@ -136,9 +138,6 @@ describe(recordShape.name, () => {
                     {
                         keys: [],
                         values: -1,
-                    },
-                    {
-                        allowExtraKeys: false,
                     },
                 ],
                 throws: {

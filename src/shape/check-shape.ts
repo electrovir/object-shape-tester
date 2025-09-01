@@ -16,10 +16,8 @@ export type CheckShapeOptions = PartialWithUndefined<{
      *   `true` for all nested schemas).
      * - `false`: extra keys are forcibly blocked in all objects (`additionalProperties` is forced to
      *   `false` for all nested schemas).
-     * - `undefined`: extra keys allowance is determined by each individual schema
-     *   (`additionalProperties` is not forced to any value).
      *
-     * @default undefined
+     * @default false
      */
     allowExtraKeys: boolean;
 }>;
@@ -101,11 +99,9 @@ export function assertWrapValidShape<SpecificShape extends Shape | TSchema>(
 
 function getCompiledSchema(shape: Shape | TSchema, options: CheckShapeOptions) {
     shape = ensureShape(shape);
-    return options.allowExtraKeys === undefined
-        ? shape.$_compiledSchema
-        : options.allowExtraKeys
-          ? shape.$_compiledSchemaExtraKeys
-          : shape.$_compiledSchemaNoExtraKeys;
+    return options.allowExtraKeys
+        ? shape.$_compiledSchemaExtraKeys
+        : shape.$_compiledSchemaNoExtraKeys;
 }
 
 /**

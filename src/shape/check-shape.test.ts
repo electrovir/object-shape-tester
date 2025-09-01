@@ -108,7 +108,7 @@ const testCases: ReadonlyArray<
         },
     },
     {
-        it: 'passes a bare object',
+        it: 'passes a basic object',
         inputs: [
             {
                 a: 'what',
@@ -118,7 +118,7 @@ const testCases: ReadonlyArray<
             defineShape({
                 a: '',
                 b: 0,
-                c: new RegExp('f'),
+                c: classShape(RegExp),
             }),
         ],
         throws: undefined,
@@ -454,18 +454,6 @@ const testCases: ReadonlyArray<
         throws: {
             matchConstructor: ShapeMismatchError,
         },
-    },
-    {
-        it: 'allows extra keys by default',
-        inputs: [
-            {a: undefined, b: '', c: null, d: 'lol extra stuff'},
-            defineShape({
-                a: undefined,
-                b: unionShape('', undefined),
-                c: null,
-            }),
-        ],
-        throws: undefined,
     },
     {
         it: 'fails on invalid or strings',
@@ -971,6 +959,9 @@ describe(assertValidShape.name, () => {
                 flags: '',
                 source: '',
             }),
+            {
+                allowExtraKeys: true,
+            },
         );
     });
 
@@ -1081,7 +1072,7 @@ describe(assertValidShape.name, () => {
         assertValidShape(instance, myShape);
     });
 
-    it('works with complex or', () => {
+    it('works with complex union', () => {
         const result = {
             id: randomString(),
             message: 'Batch verification completed.',
@@ -1162,7 +1153,9 @@ describe(assertValidShape.name, () => {
             unionShape(verificationResultInProgressShape, verificationResultCompletedShape),
         );
 
-        assertValidShape(result, VerificationResultShape);
+        assertValidShape(result, VerificationResultShape, {
+            allowExtraKeys: true,
+        });
 
         assert.deepEquals(
             VerificationResultShape.default,
@@ -1237,22 +1230,6 @@ describe(assertValidShape.name, () => {
 
     itCases(assertValidShape, [
         {
-            it: 'allows extra keys by shape',
-            inputs: [
-                {
-                    a: '',
-                    b: '',
-                },
-                defineShape({
-                    a: '',
-                }),
-                {
-                    allowExtraKeys: undefined,
-                },
-            ],
-            throws: undefined,
-        },
-        {
             it: 'accepts extra keys in items',
             inputs: [
                 [
@@ -1270,6 +1247,9 @@ describe(assertValidShape.name, () => {
                         a: Type.String(),
                     }),
                 ]),
+                {
+                    allowExtraKeys: true,
+                },
             ],
             throws: undefined,
         },
@@ -1291,30 +1271,10 @@ describe(assertValidShape.name, () => {
                         a: Type.String(),
                     }),
                 ]),
-                {
-                    allowExtraKeys: false,
-                },
             ],
             throws: {
                 matchMessage: '/2/b: Unexpected property',
             },
-        },
-        {
-            it: 'accepts extra keys in items schema',
-            inputs: [
-                [
-                    {
-                        a: 'hi',
-                        b: 'bye',
-                    },
-                ],
-                Type.Array(
-                    Type.Object({
-                        a: Type.String(),
-                    }),
-                ),
-            ],
-            throws: undefined,
         },
         {
             it: 'allows extra keys',
@@ -1347,9 +1307,6 @@ describe(assertValidShape.name, () => {
                         a: Type.String(),
                     }),
                 ),
-                {
-                    allowExtraKeys: false,
-                },
             ],
             throws: {
                 matchMessage: '/0/b: Unexpected property',
@@ -1371,6 +1328,9 @@ describe(assertValidShape.name, () => {
                         b: Type.String(),
                     }),
                 ]),
+                {
+                    allowExtraKeys: true,
+                },
             ],
             throws: undefined,
         },
@@ -1390,9 +1350,6 @@ describe(assertValidShape.name, () => {
                         b: Type.String(),
                     }),
                 ]),
-                {
-                    allowExtraKeys: false,
-                },
             ],
             throws: {
                 matchMessage: '/b: Unexpected property',
@@ -1427,9 +1384,6 @@ describe(assertValidShape.name, () => {
                 defineShape({
                     a: '',
                 }),
-                {
-                    allowExtraKeys: false,
-                },
             ],
             throws: {
                 matchMessage: '/b: Unexpected property',
@@ -1502,6 +1456,9 @@ describe(assertValidShape.name, () => {
                     a: '',
                     b: '',
                 }),
+                {
+                    allowExtraKeys: true,
+                },
             ],
             throws: undefined,
         },
@@ -1541,9 +1498,6 @@ describe(assertValidShape.name, () => {
                     a: '',
                     b: '',
                 }),
-                {
-                    allowExtraKeys: false,
-                },
             ],
             throws: {
                 matchMessage: '/c: Unexpected property',

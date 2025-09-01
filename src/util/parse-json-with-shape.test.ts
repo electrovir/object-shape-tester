@@ -36,6 +36,9 @@ describe(parseJsonWithShape.name, () => {
                 defineShape({
                     a: '',
                 }),
+                {
+                    allowExtraKeys: true,
+                },
             ],
             expect: {a: 'hi', b: 3},
         },
