@@ -1317,6 +1317,23 @@ describe(assertValidShape.name, () => {
             throws: undefined,
         },
         {
+            it: 'allows extra keys',
+            inputs: [
+                {
+                    a: '1',
+                    b: '2',
+                    c: '3',
+                },
+                defineShape({
+                    a: '',
+                }),
+                {
+                    allowExtraKeys: true,
+                },
+            ],
+            throws: undefined,
+        },
+        {
             it: 'blocks extra keys in items schema',
             inputs: [
                 [

@@ -138,18 +138,18 @@ function forceAdditionalProperties<T extends TSchema>(current: T, forcedValue: b
 
     if (check.isObject(current.properties)) {
         const newProps: AnyObject = {};
-        Object.entries(current.properties).forEach(
+        Object.entries(current.properties as TObject['properties']).forEach(
             ([
                 key,
                 value,
             ]) => {
-                newProps[key] = forceAdditionalProperties(value as TSchema, forcedValue);
+                newProps[key] = forceAdditionalProperties(value, forcedValue);
             },
         );
         clone.properties = newProps;
     }
 
-    clone.additionalProperties = false;
+    clone.additionalProperties = forcedValue;
 
     return clone;
 }
