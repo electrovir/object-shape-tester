@@ -1,6 +1,13 @@
 import {type PartialWithUndefined} from '@augment-vir/common';
-import {Type} from '@sinclair/typebox';
-import {defineShape} from '../shape/shape.js';
+import {
+    type TOptionalWithFlag,
+    type TSchema,
+    type TUndefined,
+    type TUnion,
+    Type,
+} from '@sinclair/typebox';
+import {TypeSystemPolicy} from '@sinclair/typebox/system';
+import {defineShape, type ShapeInitSchema} from '../shape/shape.js';
 
 /**
  * Creates a shape that allows an object property to be missing.
@@ -21,20 +28,34 @@ import {defineShape} from '../shape/shape.js';
  * checkValidShape({b: 0}, myShape); // `false`
  * ```
  */
-export function optionalShape<T>(
+export function optionalShape<T, const AlsoUndefined extends boolean = false>(
     shape: T,
     options: PartialWithUndefined<{
-        alsoUndefined: boolean;
+        /**
+         * - `true`: Allow the optional property to be present and possibly `undefined`.
+         * - `false`: If the property is present, it cannot be `undefined`.
+         *
+         * @default `false`
+         */
+        alsoUndefined: AlsoUndefined;
     }> = {},
-) {
-    const rawInnerSchema = defineShape(shape).$_schema;
+): TOptionalWithFlag<
+    AlsoUndefined extends true ? TUnion<[TUndefined, ShapeInitSchema<T>]> : ShapeInitSchema<T>,
+    true
+> {
+    TypeSystemPolicy.ExactOptionalPropertyTypes = true;
 
-    const innerSchema = options.alsoUndefined
+    const shapeSchema = defineShape(shape).$_schema;
+
+    const schema: TSchema = options.alsoUndefined
         ? Type.Union([
               Type.Undefined(),
-              rawInnerSchema,
+              shapeSchema,
           ])
-        : rawInnerSchema;
+        : shapeSchema;
 
-    return defineShape(Type.Optional(innerSchema));
+    return defineShape(Type.Optional(schema)) as TOptionalWithFlag<
+        AlsoUndefined extends true ? TUnion<[TUndefined, ShapeInitSchema<T>]> : ShapeInitSchema<T>,
+        true
+    >;
 }

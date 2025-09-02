@@ -21,6 +21,18 @@ describe(optionalShape.name, () => {
             b?: number;
         }>();
     });
+
+    it('does not make undefined', () => {
+        const myShape = defineShape({
+            a: optionalShape(''),
+        });
+
+        assert.tsType<Required<typeof myShape.runtimeType>['a']>().equals<string>();
+
+        assert.throws(() => assertValidShape({a: undefined}, myShape));
+        assertValidShape({}, myShape);
+    });
+
     it('works with schema optional', () => {
         const shape = defineShape({
             a: '',
@@ -46,7 +58,13 @@ describe(optionalShape.name, () => {
             a: string;
             b?: number | undefined;
         }>();
+        assert.tsType<Required<typeof shape.runtimeType>>().equals<{
+            a: string;
+            b: number | undefined;
+        }>();
+        assert.tsType<Required<typeof shape.runtimeType>['b']>().equals<number | undefined>();
         assertValidShape({a: 'hi', b: undefined}, shape);
+        assertValidShape({a: 'hi'}, shape);
     });
 
     itCases(
