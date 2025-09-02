@@ -8,14 +8,14 @@ describe(createCustomShape.name, () => {
     it('creates a custom shape', () => {
         const utcIsoStringShape = createCustomShape({
             default: new Date().toISOString() as UtcIsoString,
-            name: 'UtcIsoString',
+            name: 'TEST_TEST_UtcIsoString',
             checkValue(value) {
                 return isValidIsoString(value);
             },
         });
 
         assert.throws(() => assertValidShape('', utcIsoStringShape()), {
-            matchMessage: "Expected kind 'UtcIsoString'",
+            matchMessage: "Expected kind 'TEST_TEST_UtcIsoString'",
         });
         assertValidShape(new Date().toISOString(), utcIsoStringShape());
         assertValidShape(utcIsoStringShape().default, utcIsoStringShape());

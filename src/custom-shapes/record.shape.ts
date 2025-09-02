@@ -96,6 +96,7 @@ export function recordShape<K, V, IsPartial extends boolean>({
 }
 
 function setRecordShapeRegistry() {
+    /* node:coverage disable: this package transitively depends on itself so this gets executed outside of the coverage calculator. */
     if (!TypeRegistry.Has(recordShapeKind)) {
         TypeRegistry.Set(recordShapeKind, (options: RecordShapeOptions, value) => {
             if (typeof value !== 'object' || !value || Array.isArray(value)) {
@@ -123,6 +124,7 @@ function setRecordShapeRegistry() {
             return existingKeysMatch && hasAllKeys;
         });
     }
+    /* node:coverage enable */
 
     registerErrorMessage(recordShapeKind, (error) => {
         const schema = error.schema;
