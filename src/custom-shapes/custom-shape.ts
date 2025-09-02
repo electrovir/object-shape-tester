@@ -1,6 +1,8 @@
 import {Kind, Type, TypeRegistry} from '@sinclair/typebox';
 import {defineShape} from '../shape/shape.js';
 
+export {Kind} from '@sinclair/typebox';
+
 /**
  * Easily create a custom shape.
  *
