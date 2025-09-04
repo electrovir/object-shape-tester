@@ -1196,6 +1196,78 @@ describe(assertValidShape.name, () => {
         );
     });
 
+    it('works on example pull request vir config', () => {
+        const reviewRuleWithoutOverridesShape = defineShape({
+            autoAdd: optionalShape(true),
+            users: optionalShape(['']),
+            required: optionalShape(unionShape(exactShape('all'), 1)),
+            codeOwns: optionalShape(
+                unionShape(
+                    {
+                        paths: optionalShape([unionShape('', classShape(RegExp))]),
+                        notPaths: optionalShape([unionShape('', classShape(RegExp))]),
+                    },
+                    undefined,
+                ),
+            ),
+        });
+        const reviewRuleShape = defineShape(
+            intersectShape(reviewRuleWithoutOverridesShape, {
+                userOverrides: optionalShape(
+                    unionShape(
+                        recordShape({
+                            keys: '',
+                            values: reviewRuleWithoutOverridesShape,
+                        }),
+                        undefined,
+                    ),
+                ),
+            }),
+        );
+        const configShape = defineShape({
+            assignToAuthor: optionalShape(true),
+            waitForParentPullRequest: optionalShape(true),
+            blockNoMerge: optionalShape(true),
+            checkPrimaryReviewer: optionalShape(true),
+            ignoreDraft: optionalShape(true),
+            reviewRules: optionalShape([reviewRuleShape]),
+            insertCodeOwners: optionalShape(true),
+            scripts: optionalShape([
+                () => {},
+            ]),
+        });
+
+        const value: typeof configShape.runtimeType = {
+            assignToAuthor: true,
+            blockNoMerge: true,
+            checkPrimaryReviewer: false,
+            ignoreDraft: true,
+            insertCodeOwners: true,
+            waitForParentPullRequest: true,
+            reviewRules: [
+                // all devs
+                {
+                    autoAdd: true,
+                    users: [
+                        'electrovir',
+                    ],
+                    required: 1,
+                    userOverrides: {
+                        electrovir: {
+                            required: 0,
+                        },
+                    },
+                },
+                {
+                    autoAdd: false,
+                    users: ['electrovir'],
+                },
+            ],
+        };
+
+        assertValidShape(value, configShape);
+    });
+
     it('errors keys go into arrays', () => {
         assert.throws(
             () => {
