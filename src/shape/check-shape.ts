@@ -92,7 +92,7 @@ export function assertWrapValidShape<SpecificShape extends Shape | TSchema>(
     shape: SpecificShape,
     options: CheckShapeOptions = {},
     failureMessage?: string | undefined,
-): RuntimeTypeOf<SpecificShape> | undefined {
+): RuntimeTypeOf<SpecificShape> {
     assertValidShape(value, shape, options, failureMessage);
     return value;
 }

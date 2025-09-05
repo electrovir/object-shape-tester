@@ -1621,6 +1621,10 @@ describe(checkWrapValidShape.name, () => {
 });
 
 describe(assertWrapValidShape.name, () => {
+    it('has proper types', () => {
+        assert.tsType(assertWrapValidShape('', defineShape(''))).equals<string>();
+    });
+
     const testCasesForAssertWrapValidShape: ReadonlyArray<
         FunctionTestCase<typeof assertWrapValidShape>
     > = testCases.map((testCase): FunctionTestCase<typeof assertWrapValidShape> => {
