@@ -7,7 +7,7 @@ import {
     Type,
 } from '@sinclair/typebox';
 import {TypeSystemPolicy} from '@sinclair/typebox/system';
-import {defineShape, type ShapeInitSchema} from '../shape/shape.js';
+import {defineShape, type Shape, type ShapeInitSchema} from '../shape/shape.js';
 
 /**
  * Creates a shape that allows an object property to be missing.
@@ -39,9 +39,11 @@ export function optionalShape<T, const AlsoUndefined extends boolean = false>(
          */
         alsoUndefined: AlsoUndefined;
     }> = {},
-): TOptionalWithFlag<
-    AlsoUndefined extends true ? TUnion<[TUndefined, ShapeInitSchema<T>]> : ShapeInitSchema<T>,
-    true
+): Shape<
+    TOptionalWithFlag<
+        AlsoUndefined extends true ? TUnion<[TUndefined, ShapeInitSchema<T>]> : ShapeInitSchema<T>,
+        true
+    >
 > {
     TypeSystemPolicy.ExactOptionalPropertyTypes = true;
 
@@ -54,8 +56,12 @@ export function optionalShape<T, const AlsoUndefined extends boolean = false>(
           ])
         : shapeSchema;
 
-    return defineShape(Type.Optional(schema)) as TOptionalWithFlag<
-        AlsoUndefined extends true ? TUnion<[TUndefined, ShapeInitSchema<T>]> : ShapeInitSchema<T>,
-        true
+    return defineShape(Type.Optional(schema)) as Shape<
+        TOptionalWithFlag<
+            AlsoUndefined extends true
+                ? TUnion<[TUndefined, ShapeInitSchema<T>]>
+                : ShapeInitSchema<T>,
+            true
+        >
     >;
 }

@@ -22,6 +22,12 @@ describe(optionalShape.name, () => {
         }>();
     });
 
+    it('can be used on non-property values without affecting it', () => {
+        const shape = defineShape(optionalShape(''));
+        assert.tsType<typeof shape.runtimeType>().equals<string>();
+        assertValidShape('hello there', shape);
+    });
+
     it('does not make undefined', () => {
         const myShape = defineShape({
             a: optionalShape(''),

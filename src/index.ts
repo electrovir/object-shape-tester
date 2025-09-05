@@ -4,6 +4,7 @@ export * from './custom-shapes/enum.shape.js';
 export * from './custom-shapes/exact.shape.js';
 export * from './custom-shapes/intersect.shape.js';
 export * from './custom-shapes/non-empty-string.shape.js';
+export * from './custom-shapes/nullable.shape.js';
 export * from './custom-shapes/optional.shape.js';
 export * from './custom-shapes/range.shape.js';
 export * from './custom-shapes/record.shape.js';
