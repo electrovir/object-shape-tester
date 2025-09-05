@@ -1,9 +1,27 @@
-import {describe, itCases} from '@augment-vir/test';
+import {assert} from '@augment-vir/assert';
+import {describe, it, itCases} from '@augment-vir/test';
 import {ShapeMismatchError} from '../errors/shape-mismatch.error.js';
 import {defineShape} from '../shape/shape.js';
 import {parseJsonWithShape} from './parse-json-with-shape.js';
 
 describe(parseJsonWithShape.name, () => {
+    it('returns the proper type', () => {
+        assert
+            .tsType(
+                parseJsonWithShape(
+                    JSON.stringify({a: 'hi', b: 3}),
+                    defineShape({
+                        a: '',
+                        b: 1,
+                    }),
+                ),
+            )
+            .equals<{
+                a: string;
+                b: number;
+            }>();
+    });
+
     itCases(parseJsonWithShape, [
         {
             it: 'parses json',

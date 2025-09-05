@@ -21,7 +21,7 @@ export function parseJsonWithShape<const CurrentShape extends Shape>(
     shape: Readonly<CurrentShape>,
     options: CheckShapeOptions = {},
     failureMessage?: string | undefined,
-): Shape['runtimeType'] {
+): CurrentShape['runtimeType'] {
     const parsed = JSON.parse(json);
     return assertWrapValidShape(parsed, shape, options, failureMessage);
 }
