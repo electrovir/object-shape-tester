@@ -2,7 +2,8 @@ import {assertWrapValidShape, type CheckShapeOptions} from '../shape/check-shape
 import {type Shape} from '../shape/shape.js';
 
 /**
- * Parse a JSON string and verify it against the given shape definition.
+ * Parse a JSON string and verify it against the given shape definition. Also handles top level
+ * empty strings and `'undefined'` (both are converted to `undefined`).
  *
  * @category Util
  * @example
@@ -22,6 +23,6 @@ export function parseJsonWithShape<const CurrentShape extends Shape>(
     options: CheckShapeOptions = {},
     failureMessage?: string | undefined,
 ): CurrentShape['runtimeType'] {
-    const parsed = JSON.parse(json);
+    const parsed = json && json !== 'undefined' ? JSON.parse(json) : undefined;
     return assertWrapValidShape(parsed, shape, options, failureMessage);
 }

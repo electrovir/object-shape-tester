@@ -1,5 +1,6 @@
 import {assert} from '@augment-vir/assert';
 import {describe, it, itCases} from '@augment-vir/test';
+import {nullableShape} from '../custom-shapes/nullable.shape.js';
 import {ShapeMismatchError} from '../errors/shape-mismatch.error.js';
 import {defineShape} from '../shape/shape.js';
 import {parseJsonWithShape} from './parse-json-with-shape.js';
@@ -33,6 +34,22 @@ describe(parseJsonWithShape.name, () => {
                 }),
             ],
             expect: {a: 'hi', b: 3},
+        },
+        {
+            it: 'handles empty string',
+            inputs: [
+                '',
+                nullableShape(-1),
+            ],
+            expect: undefined,
+        },
+        {
+            it: 'handles undefined string',
+            inputs: [
+                'undefined',
+                nullableShape(-1),
+            ],
+            expect: undefined,
         },
         {
             it: 'rejects invalid shape',
