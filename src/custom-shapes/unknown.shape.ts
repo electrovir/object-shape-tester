@@ -1,5 +1,5 @@
-import {Type} from '@sinclair/typebox';
-import {defineShape} from '../shape/shape.js';
+import {type TUnsafe, Type} from '@sinclair/typebox';
+import {defineShape, type Shape} from '../shape/shape.js';
 
 /**
  * Creates a shape that allows any value. This should be used sparingly.
@@ -17,6 +17,6 @@ import {defineShape} from '../shape/shape.js';
  * checkValidShape({}, myShape); // `true`
  * ```
  */
-export function unknownShape(defaultValue?: unknown) {
-    return defineShape(Type.Unknown({default: defaultValue}));
+export function unknownShape<T = unknown>(defaultValue?: unknown): Shape<TUnsafe<T>> {
+    return defineShape(Type.Unknown({default: defaultValue})) as Shape<TUnsafe<T>>;
 }

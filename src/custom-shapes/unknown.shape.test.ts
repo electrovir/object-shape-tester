@@ -19,6 +19,10 @@ describe(unknownShape.name, () => {
         assert.strictEquals(undefined, myUnknown.default as any);
         assert.tsType<typeof myUnknown.runtimeType>().equals<unknown>();
     });
+    it('allows any type parameter', () => {
+        const myUnknown = unknownShape<RegExp>();
+        assert.tsType<typeof myUnknown.runtimeType>().equals<RegExp>();
+    });
     it('optionally allows a single input', () => {
         /** Omitting inputs entirely is allowed. */
         unknownShape();
