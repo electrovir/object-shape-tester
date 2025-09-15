@@ -46,13 +46,13 @@
         "test:spelling": "virmator spellcheck"
     },
     "dependencies": {
-        "@augment-vir/assert": "^31.35.0",
-        "@augment-vir/common": "^31.35.0",
+        "@augment-vir/assert": "^31.36.0",
+        "@augment-vir/common": "^31.36.0",
         "@sinclair/typebox": "^0.34.41",
-        "type-fest": "^4.41.0"
+        "type-fest": "^5.0.0"
     },
     "devDependencies": {
-        "@augment-vir/test": "^31.35.0",
+        "@augment-vir/test": "^31.36.0",
         "@eslint/eslintrc": "^3.3.1",
         "@eslint/js": "9.35.0",
         "@stylistic/eslint-plugin": "^5.3.1",
@@ -69,7 +69,7 @@
         "esbuild": "^0.25.9",
         "eslint": "^9.35.0",
         "eslint-config-prettier": "^10.1.8",
-        "eslint-plugin-jsdoc": "^56.1.2",
+        "eslint-plugin-jsdoc": "^57.0.8",
         "eslint-plugin-monorepo-cop": "^1.0.2",
         "eslint-plugin-playwright": "^2.2.2",
         "eslint-plugin-prettier": "^5.5.4",
@@ -89,7 +89,7 @@
         "prettier-plugin-sort-json": "^4.1.1",
         "prettier-plugin-toml": "^2.0.6",
         "runstorm": "^0.6.2",
-        "typedoc": "^0.28.12",
+        "typedoc": "^0.28.13",
         "typescript": "^5.9.2",
         "typescript-eslint": "^8.43.0",
         "virmator": "^14.0.3",
