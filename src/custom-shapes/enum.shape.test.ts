@@ -32,8 +32,6 @@ describe(enumShape.name, () => {
         assert.strictEquals(
             error.message.trim(),
             `Shape mismatch:
-    Got 'invalid'.
-
     Expected union value:
         Expected 'first'
         Expected 'second'

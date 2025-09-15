@@ -1,5 +1,5 @@
 import {check} from '@augment-vir/assert';
-import {combineErrorMessages, indent, stringify} from '@augment-vir/common';
+import {combineErrorMessages, indent} from '@augment-vir/common';
 import {type ValueError} from '@sinclair/typebox/errors';
 
 /**
@@ -18,7 +18,7 @@ export class ShapeMismatchError extends TypeError {
 
         const message = combineErrorMessages(
             failureMessage,
-            `Shape mismatch:\n    Got ${stringify(value)}.\n\n${indent(errorMessages, 1)}`,
+            `Shape mismatch:\n${indent(errorMessages, 1)}`,
         );
 
         super(message);
