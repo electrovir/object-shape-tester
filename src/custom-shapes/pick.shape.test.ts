@@ -1,6 +1,6 @@
 import {assert} from '@augment-vir/assert';
 import {describe, it} from '@augment-vir/test';
-import {assertValidShape} from '../shape/check-shape.js';
+import {assertValidShape, checkValidShape} from '../shape/check-shape.js';
 import {defineShape} from '../shape/shape.js';
 import {pickShape} from './pick.shape.js';
 
@@ -12,10 +12,10 @@ describe(pickShape.name, () => {
                 goodbye: '',
                 when: -1,
             }),
-            [
-                'goodbye',
-                'when',
-            ],
+            {
+                goodbye: true,
+                when: true,
+            },
         );
 
         assert.tsType<typeof pickedShape.runtimeType>().equals<{
@@ -30,6 +30,76 @@ describe(pickShape.name, () => {
             },
             pickedShape,
         );
+        assert.isFalse(
+            checkValidShape(
+                {
+                    goodbye: 'hi',
+                    when: 10,
+                    hello: 'another value',
+                },
+                pickedShape,
+            ),
+        );
+        assertValidShape(
+            {
+                goodbye: 'hi',
+                when: 10,
+                hello: 'another value',
+            },
+            pickedShape,
+            {
+                allowExtraKeys: true,
+            },
+        );
+    });
+    it('works with a plain object input', () => {
+        const pickedShape = pickShape(
+            {
+                hello: '',
+                goodbye: '',
+                when: -1,
+            },
+            {
+                goodbye: true,
+                when: true,
+            },
+        );
+
+        assert.tsType<typeof pickedShape.runtimeType>().equals<
+            Readonly<{
+                goodbye: string;
+                when: number;
+            }>
+        >();
+
+        assertValidShape(
+            {
+                goodbye: 'hi',
+                when: 10,
+            },
+            pickedShape,
+        );
+        assert.isFalse(
+            checkValidShape(
+                {
+                    goodbye: 'hi',
+                    when: 10,
+                    hello: 'another value',
+                },
+                pickedShape,
+            ),
+        );
+        assertValidShape(
+            {
+                goodbye: 'hi',
+                when: 10,
+                hello: 'another value',
+            },
+            pickedShape,
+            {
+                allowExtraKeys: true,
+            },
+        );
     });
     it('errors on invalid key pick', () => {
         const pickedShape = pickShape(
@@ -38,12 +108,25 @@ describe(pickShape.name, () => {
                 goodbye: '',
                 when: -1,
             }),
-            [
-                'goodbye',
-                'when',
+            {
+                goodbye: true,
+                when: true,
                 // @ts-expect-error: intentionally incorrect key
-                'not a key',
-            ],
+                'not a key': true,
+            },
+        );
+    });
+    it('does not allow nested selection', () => {
+        const pickedShape = pickShape(
+            defineShape({
+                hello: '',
+                goodbye: '',
+                when: -1,
+            }),
+            {
+                goodbye: true,
+                when: true,
+            },
         );
     });
 });
