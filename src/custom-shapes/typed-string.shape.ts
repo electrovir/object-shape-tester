@@ -1,8 +1,6 @@
 import {Type} from '@sinclair/typebox';
 import {defineShape} from '../shape/shape.js';
 
-export {type Uuid} from '@augment-vir/common';
-
 /**
  * Creates a shape that requires a string and gives it a specific type. This does _not_ apply any
  * extra type safety beyond string checking.
