@@ -10,6 +10,7 @@ export * from './custom-shapes/pick.shape.js';
 export * from './custom-shapes/range.shape.js';
 export * from './custom-shapes/record.shape.js';
 export * from './custom-shapes/tuple.shape.js';
+export * from './custom-shapes/typed-string.shape.js';
 export * from './custom-shapes/union.shape.js';
 export * from './custom-shapes/unknown.shape.js';
 export * from './custom-shapes/uuid.shape.js';
