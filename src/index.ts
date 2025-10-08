@@ -1,5 +1,6 @@
 export * from './custom-shapes/class.shape.js';
 export * from './custom-shapes/custom-shape.js';
+export * from './custom-shapes/ensure-nullable.shape.js';
 export * from './custom-shapes/enum.shape.js';
 export * from './custom-shapes/exact.shape.js';
 export * from './custom-shapes/intersect.shape.js';
@@ -20,3 +21,4 @@ export * from './errors/shape-mismatch.error.js';
 export * from './shape/check-shape.js';
 export * from './shape/shape.js';
 export * from './util/parse-json-with-shape.js';
+export * from './util/typebox-util.js';
