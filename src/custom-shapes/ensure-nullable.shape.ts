@@ -1,14 +1,14 @@
 import {mapObjectValues} from '@augment-vir/common';
 import {
     Type,
+    type OptionalKind,
     type TNull,
-    type TOptionalWithFlag,
     type TSchema,
     type TUndefined,
-    type TUnion,
+    type TUnsafe,
 } from '@sinclair/typebox';
-import {type IsAny, type OptionalKeysOf, type RequiredKeysOf} from 'type-fest';
-import {defineShape, type Shape, type ShapeInitSchema, type ShapeInitType} from '../shape/shape.js';
+import {type IsAny, type OptionalKeysOf, type RequiredKeysOf, type Simplify} from 'type-fest';
+import {defineShape, type Shape, type ShapeInitType} from '../shape/shape.js';
 import {
     canSchemaBeNullable,
     insertUnion,
@@ -33,34 +33,45 @@ export type IsNullable<T> =
             : false;
 
 /**
+ * Checks if a schema is possibly `undefined`, `null`, or optional. `any` is included.
+ *
+ * @category Internal
+ */
+export type IsNullableSchema<T extends TSchema> =
+    IsNullable<ShapeInitType<T>> extends true
+        ? true
+        : T extends TNull
+          ? true
+          : T extends TUndefined
+            ? true
+            : T[typeof OptionalKind] extends 'Optional'
+              ? true
+              : false;
+
+/**
  * Ensures that any property that is optional, potentially `null` or `undefined` is fully optional,
  * possibly `null` or `undefined`.
  *
  * @category Internal
  */
-export type EnsureNullableType<Original> = {
-    [Key in RequiredKeysOf<Extract<Original, object>> as IsNullable<Original[Key]> extends true
-        ? never
-        : Key]: Original[Key];
-} & {
-    [Key in OptionalKeysOf<Extract<Original, object>>]?: Original[Key] | undefined | null;
-} & {
-    [Key in RequiredKeysOf<Extract<Original, object>> as IsNullable<Original[Key]> extends true
-        ? Key
-        : never]?: Original[Key] | undefined | null;
-};
-
-/**
- * Makes a schema that ensures that any property that is optional, potentially `null` or `undefined`
- * is fully optional, possibly `null` or `undefined`.
- *
- * @category Internal
- */
-export type EnsureNullableSchema<Original> = {
-    [Key in keyof Original]: IsNullable<Original[Key]> extends true
-        ? TOptionalWithFlag<TUnion<[ShapeInitSchema<Original[Key]>, TUndefined, TNull]>, true>
-        : Original[Key];
-};
+export type EnsureNullableType<Original> = Original extends object
+    ? Simplify<
+          {
+              [Key in RequiredKeysOf<Original> as IsNullable<Original[Key]> extends true
+                  ? never
+                  : Key]: EnsureNullableType<Original[Key]>;
+          } & {
+              [Key in OptionalKeysOf<Original>]?:
+                  | EnsureNullableType<Original[Key]>
+                  | undefined
+                  | null;
+          } & {
+              [Key in RequiredKeysOf<Original> as IsNullable<Original[Key]> extends true
+                  ? Key
+                  : never]?: EnsureNullableType<Original[Key]> | undefined | null;
+          }
+      >
+    : Original;
 
 /**
  * Creates a shape from an object shape where any property that can be any kind of nullable
@@ -98,7 +109,7 @@ export type EnsureNullableSchema<Original> = {
  */
 export function ensureNullableShape<Original>(
     originalShape: Original,
-): Shape<EnsureNullableSchema<ShapeInitType<Original>>> {
+): Shape<TUnsafe<EnsureNullableType<ShapeInitType<Original>>>> {
     const shape = defineShape(originalShape);
 
     return defineShape(

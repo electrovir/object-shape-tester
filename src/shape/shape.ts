@@ -225,7 +225,9 @@ export type ShapeInitType<Init> =
         ? any
         : IsUnknown<Init> extends true
           ? any
-          : Static<ShapeInitSchema<Init>>;
+          : Init extends Shape
+            ? Init['runtimeType']
+            : Static<ShapeInitSchema<Init>>;
 /**
  * Converts a shape init into its default value type.
  *

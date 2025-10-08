@@ -1,15 +1,21 @@
 import {assert} from '@augment-vir/assert';
 import {type AnyObject} from '@augment-vir/common';
 import {describe, it} from '@augment-vir/test';
-import {Type} from '@sinclair/typebox';
+import {Type, type TNull, type TOptional, type TString, type TUndefined} from '@sinclair/typebox';
+import {type OptionalKeysOf} from 'type-fest';
 import {
     assertValidShape,
+    defineShape,
     ensureNullableShape,
     intersectShape,
+    nullableShape,
     unionShape,
     type EnsureNullableType,
     type IsNullable,
+    type ShapeInitSchema,
+    type ShapeInitType,
 } from '../index.js';
+import {type IsNullableSchema} from './ensure-nullable.shape.js';
 
 describe('IsNullable', () => {
     it('accepts null', () => {
@@ -30,6 +36,22 @@ describe('IsNullable', () => {
         assert.tsType<IsNullable<string>>().equals<false>();
         assert.tsType<IsNullable<number>>().equals<false>();
         assert.tsType<IsNullable<AnyObject>>().equals<false>();
+    });
+});
+
+describe('IsNullableSchema', () => {
+    it('accepts nullable schema', () => {
+        assert.tsType<IsNullableSchema<TNull>>().equals<true>();
+        assert.tsType<IsNullableSchema<TUndefined>>().equals<true>();
+        assert.tsType<IsNullableSchema<TOptional<TString>>>().equals<true>();
+
+        assert.tsType<IsNullableSchema<ShapeInitSchema<null>>>().equals<true>();
+        assert.tsType<IsNullableSchema<ShapeInitSchema<undefined>>>().equals<true>();
+    });
+    it('rejects non-nullable schema', () => {
+        assert.tsType<IsNullableSchema<ShapeInitSchema<''>>>().equals<false>();
+        assert.tsType<IsNullableSchema<TString>>().equals<false>();
+        assert.tsType<IsNullableSchema<ShapeInitSchema<-1>>>().equals<false>();
     });
 });
 
@@ -94,7 +116,7 @@ describe(ensureNullableShape.name, () => {
             e: number;
             nested?:
                 | {
-                      f: string | null;
+                      f?: string | null;
                   }
                 | null
                 | undefined;
@@ -189,6 +211,66 @@ describe(ensureNullableShape.name, () => {
                 myShape,
             ),
         );
+    });
+
+    it('works with nullableShape', () => {
+        const innerShape = intersectShape(
+            {
+                id: '',
+                name: '',
+                isAdmin: false,
+            },
+            defineShape({
+                isBlocked: nullableShape(false),
+
+                settings: nullableShape({
+                    disabledNotifications: unionShape(null, false),
+                }),
+            }),
+        );
+
+        const myShape = ensureNullableShape(innerShape);
+
+        assert
+            .tsType<
+                Extract<ShapeInitType<typeof myShape>['settings'], object> extends never
+                    ? false
+                    : true
+            >()
+            .equals<true>();
+        // eslint-disable-next-line @typescript-eslint/no-redundant-type-constituents
+        assert.tsType<string | never>().equals<string>();
+
+        type ShapeInitTypeTest = ShapeInitType<typeof innerShape>;
+        assert.tsType<ShapeInitTypeTest>().slowEquals<{
+            isBlocked?: boolean | null | undefined;
+            settings?:
+                | {
+                      disabledNotifications: boolean | null;
+                  }
+                | null
+                | undefined;
+            id: string;
+            name: string;
+            isAdmin: boolean;
+        }>();
+
+        type OptionalKeysTest = OptionalKeysOf<Extract<ShapeInitType<typeof innerShape>, object>>;
+
+        assert.tsType<OptionalKeysTest>().equals<'isBlocked' | 'settings'>();
+
+        assert.tsType<typeof myShape.runtimeType>().slowEquals<{
+            id: string;
+            name: string;
+            isAdmin: boolean;
+            isBlocked?: boolean | null | undefined;
+            settings?:
+                | undefined
+                | null
+                | {
+                      disabledNotifications?: boolean | null | undefined;
+                  };
+        }>();
     });
 
     it('works on intersections', () => {
