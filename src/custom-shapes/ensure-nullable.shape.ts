@@ -7,7 +7,13 @@ import {
     type TUndefined,
     type TUnsafe,
 } from '@sinclair/typebox';
-import {type IsAny, type OptionalKeysOf, type RequiredKeysOf, type Simplify} from 'type-fest';
+import {
+    type IsAny,
+    type OptionalKeysOf,
+    type Primitive,
+    type RequiredKeysOf,
+    type Simplify,
+} from 'type-fest';
 import {defineShape, type Shape, type ShapeInitType} from '../shape/shape.js';
 import {
     canSchemaBeNullable,
@@ -54,24 +60,28 @@ export type IsNullableSchema<T extends TSchema> =
  *
  * @category Internal
  */
-export type EnsureNullableType<Original> = Original extends object
-    ? Simplify<
+export type EnsureNullableType<Original> = Original extends Primitive
+    ? Original
+    : Simplify<
           {
-              [Key in RequiredKeysOf<Original> as IsNullable<Original[Key]> extends true
+              [Key in RequiredKeysOf<Extract<Original, object>> as IsNullable<
+                  Original[Key]
+              > extends true
                   ? never
                   : Key]: EnsureNullableType<Original[Key]>;
           } & {
-              [Key in OptionalKeysOf<Original>]?:
+              [Key in OptionalKeysOf<Extract<Original, object>>]?:
                   | EnsureNullableType<Original[Key]>
                   | undefined
                   | null;
           } & {
-              [Key in RequiredKeysOf<Original> as IsNullable<Original[Key]> extends true
+              [Key in RequiredKeysOf<Extract<Original, object>> as IsNullable<
+                  Original[Key]
+              > extends true
                   ? Key
                   : never]?: EnsureNullableType<Original[Key]> | undefined | null;
           }
-      >
-    : Original;
+      >;
 
 /**
  * Creates a shape from an object shape where any property that can be any kind of nullable
