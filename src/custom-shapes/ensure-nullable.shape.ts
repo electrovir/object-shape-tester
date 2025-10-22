@@ -62,26 +62,30 @@ export type IsNullableSchema<T extends TSchema> =
  */
 export type EnsureNullableType<Original> = Original extends Primitive
     ? Original
-    : Simplify<
-          {
-              [Key in RequiredKeysOf<Extract<Original, object>> as IsNullable<
-                  Original[Key]
-              > extends true
-                  ? never
-                  : Key]: EnsureNullableType<Original[Key]>;
-          } & {
-              [Key in OptionalKeysOf<Extract<Original, object>>]?:
-                  | EnsureNullableType<Original[Key]>
-                  | undefined
-                  | null;
-          } & {
-              [Key in RequiredKeysOf<Extract<Original, object>> as IsNullable<
-                  Original[Key]
-              > extends true
-                  ? Key
-                  : never]?: EnsureNullableType<Original[Key]> | undefined | null;
-          }
-      >;
+    : Original extends ReadonlyArray<any>
+      ? {
+            [Key in keyof Original]: EnsureNullableType<Original[Key]>;
+        }
+      : Simplify<
+            {
+                [Key in RequiredKeysOf<Extract<Original, object>> as IsNullable<
+                    Original[Key]
+                > extends true
+                    ? never
+                    : Key]: EnsureNullableType<Original[Key]>;
+            } & {
+                [Key in OptionalKeysOf<Extract<Original, object>>]?:
+                    | EnsureNullableType<Original[Key]>
+                    | undefined
+                    | null;
+            } & {
+                [Key in RequiredKeysOf<Extract<Original, object>> as IsNullable<
+                    Original[Key]
+                > extends true
+                    ? Key
+                    : never]?: EnsureNullableType<Original[Key]> | undefined | null;
+            }
+        >;
 
 /**
  * Creates a shape from an object shape where any property that can be any kind of nullable

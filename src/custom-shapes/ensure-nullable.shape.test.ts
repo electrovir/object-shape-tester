@@ -88,6 +88,16 @@ describe('EnsureNullable', () => {
 });
 
 describe(ensureNullableShape.name, () => {
+    it('works with a nested array', () => {
+        const myShape = ensureNullableShape({
+            a: [''],
+        });
+
+        assert.tsType<typeof myShape.runtimeType>().equals<{
+            a: string[];
+        }>;
+    });
+
     it('makes null properties optional + undefined', () => {
         const myShape = ensureNullableShape({
             a: '',
