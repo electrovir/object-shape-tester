@@ -1,6 +1,6 @@
 {
     "name": "object-shape-tester",
-    "version": "6.9.3",
+    "version": "6.10.0",
     "description": "Test object properties and value types.",
     "keywords": [
         "object",
@@ -55,9 +55,9 @@
         "@augment-vir/test": "^31.51.1",
         "@eslint/eslintrc": "^3.3.1",
         "@eslint/js": "9.39.1",
-        "@stylistic/eslint-plugin": "^5.5.0",
+        "@stylistic/eslint-plugin": "^5.6.1",
         "@stylistic/eslint-plugin-ts": "^4.4.1",
-        "@typescript-eslint/eslint-plugin": "^8.46.2",
+        "@typescript-eslint/eslint-plugin": "^8.47.0",
         "@web/dev-server-esbuild": "^1.0.4",
         "@web/test-runner": "^0.20.2",
         "@web/test-runner-commands": "^0.9.0",
@@ -91,9 +91,9 @@
         "runstorm": "^0.6.2",
         "typedoc": "^0.28.14",
         "typescript": "^5.9.3",
-        "typescript-eslint": "^8.46.2",
+        "typescript-eslint": "^8.47.0",
         "virmator": "^14.2.2",
-        "vite": "^7.2.2",
+        "vite": "^7.2.4",
         "vite-tsconfig-paths": "^5.1.4"
     },
     "engines": {
