@@ -297,6 +297,27 @@ describe(recordShape.name, () => {
             },
         ],
     );
+
+    /** This does not work. Don't do it. */
+    // it('works when intersected with an object schema', () => {
+    //     const myShape = intersectShape(
+    //         recordShape({
+    //             keys: '',
+    //             values: -1,
+    //         }),
+    //         defineShape({
+    //             stuff: '',
+    //         }),
+    //     );
+
+    //     assertValidShape(
+    //         {
+    //             stuff: 'hi',
+    //             somethingElse: 21,
+    //         },
+    //         myShape,
+    //     );
+    // });
 });
 
 describe(extractFiniteKeys.name, () => {

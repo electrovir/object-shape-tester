@@ -3,7 +3,7 @@ import {describe, it, itCases} from '@augment-vir/test';
 import {nullableShape} from '../custom-shapes/nullable.shape.js';
 import {ShapeMismatchError} from '../errors/shape-mismatch.error.js';
 import {defineShape} from '../shape/shape.js';
-import {parseJsonWithShape} from './parse-json-with-shape.js';
+import {parseJsonWithShape} from './json.js';
 
 describe(parseJsonWithShape.name, () => {
     it('returns the proper type', () => {

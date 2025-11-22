@@ -4,7 +4,9 @@ import {type UnionToIntersection} from 'type-fest';
 import {defineShape, type ShapeInitType} from '../shape/shape.js';
 
 /**
- * Creates a shape that merges multiple objects together.
+ * Creates a shape that merges multiple objects together. Note that intersecting fixed properties
+ * with a `recordShape` (or other generic mapped object keys) is not supported and will break in
+ * many ways.
  *
  * @category Shape
  * @example

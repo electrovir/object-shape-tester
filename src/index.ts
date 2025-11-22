@@ -20,5 +20,5 @@ export * from './errors/error-message.js';
 export * from './errors/shape-mismatch.error.js';
 export * from './shape/check-shape.js';
 export * from './shape/shape.js';
-export * from './util/parse-json-with-shape.js';
+export * from './util/json.js';
 export * from './util/typebox-util.js';
