@@ -76,7 +76,7 @@ export function assertValidShape<SpecificShape extends Shape | TSchema>(
 
     const errors = Array.from(getCompiledSchema(shape, options).Errors(value));
     if (errors.length) {
-        throw new ShapeMismatchError(value, errors, failureMessage);
+        throw new ShapeMismatchError(errors, failureMessage);
     }
 }
 

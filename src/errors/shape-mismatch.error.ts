@@ -10,7 +10,6 @@ import {type ValueError} from '@sinclair/typebox/errors';
 export class ShapeMismatchError extends TypeError {
     public override name = 'ShapeMismatchError';
     constructor(
-        public readonly value: unknown,
         public readonly errors: ReadonlyArray<Readonly<ValueError>>,
         public readonly failureMessage?: string | undefined,
     ) {
