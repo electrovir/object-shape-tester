@@ -9,6 +9,7 @@ export * from './custom-shapes/nullable.shape.js';
 export * from './custom-shapes/optional.shape.js';
 export * from './custom-shapes/partial-shape.js';
 export * from './custom-shapes/pick.shape.js';
+export * from './custom-shapes/primitive.shape.js';
 export * from './custom-shapes/range.shape.js';
 export * from './custom-shapes/record.shape.js';
 export * from './custom-shapes/tuple.shape.js';
