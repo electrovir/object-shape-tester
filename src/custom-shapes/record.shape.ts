@@ -77,22 +77,24 @@ export function recordShape<K, V, IsPartial extends boolean>({
     const keysShape = defineKeysShape(keys);
     const valuesShape = defineShape(values);
 
-    return Type.Unsafe<
-        IsEqual<IsPartial, true> extends true
-            ? Partial<Record<Extract<ShapeInitType<K>, PropertyKey>, ShapeInitType<V>>>
-            : Record<Extract<ShapeInitType<K>, PropertyKey>, ShapeInitType<V>>
-    >({
-        [Kind]: recordShapeKind,
-        keysShape,
-        valuesShape,
-        isPartial: !!partial,
-        additionalProperties: !!additionalProperties,
-        default: createDefaultValue({
-            isPartial: !!partial,
+    return defineShape(
+        Type.Unsafe<
+            IsEqual<IsPartial, true> extends true
+                ? Partial<Record<Extract<ShapeInitType<K>, PropertyKey>, ShapeInitType<V>>>
+                : Record<Extract<ShapeInitType<K>, PropertyKey>, ShapeInitType<V>>
+        >({
+            [Kind]: recordShapeKind,
             keysShape,
             valuesShape,
-        }),
-    } satisfies RecordShapeOptions & SchemaOptions);
+            isPartial: !!partial,
+            additionalProperties: !!additionalProperties,
+            default: createDefaultValue({
+                isPartial: !!partial,
+                keysShape,
+                valuesShape,
+            }),
+        } satisfies RecordShapeOptions & SchemaOptions),
+    );
 }
 
 function setRecordShapeRegistry() {

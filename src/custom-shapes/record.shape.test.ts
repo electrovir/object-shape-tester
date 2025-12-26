@@ -1,5 +1,7 @@
 import {assert} from '@augment-vir/assert';
 import {describe, it, itCases} from '@augment-vir/test';
+import {Type} from '@sinclair/typebox';
+import {ShapeMismatchError} from '../errors/shape-mismatch.error.js';
 import {assertValidShape, type CheckShapeOptions} from '../shape/check-shape.js';
 import {defineShape} from '../shape/shape.js';
 import {classShape} from './class.shape.js';
@@ -54,6 +56,43 @@ describe(recordShape.name, () => {
                     },
                 ],
                 throws: undefined,
+            },
+            {
+                it: 'accepts keys defined with a schema',
+                inputs: [
+                    {
+                        a: 1,
+                        b: 2,
+                    },
+                    {
+                        keys: Type.Union([
+                            Type.Const('a'),
+                            Type.Const('b'),
+                        ]),
+                        values: -1,
+                    },
+                ],
+                throws: undefined,
+            },
+            {
+                it: 'rejects keys defined with a schema',
+                inputs: [
+                    {
+                        a: 1,
+                        b: 2,
+                    },
+                    {
+                        keys: Type.Union([
+                            Type.Const('a'),
+                            Type.Const('five'),
+                        ]),
+                        values: -1,
+                    },
+                ],
+                throws: {
+                    matchConstructor: ShapeMismatchError,
+                    matchMessage: 'Missing keys: five',
+                },
             },
             {
                 it: 'accepts an array of keys',
