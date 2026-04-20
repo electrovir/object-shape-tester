@@ -44,7 +44,9 @@ describe(enumShape.name, () => {
         // @ts-expect-error: wrong input
         enumShape('input must be an object');
         enumShape(TestEnum);
-        enumShape({objectIs: 'okay too'});
+        enumShape({
+            objectIs: 'okay too',
+        });
     });
 
     itCases(

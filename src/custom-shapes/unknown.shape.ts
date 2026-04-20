@@ -18,5 +18,9 @@ import {defineShape, type Shape} from '../shape/shape.js';
  * ```
  */
 export function unknownShape<T = unknown>(defaultValue?: unknown): Shape<TUnsafe<T>> {
-    return defineShape(Type.Unknown({default: defaultValue})) as Shape<TUnsafe<T>>;
+    return defineShape(
+        Type.Unknown({
+            default: defaultValue,
+        }),
+    ) as Shape<TUnsafe<T>>;
 }

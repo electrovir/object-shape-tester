@@ -22,7 +22,9 @@ describe(rangeShape.name, () => {
             }),
         });
         assert.tsType<typeof wrapped.runtimeType>().equals<{value: number}>();
-        assert.deepEquals(wrapped.default, {value: 5});
+        assert.deepEquals(wrapped.default, {
+            value: 5,
+        });
     });
 
     it('honors custom default', () => {

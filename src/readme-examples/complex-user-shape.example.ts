@@ -18,7 +18,14 @@ const userShape = defineShape({
     middleInitial: unionShape('M', undefined),
     lastName: 'last',
     id: 0,
-    tags: intersectShape({userTags: ['']}, {creatorTags: ['']}),
+    tags: intersectShape(
+        {
+            userTags: [''],
+        },
+        {
+            creatorTags: [''],
+        },
+    ),
     primaryColor: unionShape(exactShape('red'), exactShape('green'), exactShape('blue')),
     authLevel: enumShape(AuthLevel),
     extraDetails: unknownShape(),

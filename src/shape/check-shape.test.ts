@@ -238,15 +238,27 @@ const testCases: ReadonlyArray<
         it: 'matches valid numeric range',
         inputs: [
             5,
-            defineShape(rangeShape({min: 1, max: 10})),
+            defineShape(
+                rangeShape({
+                    min: 1,
+                    max: 10,
+                }),
+            ),
         ],
         throws: undefined,
     },
     {
         it: 'rejects non-number numeric range',
         inputs: [
-            {hi: 'hi'},
-            defineShape(rangeShape({min: 1, max: 10})),
+            {
+                hi: 'hi',
+            },
+            defineShape(
+                rangeShape({
+                    min: 1,
+                    max: 10,
+                }),
+            ),
         ],
         throws: {
             matchConstructor: ShapeMismatchError,
@@ -256,7 +268,12 @@ const testCases: ReadonlyArray<
         it: 'rejects invalid numeric range',
         inputs: [
             11,
-            defineShape(rangeShape({min: 1, max: 10})),
+            defineShape(
+                rangeShape({
+                    min: 1,
+                    max: 10,
+                }),
+            ),
         ],
         throws: {
             matchConstructor: ShapeMismatchError,
@@ -282,12 +299,22 @@ const testCases: ReadonlyArray<
             {
                 a: 'what',
                 b: '',
-                c: {a: 0, b: ''},
+                c: {
+                    a: 0,
+                    b: '',
+                },
             },
             defineShape({
                 a: 'what',
                 b: unionShape('', 0),
-                c: intersectShape({a: 0}, {b: ''}),
+                c: intersectShape(
+                    {
+                        a: 0,
+                    },
+                    {
+                        b: '',
+                    },
+                ),
             }),
         ],
         throws: undefined,
@@ -302,12 +329,22 @@ const testCases: ReadonlyArray<
                     'b',
                     'c',
                 ],
-                c: {a: 0, b: ''},
+                c: {
+                    a: 0,
+                    b: '',
+                },
             },
             defineShape({
                 a: 'what',
                 b: [''],
-                c: intersectShape({a: 0}, {b: ''}),
+                c: intersectShape(
+                    {
+                        a: 0,
+                    },
+                    {
+                        b: '',
+                    },
+                ),
             }),
         ],
         throws: undefined,
@@ -320,7 +357,16 @@ const testCases: ReadonlyArray<
                 b: '',
                 c: '',
             },
-            defineShape(intersectShape({a: 0}, {b: ''})),
+            defineShape(
+                intersectShape(
+                    {
+                        a: 0,
+                    },
+                    {
+                        b: '',
+                    },
+                ),
+            ),
             {
                 allowExtraKeys: false,
             },
@@ -427,7 +473,9 @@ const testCases: ReadonlyArray<
         it: 'works with nested specifiers',
         inputs: [
             {
-                a: {what: 'who'},
+                a: {
+                    what: 'who',
+                },
                 b: 'hello there',
                 c: 4321,
             },
@@ -458,7 +506,9 @@ const testCases: ReadonlyArray<
     {
         it: 'fails on invalid or strings',
         inputs: [
-            {b: false},
+            {
+                b: false,
+            },
             defineShape({
                 b: unionShape('', 4),
             }),
@@ -507,7 +557,16 @@ const testCases: ReadonlyArray<
                 b: '',
                 c: '',
             },
-            defineShape(unionShape({a: 0}, {b: ''})),
+            defineShape(
+                unionShape(
+                    {
+                        a: 0,
+                    },
+                    {
+                        b: '',
+                    },
+                ),
+            ),
             {
                 allowExtraKeys: false,
             },
@@ -546,12 +605,22 @@ const testCases: ReadonlyArray<
             {
                 a: 'what',
                 b: '',
-                c: {a: 0, c: ''},
+                c: {
+                    a: 0,
+                    c: '',
+                },
             },
             defineShape({
                 a: 'what',
                 b: unionShape('', 0),
-                c: intersectShape({a: 0}, {b: ''}),
+                c: intersectShape(
+                    {
+                        a: 0,
+                    },
+                    {
+                        b: '',
+                    },
+                ),
             }),
         ],
         throws: {
@@ -565,7 +634,16 @@ const testCases: ReadonlyArray<
                 a: 'what',
                 b: '',
             },
-            defineShape(intersectShape({a: ''}, {c: -1})),
+            defineShape(
+                intersectShape(
+                    {
+                        a: '',
+                    },
+                    {
+                        c: -1,
+                    },
+                ),
+            ),
         ],
         throws: {
             matchConstructor: ShapeMismatchError,
@@ -577,12 +655,22 @@ const testCases: ReadonlyArray<
             {
                 a: 'what',
                 b: '',
-                c: {a: 0, c: ''},
+                c: {
+                    a: 0,
+                    c: '',
+                },
             },
             defineShape({
                 a: 'what',
                 b: unionShape('', 0),
-                c: intersectShape({a: 0}, {b: ''}),
+                c: intersectShape(
+                    {
+                        a: 0,
+                    },
+                    {
+                        b: '',
+                    },
+                ),
             }),
         ],
         throws: {
@@ -697,7 +785,9 @@ describe(assertValidShape.name, () => {
                             minute: 0,
                             second: 0,
                         },
-                        defineShape({hi: ''}),
+                        defineShape({
+                            hi: '',
+                        }),
                         {},
                         'oh no this failed',
                     ),
@@ -743,7 +833,14 @@ describe(assertValidShape.name, () => {
 
         const shapeWithNested = defineShape({
             stringProp: '',
-            andProp: intersectShape({hi: ''}, {bye: ''}),
+            andProp: intersectShape(
+                {
+                    hi: '',
+                },
+                {
+                    bye: '',
+                },
+            ),
             nestedShape: unionShape(lowerLevelShape),
             exactProp: exactShape('derp'),
         });
@@ -766,7 +863,10 @@ describe(assertValidShape.name, () => {
 
         const exampleInstance: (typeof shapeWithNested)['runtimeType'] = {
             stringProp: 'yo',
-            andProp: {hi: 'hello', bye: 'good bye'},
+            andProp: {
+                hi: 'hello',
+                bye: 'good bye',
+            },
             nestedShape: {
                 example: {
                     first: 'a string',
@@ -1581,7 +1681,10 @@ describe(assertValidShape.name, () => {
 describe(checkValidShape.name, () => {
     const testCasesForIsValidCheck: ReadonlyArray<FunctionTestCase<typeof checkValidShape>> =
         testCases.map((testCase: any): FunctionTestCase<typeof checkValidShape> => {
-            const newTestCase = {...testCase, expect: testCase.throws ? false : true};
+            const newTestCase = {
+                ...testCase,
+                expect: testCase.throws ? false : true,
+            };
             delete newTestCase.throws;
             return newTestCase;
         });
@@ -1604,16 +1707,26 @@ describe(checkWrapValidShape.name, () => {
         {
             it: 'passes',
             inputs: [
-                {a: 'hi'},
-                defineShape({a: ''}),
+                {
+                    a: 'hi',
+                },
+                defineShape({
+                    a: '',
+                }),
             ],
-            expect: {a: 'hi'},
+            expect: {
+                a: 'hi',
+            },
         },
         {
             it: 'rejects',
             inputs: [
-                {a: 3},
-                defineShape({a: ''}),
+                {
+                    a: 3,
+                },
+                defineShape({
+                    a: '',
+                }),
             ],
             expect: undefined,
         },
@@ -1646,16 +1759,26 @@ describe(assertWrapValidShape.name, () => {
         {
             it: 'passes',
             inputs: [
-                {a: 'hi'},
-                defineShape({a: ''}),
+                {
+                    a: 'hi',
+                },
+                defineShape({
+                    a: '',
+                }),
             ],
-            expect: {a: 'hi'},
+            expect: {
+                a: 'hi',
+            },
         },
         {
             it: 'rejects',
             inputs: [
-                {a: 3},
-                defineShape({a: ''}),
+                {
+                    a: 3,
+                },
+                defineShape({
+                    a: '',
+                }),
             ],
             throws: {
                 matchConstructor: ShapeMismatchError,

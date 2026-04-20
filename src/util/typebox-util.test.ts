@@ -5,18 +5,29 @@ import {insertUnion, isUnionSchema} from './typebox-util.js';
 
 describe(insertUnion.name, () => {
     it('adds insertion to existing union and preserves default', () => {
-        const numberSchema = Type.Number({default: 5});
-        const stringSchema = Type.String({default: 'hi'});
+        const numberSchema = Type.Number({
+            default: 5,
+        });
+        const stringSchema = Type.String({
+            default: 'hi',
+        });
         const baseUnion = Type.Union(
             [
                 numberSchema,
                 stringSchema,
             ],
-            {default: 5},
+            {
+                default: 5,
+            },
         );
-        const insertion = Type.Boolean({default: false});
+        const insertion = Type.Boolean({
+            default: false,
+        });
 
-        const result = insertUnion({originalSchema: baseUnion, insertion});
+        const result = insertUnion({
+            originalSchema: baseUnion,
+            insertion,
+        });
 
         assert.isTrue(isUnionSchema(result));
         assert.strictEquals(result.default, 5);
@@ -31,10 +42,17 @@ describe(insertUnion.name, () => {
     });
 
     it('wraps non-union with undefined and ignores insertion', () => {
-        const original = Type.String({default: 'value'});
-        const insertion = Type.Number({default: 42});
+        const original = Type.String({
+            default: 'value',
+        });
+        const insertion = Type.Number({
+            default: 42,
+        });
 
-        const result = insertUnion({originalSchema: original, insertion});
+        const result = insertUnion({
+            originalSchema: original,
+            insertion,
+        });
         assert.isTrue(isUnionSchema(result));
         assert.strictEquals(result.default, 'value');
         assert.strictEquals(result.anyOf.length, 2);

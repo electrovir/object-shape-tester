@@ -25,5 +25,12 @@ export function uuidShape(defaultValue: Uuid = '00000000-0000-1000-0000-00000000
         FormatRegistry.Set('uuid', (value) => check.isUuid(value));
     }
 
-    return defineShape(Type.Unsafe<Uuid>(Type.String({format: 'uuid', default: defaultValue})));
+    return defineShape(
+        Type.Unsafe<Uuid>(
+            Type.String({
+                format: 'uuid',
+                default: defaultValue,
+            }),
+        ),
+    );
 }

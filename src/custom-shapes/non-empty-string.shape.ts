@@ -22,6 +22,11 @@ export function nonEmptyStringShape(defaultValue: string = ' ') {
     }
 
     return defineShape(
-        Type.Unsafe<string>(Type.String({format: 'non-empty', default: defaultValue})),
+        Type.Unsafe<string>(
+            Type.String({
+                format: 'non-empty',
+                default: defaultValue,
+            }),
+        ),
     );
 }

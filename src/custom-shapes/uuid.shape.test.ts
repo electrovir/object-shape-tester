@@ -44,8 +44,12 @@ describe(uuidShape.name, () => {
             {
                 it: 'accepts a nested UUID',
                 inputs: [
-                    {value: '00000000-0000-1000-0000-000000000000'},
-                    defineShape({value: uuidShape()}),
+                    {
+                        value: '00000000-0000-1000-0000-000000000000',
+                    },
+                    defineShape({
+                        value: uuidShape(),
+                    }),
                 ],
                 throws: undefined,
             },
@@ -64,8 +68,12 @@ describe(uuidShape.name, () => {
             {
                 it: 'rejects an invalid nested UUID',
                 inputs: [
-                    {value: '00000000-0000-10000000-000000000000'},
-                    defineShape({value: uuidShape()}),
+                    {
+                        value: '00000000-0000-10000000-000000000000',
+                    },
+                    defineShape({
+                        value: uuidShape(),
+                    }),
                 ],
                 throws: {
                     matchMessage: "Expected string to match 'uuid' format",
@@ -74,8 +82,12 @@ describe(uuidShape.name, () => {
             {
                 it: 'rejects an nil nested UUID',
                 inputs: [
-                    {value: '00000000-0000-0000-0000-000000000000'},
-                    defineShape({value: uuidShape()}),
+                    {
+                        value: '00000000-0000-0000-0000-000000000000',
+                    },
+                    defineShape({
+                        value: uuidShape(),
+                    }),
                 ],
                 throws: {
                     matchMessage: "Expected string to match 'uuid' format",

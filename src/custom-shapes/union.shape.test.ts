@@ -49,7 +49,9 @@ describe(unionShape.name, () => {
                   c?: boolean;
               }
         >();
-        assert.deepEquals(myUnionShape.default, {hi: ''});
+        assert.deepEquals(myUnionShape.default, {
+            hi: '',
+        });
     });
 
     it('requires at least one input', () => {

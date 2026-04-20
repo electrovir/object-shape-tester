@@ -35,14 +35,25 @@ describe(optionalShape.name, () => {
 
         assert.tsType<Required<typeof myShape.runtimeType>['a']>().equals<string>();
 
-        assert.throws(() => assertValidShape({a: undefined}, myShape));
+        assert.throws(() =>
+            assertValidShape(
+                {
+                    a: undefined,
+                },
+                myShape,
+            ),
+        );
         assertValidShape({}, myShape);
     });
 
     it('works with schema optional', () => {
         const shape = defineShape({
             a: '',
-            b: Type.Optional(Type.Number({default: -1})),
+            b: Type.Optional(
+                Type.Number({
+                    default: -1,
+                }),
+            ),
         });
 
         assert.deepEquals(shape.default, {
@@ -57,7 +68,9 @@ describe(optionalShape.name, () => {
     it('can also insert undefined', () => {
         const shape = defineShape({
             a: '',
-            b: optionalShape(-1, {alsoUndefined: true}),
+            b: optionalShape(-1, {
+                alsoUndefined: true,
+            }),
         });
 
         assert.tsType<typeof shape.runtimeType>().equals<{
@@ -69,8 +82,19 @@ describe(optionalShape.name, () => {
             b: number | undefined;
         }>();
         assert.tsType<Required<typeof shape.runtimeType>['b']>().equals<number | undefined>();
-        assertValidShape({a: 'hi', b: undefined}, shape);
-        assertValidShape({a: 'hi'}, shape);
+        assertValidShape(
+            {
+                a: 'hi',
+                b: undefined,
+            },
+            shape,
+        );
+        assertValidShape(
+            {
+                a: 'hi',
+            },
+            shape,
+        );
     });
 
     itCases(

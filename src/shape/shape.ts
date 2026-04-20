@@ -137,7 +137,9 @@ export function isSchema(input: unknown): input is TSchema {
  * @category Internal
  */
 function forceAdditionalProperties<T extends TSchema>(current: T, forcedValue: boolean): T {
-    const clone: AnyObject = {...current};
+    const clone: AnyObject = {
+        ...current,
+    };
 
     if (Array.isArray(current.anyOf)) {
         clone.anyOf = current.anyOf.map((entry) => forceAdditionalProperties(entry, forcedValue));
@@ -208,19 +210,33 @@ export function shapeInitToSchema(init: unknown): TSchema {
         });
     } else if (check.isPrimitive(init)) {
         if (check.isString(init)) {
-            return Type.String({default: init});
+            return Type.String({
+                default: init,
+            });
         } else if (check.isNumber(init)) {
-            return Type.Number({default: init});
+            return Type.Number({
+                default: init,
+            });
         } else if (check.isBoolean(init)) {
-            return Type.Boolean({default: init});
+            return Type.Boolean({
+                default: init,
+            });
         } else if (check.isSymbol(init)) {
-            return Type.Symbol({default: init});
+            return Type.Symbol({
+                default: init,
+            });
         } else if (check.isNull(init)) {
-            return Type.Null({default: null});
+            return Type.Null({
+                default: null,
+            });
         } else if (check.isUndefined(init)) {
-            return Type.Undefined({default: undefined});
+            return Type.Undefined({
+                default: undefined,
+            });
         } else if (check.isBigInt(init)) {
-            return Type.BigInt({default: init});
+            return Type.BigInt({
+                default: init,
+            });
             /* node:coverage ignore next 7 */
         } else {
             assert.tsType(init).equals<never>();

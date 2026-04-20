@@ -41,14 +41,20 @@ describe(defineShape.name, () => {
         assert.strictEquals(newShape as any, originalShape);
     });
     it('accepts a schema', () => {
-        const myShape = defineShape(Type.Number({default: 4}));
+        const myShape = defineShape(
+            Type.Number({
+                default: 4,
+            }),
+        );
 
         assert.tsType<typeof myShape.runtimeType>().equals<number>();
         assert.strictEquals(myShape.default, 4);
     });
 
     it('throws an error if runtimeType is accessed as a value', () => {
-        const exampleShape = defineShape({hi: ''});
+        const exampleShape = defineShape({
+            hi: '',
+        });
         assert.throws(() => {
             exampleShape.runtimeType;
         });
@@ -78,7 +84,10 @@ describe(defineShape.name, () => {
             two: '',
         });
 
-        assert.deepEquals(shapeB.default, {one: [], two: ''});
+        assert.deepEquals(shapeB.default, {
+            one: [],
+            two: '',
+        });
         assertValidShape(shapeB.default, shapeB);
     });
 
@@ -105,8 +114,18 @@ describe(defineShape.name, () => {
         });
         const doubleShape = defineShape(originalShape);
 
-        assertValidShape({hi: 'hi'}, originalShape);
-        assertValidShape({hi: 'hi'}, doubleShape);
+        assertValidShape(
+            {
+                hi: 'hi',
+            },
+            originalShape,
+        );
+        assertValidShape(
+            {
+                hi: 'hi',
+            },
+            doubleShape,
+        );
     });
 
     it('creates a simple shape object with correct type', () => {
@@ -131,7 +150,9 @@ describe(defineShape.name, () => {
             helloThere: '',
         };
 
-        const shapeWithExact = defineShape({exactProp: exactShape('derp')});
+        const shapeWithExact = defineShape({
+            exactProp: exactShape('derp'),
+        });
         type MyExact = typeof shapeWithExact.runtimeType;
         const myExactAssignment: MyExact = {
             exactProp: 'derp',
@@ -316,7 +337,10 @@ describe(defineShape.name, () => {
         },
         {
             it: 'defaults numeric range to mid point',
-            input: rangeShape({min: 1, max: 10}),
+            input: rangeShape({
+                min: 1,
+                max: 10,
+            }),
             expect: 5.5,
         },
         {
@@ -414,7 +438,9 @@ describe(isSchema.name, () => {
         },
         {
             it: 'accepts TObject',
-            input: Type.Object({a: Type.Number()}),
+            input: Type.Object({
+                a: Type.Number(),
+            }),
             expect: true,
         },
         {
@@ -455,7 +481,9 @@ describe(isSchema.name, () => {
         },
         {
             it: 'accepts a crafted object with [Kind] symbol',
-            input: {[Kind]: 'Fake' as any},
+            input: {
+                [Kind]: 'Fake' as any,
+            },
             expect: true,
         },
         {
@@ -527,14 +555,20 @@ describe(isSchema.name, () => {
 
 describe(unsafeShape.name, () => {
     it('uses the explicit type rather than inferring from the init', () => {
-        const inferredShape = defineShape({hello: ''});
+        const inferredShape = defineShape({
+            hello: '',
+        });
         assert.tsType<typeof inferredShape.runtimeType>().equals<{hello: string}>();
 
         type ExplicitType = {
             hello: string;
             extra: number;
         };
-        const explicitShape = unsafeShape<ExplicitType>(defineShape({hello: ''}));
+        const explicitShape = unsafeShape<ExplicitType>(
+            defineShape({
+                hello: '',
+            }),
+        );
         assert.tsType<typeof explicitShape.runtimeType>().equals<ExplicitType>();
     });
 
@@ -552,17 +586,30 @@ describe(unsafeShape.name, () => {
     });
 
     it('returns the init unchanged at runtime', () => {
-        const innerShape = defineShape({hello: ''});
+        const innerShape = defineShape({
+            hello: '',
+        });
         const wrapped = unsafeShape<{hello: string; extra: number}>(innerShape);
 
         assert.strictEquals(wrapped as any, innerShape);
-        assert.deepEquals(wrapped.default, {hello: ''} as any);
-        assertValidShape({hello: 'world'}, wrapped);
+        assert.deepEquals(wrapped.default, {
+            hello: '',
+        } as any);
+        assertValidShape(
+            {
+                hello: 'world',
+            },
+            wrapped,
+        );
         assert.tsType(wrapped.default).equals<Readonly<{hello: string; extra: number}>>();
     });
 
     it('accepts a raw schema as init', () => {
-        const fromSchema = unsafeShape<'literal-value'>(Type.String({default: 'literal-value'}));
+        const fromSchema = unsafeShape<'literal-value'>(
+            Type.String({
+                default: 'literal-value',
+            }),
+        );
         assert.tsType<typeof fromSchema.runtimeType>().equals<'literal-value'>();
         assert.strictEquals(fromSchema.default, 'literal-value');
     });
@@ -640,14 +687,24 @@ describe('ShapeInitType', () => {
                 // @ts-expect-error invalid inputs to intersect shape
                 myNestedAnd: intersectShape('', 0),
             },
-            myGenericRange: rangeShape({min: 1, max: 10}),
+            myGenericRange: rangeShape({
+                min: 1,
+                max: 10,
+            }),
             mySpecificRange: rangeShape<1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10>({
                 min: 1,
                 max: 10,
             }),
             myTuple: tupleShape('', -1, exactShape('hi')),
             myOr: unionShape('', 0),
-            myAnd: intersectShape({a: ''}, {b: 0}),
+            myAnd: intersectShape(
+                {
+                    a: '',
+                },
+                {
+                    b: 0,
+                },
+            ),
             mySimpleArray: [''],
             indexedPartial: recordShape({
                 keys: enumShape(TestEnum),
@@ -747,7 +804,9 @@ describe('ShapeInitType', () => {
             a: optionalShape('a'),
             b: optionalShape(unionShape('a', -3)),
             c: intersectShape(
-                {a: ''},
+                {
+                    a: '',
+                },
                 {
                     b: optionalShape(-3),
                 },
@@ -787,7 +846,12 @@ describe('ShapeInitType', () => {
 
         assert.tsType(shapeTest.default.basicKeys).equals<Record<string, number>>();
 
-        assertValidShape({basicKeys: {}}, shapeTest);
+        assertValidShape(
+            {
+                basicKeys: {},
+            },
+            shapeTest,
+        );
         assertValidShape(
             {
                 basicKeys: {
@@ -809,7 +873,12 @@ describe('ShapeInitType', () => {
 
         assert.tsType(shapeTest.default.basicKeys).equals<Partial<Record<Uuid, number>>>();
 
-        assertValidShape({basicKeys: {}}, shapeTest);
+        assertValidShape(
+            {
+                basicKeys: {},
+            },
+            shapeTest,
+        );
         assertValidShape(
             {
                 basicKeys: {
@@ -821,13 +890,19 @@ describe('ShapeInitType', () => {
     });
 
     it('works with or and null', () => {
-        const myNullableShape = defineShape(unionShape(null, {hello: ''}));
+        const myNullableShape = defineShape(
+            unionShape(null, {
+                hello: '',
+            }),
+        );
 
         assert.tsType<typeof myNullableShape.runtimeType>().equals<{hello: string} | null>();
     });
 
     it('works with exact strings', () => {
-        const myShape = defineShape({message: exactShape('hello')});
+        const myShape = defineShape({
+            message: exactShape('hello'),
+        });
         type MyType = typeof myShape.runtimeType;
 
         assert.tsType<MyType>().equals<{

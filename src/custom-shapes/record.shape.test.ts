@@ -20,13 +20,23 @@ enum TestEnum {
 
 describe(recordShape.name, () => {
     it('has proper types', () => {
-        const myShape = defineShape(recordShape({keys: '', values: -1}));
+        const myShape = defineShape(
+            recordShape({
+                keys: '',
+                values: -1,
+            }),
+        );
 
         assert.tsType<typeof myShape.runtimeType>().equals<Record<string, number>>();
         assert.deepEquals(myShape.default, {});
     });
     it('fills in default', () => {
-        const myShape = defineShape(recordShape({keys: enumShape(TestEnum), values: -1}));
+        const myShape = defineShape(
+            recordShape({
+                keys: enumShape(TestEnum),
+                values: -1,
+            }),
+        );
 
         assert.tsType<typeof myShape.runtimeType>().equals<Record<TestEnum, number>>();
         assert.deepEquals(myShape.default, {
@@ -418,7 +428,9 @@ describe(extractFiniteKeys.name, () => {
         },
         {
             it: 'uses values from an object (like an enum)',
-            input: exactShape({hi: 'there'}),
+            input: exactShape({
+                hi: 'there',
+            }),
             expect: ['there'],
         },
         {

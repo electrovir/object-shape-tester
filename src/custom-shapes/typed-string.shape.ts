@@ -19,5 +19,11 @@ import {defineShape} from '../shape/shape.js';
  * ```
  */
 export function typedStringShape<const T extends string>(defaultValue: string = '') {
-    return defineShape(Type.Unsafe<T>(Type.String({default: defaultValue})));
+    return defineShape(
+        Type.Unsafe<T>(
+            Type.String({
+                default: defaultValue,
+            }),
+        ),
+    );
 }

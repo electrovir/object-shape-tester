@@ -18,11 +18,28 @@ describe(nullableShape.name, () => {
             a: shape,
         });
         assert.tsType(nestedShape.default).equals<Readonly<{a?: string | null | undefined}>>();
-        assert.deepEquals(nestedShape.default, {a: undefined});
+        assert.deepEquals(nestedShape.default, {
+            a: undefined,
+        });
         assert.tsType<typeof nestedShape.runtimeType>().equals<{a?: string | null | undefined}>();
         assertValidShape({}, nestedShape);
-        assertValidShape({a: 'hi'}, nestedShape);
-        assertValidShape({a: undefined}, nestedShape);
-        assertValidShape({a: null}, nestedShape);
+        assertValidShape(
+            {
+                a: 'hi',
+            },
+            nestedShape,
+        );
+        assertValidShape(
+            {
+                a: undefined,
+            },
+            nestedShape,
+        );
+        assertValidShape(
+            {
+                a: null,
+            },
+            nestedShape,
+        );
     });
 });

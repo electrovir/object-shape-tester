@@ -105,8 +105,12 @@ describe(ensureNullableShape.name, () => {
             c: undefined,
             d: Type.Union(
                 [
-                    Type.String({default: ''}),
-                    Type.Null({default: null}),
+                    Type.String({
+                        default: '',
+                    }),
+                    Type.Null({
+                        default: null,
+                    }),
                 ],
                 {
                     default: '',

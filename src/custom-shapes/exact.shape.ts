@@ -27,7 +27,11 @@ export function exactShape<const T>(value: T): Shape<TUnsafe<T>> {
         return exactSymbolShape(value) as Shape<TUnsafe<T>>;
     }
 
-    return defineShape(Type.Const<T>(value, {default: value})) as Shape<TUnsafe<T>>;
+    return defineShape(
+        Type.Const<T>(value, {
+            default: value,
+        }),
+    ) as Shape<TUnsafe<T>>;
 }
 
 /**
@@ -52,7 +56,10 @@ function exactSymbolShape<const T extends symbol>(value: T): Shape<TUnsafe<T>> {
     }
     registerErrorMessage(exactSymbolKind, ({schema}) => {
         const symbolDescription = schema.symbol?.description
-            ? wrapString({value: schema.symbol.description, wrapper: "'"})
+            ? wrapString({
+                  value: schema.symbol.description,
+                  wrapper: "'",
+              })
             : '<unnamed symbol>';
         return `Expected symbol ${symbolDescription}`;
     });
