@@ -49,6 +49,22 @@ export type Shape<Init = any> = {
 export const shapeIdentifier = Symbol.for('object-shape-tester.shape-identifier');
 
 /**
+ * A type for defining a shape definition with a direct type definition.
+ *
+ * @category Internal
+ */
+export type UnsafeShape<T> = Shape<TUnsafe<T>>;
+
+/**
+ * A helper for defining a shape while also immediately providing the type for that shape's values.
+ *
+ * @category Internal
+ */
+export function unsafeShape<T>(init: any): UnsafeShape<T> {
+    return init;
+}
+
+/**
  * Defines a shape from the given init.
  *
  * @category Define

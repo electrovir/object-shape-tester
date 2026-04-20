@@ -18,6 +18,7 @@ import {
     defineShape,
     isSchema,
     shapeIdentifier,
+    unsafeShape,
     type ShapeInitSchema,
     type ShapeInitType,
 } from '../shape/shape.js';
@@ -522,6 +523,49 @@ describe(isSchema.name, () => {
             expect: false,
         },
     ]);
+});
+
+describe(unsafeShape.name, () => {
+    it('uses the explicit type rather than inferring from the init', () => {
+        const inferredShape = defineShape({hello: ''});
+        assert.tsType<typeof inferredShape.runtimeType>().equals<{hello: string}>();
+
+        type ExplicitType = {
+            hello: string;
+            extra: number;
+        };
+        const explicitShape = unsafeShape<ExplicitType>(defineShape({hello: ''}));
+        assert.tsType<typeof explicitShape.runtimeType>().equals<ExplicitType>();
+    });
+
+    it('allows a branded type that could not be inferred from the init', () => {
+        type BrandedId = string & {__brand: 'BrandedId'};
+        const branded = unsafeShape<BrandedId>(defineShape(''));
+
+        assert.tsType<typeof branded.runtimeType>().equals<BrandedId>();
+        assert.tsType<typeof branded.runtimeType>().notEquals<string>();
+    });
+
+    it('allows the explicit type to diverge entirely from the init', () => {
+        const diverged = unsafeShape<number>(defineShape(''));
+        assert.tsType<typeof diverged.runtimeType>().equals<number>();
+    });
+
+    it('returns the init unchanged at runtime', () => {
+        const innerShape = defineShape({hello: ''});
+        const wrapped = unsafeShape<{hello: string; extra: number}>(innerShape);
+
+        assert.strictEquals(wrapped as any, innerShape);
+        assert.deepEquals(wrapped.default, {hello: ''} as any);
+        assertValidShape({hello: 'world'}, wrapped);
+        assert.tsType(wrapped.default).equals<Readonly<{hello: string; extra: number}>>();
+    });
+
+    it('accepts a raw schema as init', () => {
+        const fromSchema = unsafeShape<'literal-value'>(Type.String({default: 'literal-value'}));
+        assert.tsType<typeof fromSchema.runtimeType>().equals<'literal-value'>();
+        assert.strictEquals(fromSchema.default, 'literal-value');
+    });
 });
 
 describe('ShapeInitType', () => {
