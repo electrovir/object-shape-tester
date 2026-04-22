@@ -61,7 +61,7 @@ export type UnsafeShape<T> = Shape<TUnsafe<T>>;
  * @category Internal
  */
 export function unsafeShape<T>(init: any): UnsafeShape<T> {
-    return init;
+    return defineShape(init) as UnsafeShape<T>;
 }
 
 /**
