@@ -41,7 +41,11 @@ const testCases: ReadonlyArray<
     Readonly<{
         it: string;
         only?: true;
-        inputs: [unknown, Shape, CheckShapeOptions?];
+        inputs: [
+            unknown,
+            Shape,
+            CheckShapeOptions?,
+        ];
         throws: ErrorMatchOptions | undefined;
     }>
 > = [

@@ -41,7 +41,14 @@ export function optionalShape<T, const AlsoUndefined extends boolean = false>(
     }> = {},
 ): Shape<
     TOptionalWithFlag<
-        AlsoUndefined extends true ? TUnion<[TUndefined, ShapeInitSchema<T>]> : ShapeInitSchema<T>,
+        AlsoUndefined extends true
+            ? TUnion<
+                  [
+                      TUndefined,
+                      ShapeInitSchema<T>,
+                  ]
+              >
+            : ShapeInitSchema<T>,
         true
     >
 > {
@@ -59,7 +66,12 @@ export function optionalShape<T, const AlsoUndefined extends boolean = false>(
     return defineShape(Type.Optional(schema)) as Shape<
         TOptionalWithFlag<
             AlsoUndefined extends true
-                ? TUnion<[TUndefined, ShapeInitSchema<T>]>
+                ? TUnion<
+                      [
+                          TUndefined,
+                          ShapeInitSchema<T>,
+                      ]
+                  >
                 : ShapeInitSchema<T>,
             true
         >

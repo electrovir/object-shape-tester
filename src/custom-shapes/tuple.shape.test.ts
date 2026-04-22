@@ -9,7 +9,13 @@ describe(tupleShape.name, () => {
     it('has sensible default that matches its shape', () => {
         const myTuple = tupleShape('', -1, exactShape('hi'));
 
-        assert.tsType<typeof myTuple.runtimeType>().equals<[string, number, 'hi']>();
+        assert.tsType<typeof myTuple.runtimeType>().equals<
+            [
+                string,
+                number,
+                'hi',
+            ]
+        >();
         assert.deepEquals(myTuple.default, [
             '',
             -1,
@@ -21,7 +27,12 @@ describe(tupleShape.name, () => {
             value: tupleShape('', -1),
         });
 
-        assert.tsType<typeof wrapped.runtimeType>().equals<{value: [string, number]}>();
+        assert.tsType<typeof wrapped.runtimeType>().equals<{
+            value: [
+                string,
+                number,
+            ];
+        }>();
         assert.deepEquals(wrapped.default, {
             value: [
                 '',

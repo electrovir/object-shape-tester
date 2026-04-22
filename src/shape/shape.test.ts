@@ -650,7 +650,16 @@ describe('ShapeInitType', () => {
 
     it('maintains array values', () => {
         assert.tsType<ShapeInitType<(string | number)[]>>().equals<(string | number)[]>();
-        assert.tsType<ShapeInitType<[string, number]>>().equals<(string | number)[]>();
+        assert
+            .tsType<
+                ShapeInitType<
+                    [
+                        string,
+                        number,
+                    ]
+                >
+            >()
+            .equals<(string | number)[]>();
     });
 
     it('maintains function types', () => {
@@ -758,7 +767,11 @@ describe('ShapeInitType', () => {
             };
             myGenericRange: number;
             mySpecificRange: 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10;
-            myTuple: [string, number, 'hi'];
+            myTuple: [
+                string,
+                number,
+                'hi',
+            ];
             myOr: string | number;
             myAnd: {
                 a: string;
@@ -796,7 +809,13 @@ describe('ShapeInitType', () => {
 
     it('works with tuples', () => {
         const myShape = defineShape(tupleShape('', -1, exactShape('hi')));
-        assert.tsType<(typeof myShape)['runtimeType']>().equals<[string, number, 'hi']>();
+        assert.tsType<(typeof myShape)['runtimeType']>().equals<
+            [
+                string,
+                number,
+                'hi',
+            ]
+        >();
     });
 
     it('unwraps optional specifiers', () => {

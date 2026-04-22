@@ -50,8 +50,13 @@ describe(enumShape.name, () => {
     });
 
     itCases(
-        (input: unknown, enumOptions: [any, any?]) =>
-            assertValidShape(input, enumShape(...enumOptions)),
+        (
+            input: unknown,
+            enumOptions: [
+                any,
+                any?,
+            ],
+        ) => assertValidShape(input, enumShape(...enumOptions)),
         [
             {
                 it: 'accepts an enum value',
