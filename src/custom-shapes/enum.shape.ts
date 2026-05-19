@@ -30,7 +30,7 @@ export function enumShape<const EnumObject extends Record<string, number | strin
 ) {
     const enumValues = getEnumValues(enumObject);
     if (defaultValue != undefined && !enumValues.includes(defaultValue)) {
-        throw new TypeError(`enumShape default must be a subset of the given enum.`);
+        throw new TypeError('enumShape default must be a subset of the given enum.');
     }
 
     return defineShape(

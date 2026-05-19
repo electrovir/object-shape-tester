@@ -921,6 +921,9 @@ describe(assertValidShape.name, () => {
                         partial: true,
                     }),
                 }),
+                {
+                    preventExtraKeys: true,
+                },
             ),
         );
         assertValidShape(
@@ -982,6 +985,9 @@ describe(assertValidShape.name, () => {
                         partial: true,
                     }),
                 ),
+                {
+                    preventExtraKeys: true,
+                },
             ),
         );
         assertValidShape(
@@ -1447,6 +1453,9 @@ describe(assertValidShape.name, () => {
                         a: Type.String(),
                     }),
                 ]),
+                {
+                    preventExtraKeys: true,
+                },
             ],
             throws: {
                 matchMessage: '/2/b: Unexpected property',
@@ -1483,6 +1492,9 @@ describe(assertValidShape.name, () => {
                         a: Type.String(),
                     }),
                 ),
+                {
+                    preventExtraKeys: true,
+                },
             ],
             throws: {
                 matchMessage: '/0/b: Unexpected property',
@@ -1526,6 +1538,9 @@ describe(assertValidShape.name, () => {
                         b: Type.String(),
                     }),
                 ]),
+                {
+                    preventExtraKeys: true,
+                },
             ],
             throws: {
                 matchMessage: '/b: Unexpected property',
@@ -1543,7 +1558,7 @@ describe(assertValidShape.name, () => {
                     values: '',
                 }),
                 {
-                    allowExtraKeys: undefined,
+                    preventExtraKeys: true,
                 },
             ],
             throws: {
@@ -1560,6 +1575,9 @@ describe(assertValidShape.name, () => {
                 defineShape({
                     a: '',
                 }),
+                {
+                    preventExtraKeys: true,
+                },
             ],
             throws: {
                 matchMessage: '/b: Unexpected property',
@@ -1674,6 +1692,9 @@ describe(assertValidShape.name, () => {
                     a: '',
                     b: '',
                 }),
+                {
+                    preventExtraKeys: true,
+                },
             ],
             throws: {
                 matchMessage: '/c: Unexpected property',

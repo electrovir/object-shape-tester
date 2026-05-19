@@ -37,7 +37,10 @@ describe(partialShape.name, () => {
         >();
     });
     itCases(
-        (input: unknown) => assertValidShape(input, myShape),
+        (input: unknown) =>
+            assertValidShape(input, myShape, {
+                preventExtraKeys: true,
+            }),
         [
             {
                 it: 'accepts an empty object',

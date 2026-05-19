@@ -38,6 +38,9 @@ describe(pickShape.name, () => {
                     hello: 'another value',
                 },
                 pickedShape,
+                {
+                    preventExtraKeys: true,
+                },
             ),
         );
         assertValidShape(
@@ -87,6 +90,9 @@ describe(pickShape.name, () => {
                     hello: 'another value',
                 },
                 pickedShape,
+                {
+                    preventExtraKeys: true,
+                },
             ),
         );
         assertValidShape(

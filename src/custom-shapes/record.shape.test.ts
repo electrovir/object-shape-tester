@@ -188,6 +188,9 @@ describe(recordShape.name, () => {
                         keys: [],
                         values: -1,
                     },
+                    {
+                        preventExtraKeys: true,
+                    },
                 ],
                 throws: {
                     matchMessage: 'Failure at keys: a,b',

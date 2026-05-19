@@ -17,9 +17,21 @@ export type CheckShapeOptions = PartialWithUndefined<{
      * - `false`: extra keys are forcibly blocked in all objects (`additionalProperties` is forced to
      *   `false` for all nested schemas).
      *
-     * @default false
+     * @deprecated Use `preventExtraKeys` instead.
+     * @default true
      */
     allowExtraKeys: boolean;
+    /**
+     * Determines if extra keys are blocked:
+     *
+     * - `false`: extra keys are allowed in all objects (`additionalProperties` is forced to `true`
+     *   for all nested schemas).
+     * - `true`: extra keys are blocked in all objects (`additionalProperties` is forced to `false`
+     *   for all nested schemas).
+     *
+     * @default false
+     */
+    preventExtraKeys: boolean;
 }>;
 
 /**
@@ -99,9 +111,9 @@ export function assertWrapValidShape<SpecificShape extends Shape | TSchema>(
 
 function getCompiledSchema(shape: Shape | TSchema, options: CheckShapeOptions) {
     shape = ensureShape(shape);
-    return options.allowExtraKeys
-        ? shape.$_compiledSchemaExtraKeys
-        : shape.$_compiledSchemaNoExtraKeys;
+    // eslint-disable-next-line @typescript-eslint/no-deprecated
+    const preventExtraKeys = options.preventExtraKeys ?? options.allowExtraKeys === false;
+    return preventExtraKeys ? shape.$_compiledSchemaNoExtraKeys : shape.$_compiledSchemaExtraKeys;
 }
 
 /**

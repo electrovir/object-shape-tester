@@ -98,7 +98,7 @@ export function defineShape<Init = any>(init: Init): Shape<Init> {
             configurable: false,
             enumerable: false,
             get(): ShapeInitType<Init> {
-                throw new Error(`runtimeType cannot be used as a value, it is only for types.`);
+                throw new Error('runtimeType cannot be used as a value, it is only for types.');
             },
         },
         [shapeIdentifier]: {
