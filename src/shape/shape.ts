@@ -80,20 +80,56 @@ export function defineShape<Init = any>(init: Init): Shape<Init> {
     }
 
     const schema = shapeInitToSchema(init) as ShapeInitSchema<Init>;
-    const schemaNoExtraKeys = forceAdditionalProperties(schema, false);
     const schemaExtraKeys = forceAdditionalProperties(schema, true);
 
-    const shape: Omit<Shape<Init>, 'runtimeType' | typeof shapeIdentifier> = {
+    const shape: Omit<
+        Shape<Init>,
+        | 'runtimeType'
+        | '$_schemaNoExtraKeys'
+        | '$_compiledSchemaNoExtraKeys'
+        | typeof shapeIdentifier
+    > = {
         $_schema: schema,
-        $_schemaNoExtraKeys: schemaNoExtraKeys,
         $_schemaExtraKeys: schemaExtraKeys,
         default: schema.default,
         $_compiledSchema: TypeCompiler.Compile(schema),
-        $_compiledSchemaNoExtraKeys: TypeCompiler.Compile(schemaNoExtraKeys),
         $_compiledSchemaExtraKeys: TypeCompiler.Compile(schemaExtraKeys),
     };
 
     Object.defineProperties(shape, {
+        /**
+         * The "no extra keys" schema and its compiled checker are only needed when callers opt into
+         * `preventExtraKeys`, so they're computed lazily on first access and then cached by
+         * overwriting the getter with the resolved value.
+         */
+        $_schemaNoExtraKeys: {
+            configurable: true,
+            enumerable: true,
+            get(): ShapeInitSchema<Init> {
+                const value = forceAdditionalProperties(schema, false);
+                Object.defineProperty(this, '$_schemaNoExtraKeys', {
+                    configurable: false,
+                    enumerable: true,
+                    writable: false,
+                    value,
+                });
+                return value;
+            },
+        },
+        $_compiledSchemaNoExtraKeys: {
+            configurable: true,
+            enumerable: true,
+            get(this: Shape<Init>): TypeCheck<any> {
+                const value = TypeCompiler.Compile(this.$_schemaNoExtraKeys);
+                Object.defineProperty(this, '$_compiledSchemaNoExtraKeys', {
+                    configurable: false,
+                    enumerable: true,
+                    writable: false,
+                    value,
+                });
+                return value;
+            },
+        },
         runtimeType: {
             configurable: false,
             enumerable: false,
