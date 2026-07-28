@@ -1,5 +1,11 @@
 import {check} from '@augment-vir/assert';
-import {type AnyObject, type AtLeastTuple, filterMap, removeDuplicates} from '@augment-vir/common';
+import {
+    type AnyObject,
+    type AtLeastTuple,
+    filterMap,
+    type IsEqual,
+    removeDuplicates,
+} from '@augment-vir/common';
 import {
     Kind,
     type SchemaOptions,
@@ -10,7 +16,6 @@ import {
     Type,
     TypeRegistry,
 } from '@sinclair/typebox';
-import {type IsEqual} from 'type-fest';
 import {registerErrorMessage} from '../errors/error-message.js';
 import {checkValidShape} from '../shape/check-shape.js';
 import {defineShape, isSchema, isShape, type Shape, type ShapeInitType} from '../shape/shape.js';

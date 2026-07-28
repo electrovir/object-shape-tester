@@ -1,6 +1,5 @@
-import {type ArrayElement, type AtLeastTuple} from '@augment-vir/common';
+import {type ArrayElement, type AtLeastTuple, type UnionToIntersection} from '@augment-vir/common';
 import {type TUnsafe, Type} from '@sinclair/typebox';
-import {type UnionToIntersection} from 'type-fest';
 import {defineShape, type ShapeInitType} from '../shape/shape.js';
 
 /**

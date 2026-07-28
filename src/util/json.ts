@@ -17,6 +17,7 @@ import {type Shape} from '../shape/shape.js';
  * @throws If the parsed JSON does not match the shape definition or if the JSON parsing throws an
  *   error.
  */
+// eslint-disable-next-line @virmator/prefer-params-object
 export function parseJsonWithShape<const CurrentShape extends Shape>(
     json: string,
     shape: Readonly<CurrentShape>,
@@ -46,6 +47,7 @@ export function parseJsonWithShape<const CurrentShape extends Shape>(
  * @throws If the parsed JSON does not match the shape definition or if the JSON parsing throws an
  *   error.
  */
+// eslint-disable-next-line @virmator/prefer-params-object
 export async function readJsonWithShape<const CurrentShape extends Shape>(
     filePath: string,
     shape: Readonly<CurrentShape>,

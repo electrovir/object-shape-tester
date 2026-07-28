@@ -1157,6 +1157,13 @@ describe(assertValidShape.name, () => {
         const result: MyType | undefined = checkValidShape(instance, myShape)
             ? instance
             : undefined;
+
+        assert.tsType<typeof result>().equals<
+            | {
+                  message: 'hello';
+              }
+            | undefined
+        >();
     });
 
     it('allows optional properties', () => {

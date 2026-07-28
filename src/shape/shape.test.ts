@@ -1,8 +1,7 @@
 import {assert} from '@augment-vir/assert';
-import {createUuidV4, type Uuid} from '@augment-vir/common';
+import {createUuidV4, type EmptyObject, type Uuid} from '@augment-vir/common';
 import {describe, it, itCases} from '@augment-vir/test';
 import {Kind, Type, type Static} from '@sinclair/typebox';
-import {type EmptyObject} from 'type-fest';
 import {classShape} from '../custom-shapes/class.shape.js';
 import {enumShape} from '../custom-shapes/enum.shape.js';
 import {exactShape} from '../custom-shapes/exact.shape.js';
@@ -260,6 +259,8 @@ describe(defineShape.name, () => {
                 ianaName: 'anything',
             },
         };
+
+        assertValidShape(fullDate, fullDateShape);
     });
 
     it('does not preserve const assignments', () => {
@@ -510,6 +511,7 @@ describe(isSchema.name, () => {
         },
         {
             it: 'rejects a Date',
+            // eslint-disable-next-line @virmator/no-raw-date
             input: new Date(),
             expect: false,
         },

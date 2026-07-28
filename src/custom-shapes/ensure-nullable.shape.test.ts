@@ -1,8 +1,7 @@
 import {assert} from '@augment-vir/assert';
-import {type AnyObject} from '@augment-vir/common';
+import {type AnyObject, type OptionalKeysOf} from '@augment-vir/common';
 import {describe, it} from '@augment-vir/test';
 import {Type, type TNull, type TOptional, type TString, type TUndefined} from '@sinclair/typebox';
-import {type OptionalKeysOf} from 'type-fest';
 import {
     assertValidShape,
     defineShape,
@@ -130,7 +129,7 @@ describe(ensureNullableShape.name, () => {
             e: number;
             nested?:
                 | {
-                      f?: string | null;
+                      f?: string | null | undefined;
                   }
                 | null
                 | undefined;

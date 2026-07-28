@@ -121,6 +121,11 @@ describe(pickShape.name, () => {
                 'not a key': true,
             },
         );
+
+        assert.tsType<typeof pickedShape.runtimeType>().equals<{
+            goodbye: string;
+            when: number;
+        }>();
     });
     it('does not allow nested selection', () => {
         const pickedShape = pickShape(
@@ -134,5 +139,10 @@ describe(pickShape.name, () => {
                 when: true,
             },
         );
+
+        assert.tsType<typeof pickedShape.runtimeType>().equals<{
+            goodbye: string;
+            when: number;
+        }>();
     });
 });

@@ -75,6 +75,7 @@ export function checkWrapValidShape<SpecificShape extends Shape | TSchema>(
  * @category Check
  * @throws `ShapeMismatchError` if `value` does not match the shape.
  */
+// eslint-disable-next-line @virmator/prefer-params-object
 export function assertValidShape<SpecificShape extends Shape | TSchema>(
     this: void,
     value: unknown,
@@ -98,6 +99,7 @@ export function assertValidShape<SpecificShape extends Shape | TSchema>(
  * @category Check
  * @throws `ShapeMismatchError` if `value` does not match the shape.
  */
+// eslint-disable-next-line @virmator/prefer-params-object
 export function assertWrapValidShape<SpecificShape extends Shape | TSchema>(
     this: void,
     value: unknown,

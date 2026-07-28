@@ -1,5 +1,11 @@
 import {assert, check} from '@augment-vir/assert';
-import {stringify, type AnyFunction, type AnyObject} from '@augment-vir/common';
+import {
+    stringify,
+    type AnyFunction,
+    type AnyObject,
+    type IsAny,
+    type IsUnknown,
+} from '@augment-vir/common';
 import {
     Kind,
     Type,
@@ -18,7 +24,6 @@ import {
     type TUnsafe,
 } from '@sinclair/typebox';
 import {TypeCompiler, type TypeCheck} from '@sinclair/typebox/compiler';
-import {type IsAny, type IsUnknown} from 'type-fest';
 import {setShapeDefinitionErrorMessage} from '../errors/error-message.js';
 
 /**

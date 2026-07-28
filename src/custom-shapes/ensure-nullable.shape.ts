@@ -1,4 +1,11 @@
-import {mapObjectValues} from '@augment-vir/common';
+import {
+    mapObjectValues,
+    type IsAny,
+    type OptionalKeysOf,
+    type Primitive,
+    type RequiredKeysOf,
+    type Simplify,
+} from '@augment-vir/common';
 import {
     Type,
     type OptionalKind,
@@ -7,13 +14,6 @@ import {
     type TUndefined,
     type TUnsafe,
 } from '@sinclair/typebox';
-import {
-    type IsAny,
-    type OptionalKeysOf,
-    type Primitive,
-    type RequiredKeysOf,
-    type Simplify,
-} from 'type-fest';
 import {defineShape, type Shape, type ShapeInitType} from '../shape/shape.js';
 import {
     canSchemaBeNullable,
