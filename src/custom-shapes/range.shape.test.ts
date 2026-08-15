@@ -141,8 +141,9 @@ describe(rangeShape.name, () => {
     );
 
     itCases(
-        (input: unknown, params: Parameters<typeof rangeShape>[0]) =>
-            assertValidShape(input, rangeShape(params)),
+        (input: unknown, params: Parameters<typeof rangeShape>[0]) => {
+            return assertValidShape(input, rangeShape(params));
+        },
         [
             {
                 it: 'rejects value equal to min when exclusiveMin is true',
@@ -296,12 +297,13 @@ describe(rangeShape.name, () => {
     });
     it('fails on invalid custom default', () => {
         assert.throws(
-            () =>
-                rangeShape({
+            () => {
+                return rangeShape({
                     min: 2,
                     max: 5,
                     default: 42,
-                }),
+                });
+            },
             {
                 matchMessage: 'Expected number to be less or equal to 5',
             },

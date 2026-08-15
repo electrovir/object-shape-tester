@@ -209,10 +209,12 @@ function createDefaultValue({
         const finiteKeys = extractFiniteKeys(keysShape);
         const defaultValue = valuesShape.default;
         return Object.fromEntries(
-            finiteKeys.map((key) => [
-                key,
-                defaultValue,
-            ]),
+            finiteKeys.map((key) => {
+                return [
+                    key,
+                    defaultValue,
+                ];
+            }),
         );
     }
 }
@@ -260,9 +262,9 @@ export function extractFiniteKeys(keys: Shape): unknown[] {
         ];
     } else if (kind === 'union') {
         return removeDuplicates(
-            (schema as TUnion).anyOf.flatMap((subSchema) =>
-                extractFiniteKeys(defineShape(subSchema)),
-            ),
+            (schema as TUnion).anyOf.flatMap((subSchema) => {
+                return extractFiniteKeys(defineShape(subSchema));
+            }),
         );
     } else if (
         [

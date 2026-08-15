@@ -35,14 +35,14 @@ describe(optionalShape.name, () => {
 
         assert.tsType<Required<typeof myShape.runtimeType>['a']>().equals<string>();
 
-        assert.throws(() =>
-            assertValidShape(
+        assert.throws(() => {
+            return assertValidShape(
                 {
                     a: undefined,
                 },
                 myShape,
-            ),
-        );
+            );
+        });
         assertValidShape({}, myShape);
     });
 

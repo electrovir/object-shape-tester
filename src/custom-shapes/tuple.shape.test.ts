@@ -43,8 +43,9 @@ describe(tupleShape.name, () => {
     });
 
     itCases(
-        (input: unknown, tupleParts: ReadonlyArray<any>) =>
-            assertValidShape(input, tupleShape(...tupleParts)),
+        (input: unknown, tupleParts: ReadonlyArray<any>) => {
+            return assertValidShape(input, tupleShape(...tupleParts));
+        },
         [
             {
                 it: 'accepts a matching tuple',

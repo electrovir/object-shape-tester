@@ -29,9 +29,9 @@ function getSubErrors(error: Readonly<ValueError>): ReadonlyArray<Readonly<Value
 }
 
 function createErrorMessage(error: Readonly<ValueError>, indentCount = 0): string {
-    const subErrorMessages = getSubErrors(error).map((subError) =>
-        createErrorMessage(subError, indentCount + 1),
-    );
+    const subErrorMessages = getSubErrors(error).map((subError) => {
+        return createErrorMessage(subError, indentCount + 1);
+    });
 
     const currentMessage =
         [

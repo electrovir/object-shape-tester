@@ -782,8 +782,8 @@ describe(assertValidShape.name, () => {
 
         it('prepends custom message', () => {
             assert.throws(
-                () =>
-                    assertValidShape(
+                () => {
+                    return assertValidShape(
                         {
                             hour: 0,
                             minute: 0,
@@ -794,7 +794,8 @@ describe(assertValidShape.name, () => {
                         }),
                         {},
                         'oh no this failed',
-                    ),
+                    );
+                },
                 {
                     matchMessage: 'oh no this failed',
                 },
@@ -905,8 +906,8 @@ describe(assertValidShape.name, () => {
                 }),
             }),
         );
-        assert.throws(() =>
-            assertValidShape(
+        assert.throws(() => {
+            return assertValidShape(
                 {
                     stuff: 'hello there',
                     moreStuff: {
@@ -924,8 +925,8 @@ describe(assertValidShape.name, () => {
                 {
                     preventExtraKeys: true,
                 },
-            ),
-        );
+            );
+        });
         assertValidShape(
             {
                 stuff: 'hello there',
@@ -965,8 +966,8 @@ describe(assertValidShape.name, () => {
                 }),
             ),
         );
-        assert.throws(() =>
-            assertValidShape(
+        assert.throws(() => {
+            return assertValidShape(
                 {
                     fff: {
                         roomId: '23f3eef2-682d-4a78-afda-129006318cdf',
@@ -988,8 +989,8 @@ describe(assertValidShape.name, () => {
                 {
                     preventExtraKeys: true,
                 },
-            ),
-        );
+            );
+        });
         assertValidShape(
             {
                 '23f3eef2-682d-4a78-afda-129006318cdf': {
@@ -1090,8 +1091,8 @@ describe(assertValidShape.name, () => {
                 }),
             }),
         );
-        assert.throws(() =>
-            assertValidShape(
+        assert.throws(() => {
+            return assertValidShape(
                 {
                     stuff: 'hello there',
                     moreStuff: {
@@ -1106,10 +1107,10 @@ describe(assertValidShape.name, () => {
                         values: 0,
                     }),
                 }),
-            ),
-        );
-        assert.throws(() =>
-            assertValidShape(
+            );
+        });
+        assert.throws(() => {
+            return assertValidShape(
                 {
                     stuff: 'hello there',
                     moreStuff: {
@@ -1124,10 +1125,10 @@ describe(assertValidShape.name, () => {
                         values: 0,
                     }),
                 }),
-            ),
-        );
-        assert.throws(() =>
-            assertValidShape(
+            );
+        });
+        assert.throws(() => {
+            return assertValidShape(
                 {
                     stuff: 'hello there',
                     moreStuff: {
@@ -1141,8 +1142,8 @@ describe(assertValidShape.name, () => {
                         values: 0,
                     }),
                 }),
-            ),
-        );
+            );
+        });
     });
 
     it('has proper types for a nested exact', () => {

@@ -207,23 +207,23 @@ describe(ensureNullableShape.name, () => {
             },
             myShape,
         );
-        assert.throws(() =>
-            assertValidShape(
+        assert.throws(() => {
+            return assertValidShape(
                 {
                     b: null,
                 },
                 myShape,
-            ),
-        );
-        assert.throws(() =>
-            assertValidShape(
+            );
+        });
+        assert.throws(() => {
+            return assertValidShape(
                 {
                     a: 'hi',
                     b: 'not number',
                 },
                 myShape,
-            ),
-        );
+            );
+        });
     });
 
     it('works with nullableShape', () => {
@@ -328,14 +328,14 @@ describe(ensureNullableShape.name, () => {
             },
             myShape,
         );
-        assert.throws(() =>
-            assertValidShape(
+        assert.throws(() => {
+            return assertValidShape(
                 {
                     b: null,
                 },
                 myShape,
-            ),
-        );
+            );
+        });
     });
 
     it('does nothing for non object', () => {

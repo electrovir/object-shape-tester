@@ -62,8 +62,9 @@ describe(unionShape.name, () => {
     });
 
     itCases(
-        (input: unknown, unionOptions: AtLeastTuple<any, 1>) =>
-            assertValidShape(input, unionShape(...unionOptions)),
+        (input: unknown, unionOptions: AtLeastTuple<any, 1>) => {
+            return assertValidShape(input, unionShape(...unionOptions));
+        },
         [
             {
                 it: 'works on a union of primitives',

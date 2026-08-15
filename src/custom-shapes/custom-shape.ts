@@ -40,11 +40,12 @@ export function createCustomShape<T>({
         TypeRegistry.Set(name, (schemaOptions, value) => checkValue(value));
     }
 
-    return (defaultValue: T = outerDefaultValue) =>
-        defineShape(
+    return (defaultValue: T = outerDefaultValue) => {
+        return defineShape(
             Type.Unsafe<T>({
                 [Kind]: name,
                 default: defaultValue,
             }),
         );
+    };
 }

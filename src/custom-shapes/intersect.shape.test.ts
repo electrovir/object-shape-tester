@@ -96,8 +96,9 @@ describe(intersectShape.name, () => {
     });
 
     itCases(
-        (input: unknown, intersectOptions: AtLeastTuple<object, 1>) =>
-            assertValidShape(input, intersectShape(...intersectOptions)),
+        (input: unknown, intersectOptions: AtLeastTuple<object, 1>) => {
+            return assertValidShape(input, intersectShape(...intersectOptions));
+        },
         [
             {
                 it: 'works with shapes',
