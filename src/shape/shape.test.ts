@@ -93,7 +93,9 @@ describe(defineShape.name, () => {
     it('allows function properties', () => {
         const shapeWithMethod = defineShape({
             myData: 'a',
-            myMethod: (input1: string, input2: number): string => `${input1}: ${input2}`,
+            myMethod(input1: string, input2: number): string {
+                return `${input1}: ${input2}`;
+            },
         });
         assert.tsType<typeof shapeWithMethod.runtimeType>().equals<{
             myData: string;

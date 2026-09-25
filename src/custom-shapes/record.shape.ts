@@ -115,18 +115,16 @@ function setRecordShapeRegistry() {
                     key,
                     value,
                 ]) => {
-                    const matchesKey = options.additionalProperties
-                        ? true
-                        : checkValidShape(key, options.keysShape);
+                    const matchesKey =
+                        options.additionalProperties || checkValidShape(key, options.keysShape);
                     const matchesValue = checkValidShape(value, options.valuesShape);
 
                     return matchesKey && matchesValue;
                 },
             );
 
-            const hasAllKeys = options.isPartial
-                ? true
-                : !getMissingKeys(options.keysShape, value).length;
+            const hasAllKeys =
+                options.isPartial || !getMissingKeys(options.keysShape, value).length;
 
             return existingKeysMatch && hasAllKeys;
         });

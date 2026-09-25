@@ -704,11 +704,11 @@ const testCases: ReadonlyArray<
                  * Just any method will work because we can't check run-time types of a function
                  * beyond checking that it is a function.
                  */
-                myMethod: () => {},
+                myMethod() {},
             },
             defineShape({
                 myData: 'a',
-                myMethod: (input1: string, input2: number): string => {
+                myMethod(input1: string, input2: number): string {
                     return [
                         input1,
                         input2,
@@ -727,7 +727,7 @@ const testCases: ReadonlyArray<
             },
             defineShape({
                 myData: 'a',
-                myMethod: (input1: string, input2: number): string => {
+                myMethod(input1: string, input2: number): string {
                     return [
                         input1,
                         input2,
@@ -748,7 +748,7 @@ const testCases: ReadonlyArray<
             },
             defineShape({
                 myData: 'a',
-                myMethod: (input1: string, input2: number): string => {
+                myMethod(input1: string, input2: number): string {
                     return [
                         input1,
                         input2,
