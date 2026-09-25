@@ -85,56 +85,40 @@ export function defineShape<Init = any>(init: Init): Shape<Init> {
     }
 
     const schema = shapeInitToSchema(init) as ShapeInitSchema<Init>;
-    const schemaExtraKeys = forceAdditionalProperties(schema, true);
 
-    const shape: Omit<
-        Shape<Init>,
-        | 'runtimeType'
-        | '$_schemaNoExtraKeys'
-        | '$_compiledSchemaNoExtraKeys'
-        | typeof shapeIdentifier
-    > = {
+    const shape: Pick<Shape<Init>, '$_schema' | 'default'> = {
         $_schema: schema,
-        $_schemaExtraKeys: schemaExtraKeys,
         default: schema.default,
-        $_compiledSchema: TypeCompiler.Compile(schema),
-        $_compiledSchemaExtraKeys: TypeCompiler.Compile(schemaExtraKeys),
     };
 
     Object.defineProperties(shape, {
         /**
-         * The "no extra keys" schema and its compiled checker are only needed when callers opt into
-         * `preventExtraKeys`, so they're computed lazily on first access and then cached by
-         * overwriting the getter with the resolved value.
+         * Derived schemas and compiled checkers are computed lazily on first access and then cached
+         * by overwriting the getter with the resolved value. Shapes are usually defined at module
+         * top level, so computing these eagerly makes every import pay for every shape, even ones
+         * that are never checked.
          */
-        $_schemaNoExtraKeys: {
-            configurable: true,
-            enumerable: true,
-            get(): ShapeInitSchema<Init> {
-                const value = forceAdditionalProperties(schema, false);
-                Object.defineProperty(this, '$_schemaNoExtraKeys', {
-                    configurable: false,
-                    enumerable: true,
-                    writable: false,
-                    value,
-                });
-                return value;
+        $_schemaExtraKeys: createCachedGetter('$_schemaExtraKeys', () => {
+            return forceAdditionalProperties(schema, true);
+        }),
+        $_schemaNoExtraKeys: createCachedGetter('$_schemaNoExtraKeys', () => {
+            return forceAdditionalProperties(schema, false);
+        }),
+        $_compiledSchema: createCachedGetter('$_compiledSchema', () => {
+            return TypeCompiler.Compile(schema);
+        }),
+        $_compiledSchemaExtraKeys: createCachedGetter(
+            '$_compiledSchemaExtraKeys',
+            function (this: Shape<Init>) {
+                return TypeCompiler.Compile(this.$_schemaExtraKeys);
             },
-        },
-        $_compiledSchemaNoExtraKeys: {
-            configurable: true,
-            enumerable: true,
-            get(this: Shape<Init>): TypeCheck<any> {
-                const value = TypeCompiler.Compile(this.$_schemaNoExtraKeys);
-                Object.defineProperty(this, '$_compiledSchemaNoExtraKeys', {
-                    configurable: false,
-                    enumerable: true,
-                    writable: false,
-                    value,
-                });
-                return value;
+        ),
+        $_compiledSchemaNoExtraKeys: createCachedGetter(
+            '$_compiledSchemaNoExtraKeys',
+            function (this: Shape<Init>) {
+                return TypeCompiler.Compile(this.$_schemaNoExtraKeys);
             },
-        },
+        ),
         runtimeType: {
             configurable: false,
             enumerable: false,
@@ -153,13 +137,35 @@ export function defineShape<Init = any>(init: Init): Shape<Init> {
     return shape as Shape<Init>;
 }
 
+function createCachedGetter<Value>(
+    key: PropertyKey,
+    compute: (this: Shape) => Value,
+): PropertyDescriptor {
+    return {
+        configurable: true,
+        enumerable: true,
+        get(this: Shape): Value {
+            const value = compute.call(this);
+            Object.defineProperty(this, key, {
+                configurable: false,
+                enumerable: true,
+                writable: false,
+                value,
+            });
+            return value;
+        },
+    };
+}
+
 /**
  * Checks if `input` is a Shape.
  *
  * @category Internal
  */
 export function isShape(input: unknown): input is Shape {
-    return check.hasKey(input, shapeIdentifier) && !!input[shapeIdentifier];
+    return (
+        check.isObject(input) && check.hasKey(input, shapeIdentifier) && !!input[shapeIdentifier]
+    );
 }
 
 /**
@@ -168,7 +174,7 @@ export function isShape(input: unknown): input is Shape {
  * @category Internal
  */
 export function isSchema(input: unknown): input is TSchema {
-    return check.hasKey(input, Kind);
+    return check.isObject(input) && check.hasKey(input, Kind);
 }
 
 /**
