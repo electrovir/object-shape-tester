@@ -17,6 +17,7 @@ import {defineShape, type Shape} from '../shape/shape.js';
  * checkValidShape({}, myShape); // `true`
  * ```
  */
+/* @__NO_SIDE_EFFECTS__ */
 export function unknownShape<T = unknown>(defaultValue?: unknown): Shape<TUnsafe<T>> {
     return defineShape(
         Type.Unknown({

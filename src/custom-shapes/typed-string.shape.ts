@@ -18,6 +18,7 @@ import {defineShape} from '../shape/shape.js';
  * checkValidShape(1, myShape); // `false`
  * ```
  */
+/* @__NO_SIDE_EFFECTS__ */
 export function typedStringShape<const T extends string>(defaultValue: string = '') {
     return defineShape(
         Type.Unsafe<T>(

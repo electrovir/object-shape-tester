@@ -18,6 +18,7 @@ import {defineShape, type ShapeInitSchema} from '../shape/shape.js';
  * checkValidShape({}, myShape); // `false`
  * ```
  */
+/* @__NO_SIDE_EFFECTS__ */
 export function unionShape<T extends Readonly<AtLeastTuple<any, 1>>>(...inits: T) {
     let defaultValue: undefined;
     const schemas = inits.map((init, index) => {

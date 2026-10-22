@@ -74,6 +74,7 @@ export function unsafeShape<T>(init: any): UnsafeShape<T> {
  *
  * @category Define
  */
+/* @__NO_SIDE_EFFECTS__ */
 export function defineShape<Init = any>(init: Init): Shape<Init> {
     setShapeDefinitionErrorMessage();
     if (isShape(init)) {

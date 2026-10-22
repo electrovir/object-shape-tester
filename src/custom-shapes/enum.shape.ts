@@ -23,6 +23,7 @@ import {defineShape, type ShapeInitSchema} from '../shape/shape.js';
  * checkValidShape('c', myShape); // `false`
  * ```
  */
+/* @__NO_SIDE_EFFECTS__ */
 export function enumShape<const EnumObject extends Record<string, number | string>>(
     enumObject: EnumObject,
     /** If omitted or `undefined`, the first value in the enum object will be used as the default. */
