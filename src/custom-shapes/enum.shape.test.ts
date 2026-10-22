@@ -24,6 +24,7 @@ describe(enumShape.name, () => {
         assert.strictEquals(myEnumShape.default, TestEnum.Third);
 
         // @ts-expect-error: intentionally invalid default value
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-enum-assignment
         assert.throws(() => enumShape(TestEnum, 'wrong'));
     });
     it('has informative error message', () => {
